@@ -21,7 +21,12 @@ const Stack = createNativeStackNavigator();
 
 function MainTabs({ route }) {
     const { theme } = useThemeContext();
-    const { phone } = route.params;
+    const phone = route.params?.phone;
+
+    // Safeguard: Don't render tabs until the phone number is available.
+    if (!phone) {
+        return null;
+    }
 
     return (
       <SocketProvider phone={phone}>

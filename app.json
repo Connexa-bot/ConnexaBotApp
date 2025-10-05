@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ConnexaBotApp",
-    "slug": "connexabotapp",
+    "name": "exaBotApp",
+    "slug": "exabotapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
