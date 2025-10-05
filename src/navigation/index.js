@@ -21,12 +21,13 @@ const Stack = createNativeStackNavigator();
 
 function MainTabs({ route }) {
     const { theme } = useThemeContext();
-    const { phone, serverUrl } = route.params || {};
 
-    // Safeguard: Don't render tabs until the phone number and server URL are available.
-    if (!phone || !serverUrl) {
+    // Robust safeguard to prevent crash if route or params are not yet available.
+    if (!route || !route.params || !route.params.phone || !route.params.serverUrl) {
+        // Render nothing or a loading indicator while waiting for params
         return null;
     }
+    const { phone, serverUrl } = route.params;
 
     return (
       <SocketProvider phone={phone} serverUrl={serverUrl}>
