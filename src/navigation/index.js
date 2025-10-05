@@ -12,18 +12,23 @@ import ChatsScreen from "../screens/ChatsScreen";
 import UpdatesScreen from "../screens/UpdatesScreen";
 import CommunitiesScreen from "../screens/CommunitiesScreen";
 import CallsScreen from "../screens/CallsScreen";
+import ChatViewScreen from "../screens/ChatViewScreen";
 import CustomHeader from "../components/CustomHeader";
+import { SocketProvider } from "../contexts/SocketContext";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-function MainTabs() {
+function MainTabs({ route }) {
     const { theme } = useThemeContext();
+    const { phone } = route.params;
+
     return (
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          header: () => <CustomHeader title="WhatsApp" />,
-          tabBarIcon: ({ focused, color, size }) => {
+      <SocketProvider phone={phone}>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            header: () => <CustomHeader title="WhatsApp" />,
+            tabBarIcon: ({ focused, color, size }) => {
             let iconName;
             if (route.name === 'Chats') {
               iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
@@ -48,6 +53,7 @@ function MainTabs() {
         <Tab.Screen name="Communities" component={CommunitiesScreen} />
         <Tab.Screen name="Calls" component={CallsScreen} />
       </Tab.Navigator>
+    </SocketProvider>
     );
   }
 
@@ -56,10 +62,24 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer theme={theme}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Main" component={MainTabs} />
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold' },
+        }}
+      >
+        <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="ChatView"
+          component={ChatViewScreen}
+          options={({ route }) => ({
+            title: route.params.chatName,
+            headerBackTitleVisible: false,
+          })}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
