@@ -2,12 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useThemeContext } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import { setApiBaseUrl, connectToServer, getConnectionStatus } from '../services/api';
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen() {
   const { theme } = useThemeContext();
+  const { login } = useAuth();
+
   const [phone, setPhone] = useState('');
-  const [serverUrl, setServerUrl] = useState('http://192.168.1.10:5000'); // Default for convenience
+  const [serverUrl, setServerUrl] = useState('https://connexa-bot-server.onrender.com'); // Default to the provided URL
   const [qrCode, setQrCode] = useState(null);
   const [linkCode, setLinkCode] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -25,7 +28,6 @@ export default function LoginScreen({ navigation }) {
     setLinkCode(null);
     setIsConnecting(true);
 
-    // Set the base URL for both API and WebSocket connections
     setApiBaseUrl(serverUrl);
 
     try {
@@ -37,8 +39,8 @@ export default function LoginScreen({ navigation }) {
         setLinkCode(data.linkCode);
       }
       if (data.connected) {
-        // Pass serverUrl along with phone
-        navigation.replace('Main', { phone, serverUrl });
+        // Use the AuthContext to log in, which will trigger the navigator to switch screens.
+        login(phone, serverUrl);
       }
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.message || 'An unknown error occurred.';
@@ -58,22 +60,17 @@ export default function LoginScreen({ navigation }) {
         setIsConnecting(false);
         setQrCode(null);
         setLinkCode(null);
-        navigation.replace('Main', { phone, serverUrl });
+        // Use the AuthContext to log in
+        login(phone, serverUrl);
       } else {
-        if (data.qrCodeDataUrl) {
-          setQrCode(data.qrCodeDataUrl);
-        }
-        if (data.linkCode) {
-          setLinkCode(data.linkCode);
-        }
-        if (data.error) {
-          setError(data.error);
-        }
+        if (data.qrCodeDataUrl) setQrCode(data.qrCodeDataUrl);
+        if (data.linkCode) setLinkCode(data.linkCode);
+        if (data.error) setError(data.error);
       }
     } catch (err) {
         console.error("Status check failed:", err.message);
     }
-  }, [isConnecting, navigation, phone, serverUrl]);
+  }, [isConnecting, phone, serverUrl, login]);
 
   useEffect(() => {
     if (isConnecting) {
@@ -88,7 +85,7 @@ export default function LoginScreen({ navigation }) {
 
       <TextInput
         style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
-        placeholder="Server URL (e.g., http://192.168.1.10:5000)"
+        placeholder="Server URL"
         placeholderTextColor="gray"
         keyboardType="url"
         value={serverUrl}
