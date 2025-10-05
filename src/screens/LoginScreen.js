@@ -2,11 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useThemeContext } from '../contexts/ThemeContext';
-import { connectToServer, getConnectionStatus } from '../services/api';
+import { setApiBaseUrl, connectToServer, getConnectionStatus } from '../services/api';
 
 export default function LoginScreen({ navigation }) {
   const { theme } = useThemeContext();
   const [phone, setPhone] = useState('');
+  const [serverUrl, setServerUrl] = useState('http://192.168.1.10:5000'); // Default for convenience
   const [qrCode, setQrCode] = useState(null);
   const [linkCode, setLinkCode] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -14,8 +15,8 @@ export default function LoginScreen({ navigation }) {
   const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnect = async () => {
-    if (!phone) {
-      Alert.alert('Error', 'Please enter your phone number.');
+    if (!phone || !serverUrl) {
+      Alert.alert('Error', 'Please enter both your phone number and the server URL.');
       return;
     }
     setLoading(true);
@@ -23,6 +24,9 @@ export default function LoginScreen({ navigation }) {
     setQrCode(null);
     setLinkCode(null);
     setIsConnecting(true);
+
+    // Set the base URL for both API and WebSocket connections
+    setApiBaseUrl(serverUrl);
 
     try {
       const { data } = await connectToServer(phone);
@@ -33,7 +37,8 @@ export default function LoginScreen({ navigation }) {
         setLinkCode(data.linkCode);
       }
       if (data.connected) {
-        navigation.replace('Main', { phone });
+        // Pass serverUrl along with phone
+        navigation.replace('Main', { phone, serverUrl });
       }
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.message || 'An unknown error occurred.';
@@ -53,7 +58,7 @@ export default function LoginScreen({ navigation }) {
         setIsConnecting(false);
         setQrCode(null);
         setLinkCode(null);
-        navigation.replace('Main', { phone });
+        navigation.replace('Main', { phone, serverUrl });
       } else {
         if (data.qrCodeDataUrl) {
           setQrCode(data.qrCodeDataUrl);
@@ -66,14 +71,13 @@ export default function LoginScreen({ navigation }) {
         }
       }
     } catch (err) {
-        // Don't show intermittent network errors to the user
         console.error("Status check failed:", err.message);
     }
-  }, [isConnecting, navigation, phone]);
+  }, [isConnecting, navigation, phone, serverUrl]);
 
   useEffect(() => {
     if (isConnecting) {
-      const interval = setInterval(checkStatus, 5000); // Check every 5 seconds
+      const interval = setInterval(checkStatus, 5000);
       return () => clearInterval(interval);
     }
   }, [isConnecting, checkStatus]);
@@ -81,13 +85,21 @@ export default function LoginScreen({ navigation }) {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Connect Your WhatsApp</Text>
-      <Text style={[styles.subtext, { color: theme.colors.text }]}>
-        Enter your phone number including the country code to start.
-      </Text>
 
       <TextInput
         style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
-        placeholder="e.g., 15551234567"
+        placeholder="Server URL (e.g., http://192.168.1.10:5000)"
+        placeholderTextColor="gray"
+        keyboardType="url"
+        value={serverUrl}
+        onChangeText={setServerUrl}
+        editable={!isConnecting}
+        autoCapitalize="none"
+      />
+
+      <TextInput
+        style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+        placeholder="Phone Number (e.g., 15551234567)"
         placeholderTextColor="gray"
         keyboardType="phone-pad"
         value={phone}
@@ -136,11 +148,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  subtext: {
-    fontSize: 16,
-    textAlign: 'center',
     marginBottom: 20,
   },
   input: {

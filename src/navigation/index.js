@@ -21,15 +21,15 @@ const Stack = createNativeStackNavigator();
 
 function MainTabs({ route }) {
     const { theme } = useThemeContext();
-    const phone = route.params?.phone;
+    const { phone, serverUrl } = route.params || {};
 
-    // Safeguard: Don't render tabs until the phone number is available.
-    if (!phone) {
+    // Safeguard: Don't render tabs until the phone number and server URL are available.
+    if (!phone || !serverUrl) {
         return null;
     }
 
     return (
-      <SocketProvider phone={phone}>
+      <SocketProvider phone={phone} serverUrl={serverUrl}>
         <Tab.Navigator
           screenOptions={({ route }) => ({
             header: () => <CustomHeader title="WhatsApp" />,

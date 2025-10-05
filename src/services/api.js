@@ -1,14 +1,14 @@
 import axios from 'axios';
 
-// IMPORTANT: Replace with your server's actual IP address or domain
-const API_URL = 'http://192.168.1.10:5000'; // Example: 'http://your-server.com'
-
 const apiClient = axios.create({
-  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+export const setApiBaseUrl = (url) => {
+  apiClient.defaults.baseURL = url;
+};
 
 export const connectToServer = (phone) => {
   return apiClient.post('/connect', { phone });
@@ -28,6 +28,14 @@ export const getMessages = (phone, chatId) => {
 
 export const sendMessage = (phone, to, message) => {
   return apiClient.post('/send-message', { phone, to, message });
+};
+
+export const getStatuses = (phone) => {
+  return apiClient.get(`/statuses/${phone}`);
+};
+
+export const postStatus = (phone, text) => {
+  return apiClient.post('/poststatus', { phone, text });
 };
 
 export default apiClient;

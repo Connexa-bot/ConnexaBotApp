@@ -1,15 +1,14 @@
-// IMPORTANT: Replace with your server's actual IP address or domain
-const WS_URL = 'ws://192.168.1.10:5000'; // Example: 'ws://your-server.com'
-
 let socket = null;
 
-export const initSocket = (phone) => {
+export const initSocket = (url, phone) => {
   // Avoid creating multiple connections
   if (socket && socket.readyState === WebSocket.OPEN) {
     return;
   }
 
-  socket = new WebSocket(`${WS_URL}?phone=${phone}`);
+  // Ensure the URL for WebSocket starts with ws:// or wss://
+  const wsUrl = url.replace(/^http/, 'ws');
+  socket = new WebSocket(`${wsUrl}?phone=${phone}`);
 
   socket.onopen = () => {
     console.log('WebSocket connection opened');

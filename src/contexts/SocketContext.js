@@ -5,7 +5,7 @@ import { sendMessage } from '../services/api';
 
 const SocketContext = createContext();
 
-export const SocketProvider = ({ children, phone }) => {
+export const SocketProvider = ({ children, phone, serverUrl }) => {
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
 
@@ -25,8 +25,8 @@ export const SocketProvider = ({ children, phone }) => {
   }, [phone]);
 
   useEffect(() => {
-    if (phone) {
-      initSocket(phone);
+    if (phone && serverUrl) {
+      initSocket(serverUrl, phone);
       const newSocket = getSocket();
       setSocket(newSocket);
 
@@ -42,7 +42,7 @@ export const SocketProvider = ({ children, phone }) => {
     return () => {
       closeSocket();
     };
-  }, [phone, handleAutoReply]);
+  }, [phone, serverUrl, handleAutoReply]);
 
   return (
     <SocketContext.Provider value={{ socket, messages, phone }}>
