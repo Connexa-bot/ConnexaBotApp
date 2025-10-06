@@ -1,14 +1,22 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 
-export default function SplashScreen({ navigation }) {
+// The SplashScreen now receives an `onFinish` prop to signal when it's done.
+export default function SplashScreen({ onFinish }) {
   useEffect(() => {
-    setTimeout(() => navigation.replace("Login"), 2000);
-  }, [navigation]);
+    // After 2 seconds, call the onFinish function provided by the navigator.
+    const timer = setTimeout(() => {
+      if (onFinish) {
+        onFinish();
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [onFinish]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>WhatsApp Clone</Text>
+      <Text style={styles.logo}>ConnexaBotApp</Text>
     </View>
   );
 }

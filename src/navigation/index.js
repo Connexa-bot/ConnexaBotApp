@@ -22,9 +22,13 @@ const Stack = createNativeStackNavigator();
 
 function MainApp() {
   const { theme } = useThemeContext();
-  const { user } = useAuth(); // Get user data from AuthContext
+  const { user } = useAuth();
 
-  // The SocketProvider now gets its data directly from the AuthContext
+  if (!user) {
+    // This should not happen if navigation is correct, but as a safeguard
+    return null;
+  }
+
   return (
     <SocketProvider phone={user.phone} serverUrl={user.serverUrl}>
       <Tab.Navigator
@@ -52,27 +56,15 @@ function MainApp() {
   );
 }
 
-export default function RootNavigator() {
-  const { theme } = useThemeContext();
-  const { isAuthenticated } = useAuth();
-  const [isLoading, setIsLoading] = React.useState(true);
+// This is the correct structure for the navigator.
+// It determines which set of screens to show based on auth state.
+function AppNavigator() {
+    const { isAuthenticated } = useAuth();
 
-  React.useEffect(() => {
-    // Simulate loading time for splash screen
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
-  }, []);
-
-  if (isLoading) {
-    return <SplashScreen />;
-  }
-
-  return (
-    <NavigationContainer theme={theme}>
+    return (
       <Stack.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: theme.colors.primary },
+          headerStyle: { backgroundColor: useThemeContext().theme.colors.primary },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' },
         }}
@@ -90,9 +82,28 @@ export default function RootNavigator() {
             />
           </>
         ) : (
-          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+          </>
         )}
       </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
+    );
+  }
+
+  // The RootNavigator now handles the initial splash screen logic
+  // before rendering the main AppNavigator.
+  export default function RootNavigator() {
+    const { theme } = useThemeContext();
+    const [isSplashFinished, setIsSplashFinished] = React.useState(false);
+
+    if (!isSplashFinished) {
+      // Pass a function to the splash screen so it can signal when it's done.
+      return <SplashScreen onFinish={() => setIsSplashFinished(true)} />;
+    }
+
+    return (
+      <NavigationContainer theme={theme}>
+        <AppNavigator />
+      </NavigationContainer>
+    );
+  }
