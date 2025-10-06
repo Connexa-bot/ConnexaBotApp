@@ -24,13 +24,13 @@ function MainApp() {
   const { theme } = useThemeContext();
   const { user } = useAuth();
 
-  if (!user) {
-    // This should not happen if navigation is correct, but as a safeguard
-    return null;
+  if (!user || !user.phone) {
+    return null; // Safeguard
   }
 
+  // SocketProvider now only needs the phone number
   return (
-    <SocketProvider phone={user.phone} serverUrl={user.serverUrl}>
+    <SocketProvider phone={user.phone}>
       <Tab.Navigator
         screenOptions={({ route }) => ({
           header: () => <CustomHeader title="WhatsApp" />,
@@ -56,11 +56,9 @@ function MainApp() {
   );
 }
 
-// This is the correct structure for the navigator.
-// It determines which set of screens to show based on auth state.
 function AppNavigator() {
     const { isAuthenticated } = useAuth();
-    const { theme } = useThemeContext(); // Hook is now correctly placed at the top level.
+    const { theme } = useThemeContext();
 
     return (
       <Stack.Navigator
@@ -83,22 +81,17 @@ function AppNavigator() {
             />
           </>
         ) : (
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-          </>
+          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         )}
       </Stack.Navigator>
     );
   }
 
-  // The RootNavigator now handles the initial splash screen logic
-  // before rendering the main AppNavigator.
   export default function RootNavigator() {
     const { theme } = useThemeContext();
     const [isSplashFinished, setIsSplashFinished] = React.useState(false);
 
     if (!isSplashFinished) {
-      // Pass a function to the splash screen so it can signal when it's done.
       return <SplashScreen onFinish={() => setIsSplashFinished(true)} />;
     }
 

@@ -1,13 +1,15 @@
+import { SERVER_URL } from '../config';
+
 let socket = null;
 
-export const initSocket = (url, phone) => {
+export const initSocket = (phone) => {
   // Avoid creating multiple connections
   if (socket && socket.readyState === WebSocket.OPEN) {
     return;
   }
 
   // Ensure the URL for WebSocket starts with ws:// or wss://
-  const wsUrl = url.replace(/^http/, 'ws');
+  const wsUrl = SERVER_URL.replace(/^http/, 'ws');
   socket = new WebSocket(`${wsUrl}?phone=${phone}`);
 
   socket.onopen = () => {
@@ -22,9 +24,6 @@ export const initSocket = (url, phone) => {
   socket.onerror = (e) => {
     console.error('WebSocket error', e.message);
   };
-
-  // The 'onmessage' handler will be set up in a context
-  // to allow different parts of the app to react to messages.
 };
 
 export const getSocket = () => socket;

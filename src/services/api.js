@@ -1,14 +1,12 @@
 import axios from 'axios';
+import { SERVER_URL } from '../config';
 
 const apiClient = axios.create({
+  baseURL: SERVER_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
-
-export const setApiBaseUrl = (url) => {
-  apiClient.defaults.baseURL = url;
-};
 
 export const connectToServer = (phone) => {
   return apiClient.post('/connect', { phone });
@@ -31,11 +29,11 @@ export const sendMessage = (phone, to, message) => {
 };
 
 export const getStatuses = (phone) => {
-  return apiClient.get(`/statuses/${phone}`);
+    return apiClient.get(`/statuses/${phone}`);
 };
 
 export const postStatus = (phone, text) => {
-  return apiClient.post('/poststatus', { phone, text });
+    return apiClient.post('/poststatus', { phone, text });
 };
 
 export default apiClient;

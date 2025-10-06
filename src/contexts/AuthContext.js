@@ -5,8 +5,9 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  const login = (phone, serverUrl) => {
-    setUser({ phone, serverUrl });
+  // The login function now only needs the phone number.
+  const login = (phone) => {
+    setUser({ phone });
   };
 
   const logout = () => {
