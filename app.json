@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ConnexaBotApp",
-    "slug": "connexabotapp",
+    "slug": "connexabot",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -47,7 +47,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "280b272e-8ca3-4358-91e6-4fa8a2e093e9"
+        "projectId": "94bc56f1-49c0-4383-8248-191deb134fc2"
       }
     },
     "owner": "connexa-hub"

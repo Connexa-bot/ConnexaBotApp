@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert, Image } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useThemeContext } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -113,24 +113,22 @@ export default function LoginScreen() {
       {loading && <ActivityIndicator size="large" color={theme.colors.primary} style={styles.feedback} />}
 
       {error && <Text style={styles.errorText}>{error}</Text>}
-
-      {qrCode && !linkCode && (
-        <View style={styles.qrContainer}>
-          <Text style={[styles.instruction, { color: theme.colors.text }]}>
-            {'Scan this QR code in WhatsApp > Linked Devices > Link a Device'}
-          </Text>
-          <QRCode value={qrCode} size={250} />
-        </View>
-      )}
-
-      {linkCode && (
-        <View style={styles.qrContainer}>
-          <Text style={[styles.instruction, { color: theme.colors.text }]}>
-            {'Alternatively, go to "Link with phone number" and enter this code:'}
-          </Text>
-          <Text style={styles.linkCode}>{linkCode}</Text>
-        </View>
-      )}
+{qrCode && !linkCode && (
+  <View style={styles.qrContainer}>
+    <Text style={[styles.instruction, { color: theme.colors.text }]}>
+      {'Scan this QR code in WhatsApp > Linked Devices > Link a Device'}
+    </Text>
+    {qrCode.startsWith('data:image') ? (
+      <Image
+        source={{ uri: qrCode }}
+        style={{ width: 250, height: 250, borderRadius: 10 }}
+        resizeMode="contain"
+      />
+    ) : (
+      <QRCode value={qrCode} size={250} />
+    )}
+  </View>
+)} 
     </View>
   );
 }
