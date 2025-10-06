@@ -60,11 +60,12 @@ function MainApp() {
 // It determines which set of screens to show based on auth state.
 function AppNavigator() {
     const { isAuthenticated } = useAuth();
+    const { theme } = useThemeContext(); // Hook is now correctly placed at the top level.
 
     return (
       <Stack.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: useThemeContext().theme.colors.primary },
+          headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' },
         }}
