@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useThemeContext } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,9 +25,9 @@ export default function LoginScreen() {
   const [error, setError] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
-  // State to manage the view: 'phoneInput', 'qrOrLink'
+  // Controls which screen is visible: phone input or QR/link view
   const [viewMode, setViewMode] = useState('phoneInput');
-  // State to manage which code to show: 'qr', 'link'
+  // Controls whether QR or link code is shown
   const [codeMode, setCodeMode] = useState('qr');
 
   const handleConnect = async () => {
@@ -40,11 +49,12 @@ export default function LoginScreen() {
       if (data.connected) {
         login(phone);
       } else {
-        // If not connected, switch to the code view
+        // Switch to QR/link screen
         setViewMode('qrOrLink');
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message || 'An unknown error occurred.';
+      const errorMessage =
+        err.response?.data?.error || err.message || 'An unknown error occurred.';
       setError(errorMessage);
       setIsConnecting(false);
     } finally {
@@ -68,7 +78,7 @@ export default function LoginScreen() {
         if (data.error) setError(data.error);
       }
     } catch (err) {
-        console.error("Status check failed:", err.message);
+      console.error('Status check failed:', err.message);
     }
   }, [isConnecting, phone, login, qrCode, linkCode]);
 
@@ -81,33 +91,41 @@ export default function LoginScreen() {
 
   const renderPhoneInputView = () => (
     <>
-      <Text style={[styles.title, { color: theme.colors.text }]}>Connect Your WhatsApp</Text>
+      <Text style={[styles.title, { color: theme.colors.text }]}>
+        Connect Your WhatsApp
+      </Text>
+
       <TextInput
-        style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+        style={[
+          styles.input,
+          { color: theme.colors.text, borderColor: theme.colors.border },
+        ]}
         placeholder="Phone Number (e.g., 15551234567)"
         placeholderTextColor="gray"
         keyboardType="phone-pad"
         value={phone}
         onChangeText={setPhone}
       />
+
       <Button
         title={loading ? 'Connecting...' : 'Connect'}
         onPress={handleConnect}
         disabled={loading}
       />
+
       {error && <Text style={styles.errorText}>{error}</Text>}
     </>
   );
 
   const renderQrOrLinkView = () => (
     <>
-      {loading && <ActivityIndicator size="large" color={theme.colors.primary} style={styles.feedback} />}
+      {loading && <ActivityIndicator size="large" color={theme.colors.primary} />}
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       {codeMode === 'qr' && qrCode && (
         <View style={styles.qrContainer}>
           <Text style={[styles.instruction, { color: theme.colors.text }]}>
-            {'Scan this QR code in WhatsApp > Linked Devices > Link a Device'}
+            Scan this QR code in WhatsApp → Linked Devices → Link a Device
           </Text>
           <QRCode value={qrCode} size={250} />
           <TouchableOpacity onPress={() => setCodeMode('link')}>
@@ -119,7 +137,7 @@ export default function LoginScreen() {
       {codeMode === 'link' && linkCode && (
         <View style={styles.qrContainer}>
           <Text style={[styles.instruction, { color: theme.colors.text }]}>
-            {'Enter this code in WhatsApp > Linked Devices > Link with phone number'}
+            Enter this code in WhatsApp → Linked Devices → Link with phone number
           </Text>
           <Text style={styles.linkCode}>{linkCode}</Text>
           <TouchableOpacity onPress={() => setCodeMode('qr')}>
@@ -128,11 +146,10 @@ export default function LoginScreen() {
         </View>
       )}
 
-      {/* Show a message if one of the codes is not available */}
       {codeMode === 'link' && !linkCode && !loading && (
-          <Text style={[styles.instruction, { color: theme.colors.text }]}>
-              Waiting for link code...
-          </Text>
+        <Text style={[styles.instruction, { color: theme.colors.text }]}>
+          Waiting for link code...
+        </Text>
       )}
     </>
   );
@@ -145,56 +162,56 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      marginBottom: 20,
-    },
-    input: {
-      width: '100%',
-      height: 50,
-      borderWidth: 1,
-      borderRadius: 8,
-      paddingHorizontal: 15,
-      marginBottom: 20,
-      fontSize: 16,
-    },
-    feedback: {
-      marginVertical: 20,
-    },
-    errorText: {
-      color: 'red',
-      marginVertical: 10,
-      textAlign: 'center',
-    },
-    qrContainer: {
-      alignItems: 'center',
-      marginTop: 30,
-      padding: 15,
-      backgroundColor: '#fff',
-      borderRadius: 10,
-    },
-    instruction: {
-      textAlign: 'center',
-      marginBottom: 15,
-      fontSize: 14,
-    },
-    linkCode: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: '#075E54',
-      letterSpacing: 4,
-      marginBottom: 20,
-    },
-    switchLink: {
-        color: '#075E54',
-        marginTop: 20,
-        fontSize: 16,
-    }
-  });
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  input: {
+    width: '100%',
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    fontSize: 16,
+  },
+  feedback: {
+    marginVertical: 20,
+  },
+  errorText: {
+    color: 'red',
+    marginVertical: 10,
+    textAlign: 'center',
+  },
+  qrContainer: {
+    alignItems: 'center',
+    marginTop: 30,
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+  },
+  instruction: {
+    textAlign: 'center',
+    marginBottom: 15,
+    fontSize: 14,
+  },
+  linkCode: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#075E54',
+    letterSpacing: 4,
+    marginBottom: 20,
+  },
+  switchLink: {
+    color: '#075E54',
+    marginTop: 20,
+    fontSize: 16,
+  },
+});
