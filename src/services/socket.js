@@ -1,35 +1,68 @@
 import { SERVER_URL } from '../config';
 
 let socket = null;
+let reconnectInterval = null;
+const RECONNECT_DELAY = 5000; // 5 seconds
 
-export const initSocket = (phone) => {
-  // Avoid creating multiple connections
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    return;
-  }
+let messageListeners = [];
 
-  // Ensure the URL for WebSocket starts with ws:// or wss://
+const connect = (phone) => {
+  if (!phone) return;
+
   const wsUrl = SERVER_URL.replace(/^http/, 'ws');
   socket = new WebSocket(`${wsUrl}?phone=${phone}`);
 
   socket.onopen = () => {
-    console.log('WebSocket connection opened');
+    console.log('✅ WebSocket connection established');
+    if (reconnectInterval) {
+      clearInterval(reconnectInterval);
+      reconnectInterval = null;
+    }
   };
 
-  socket.onclose = (e) => {
-    console.log('WebSocket connection closed', e.message);
-    socket = null; // Clear the socket on close
+  socket.onmessage = (event) => {
+    const parsedData = JSON.parse(event.data);
+    messageListeners.forEach(listener => listener(parsedData));
   };
 
-  socket.onerror = (e) => {
-    console.error('WebSocket error', e.message);
+  socket.onclose = () => {
+    console.log('🔌 WebSocket connection closed. Attempting to reconnect...');
+    if (!reconnectInterval) {
+      reconnectInterval = setInterval(() => connect(phone), RECONNECT_DELAY);
+    }
   };
+
+  socket.onerror = (error) => {
+    console.error('WebSocket error:', error.message);
+    socket.close(); // This will trigger the onclose handler to reconnect
+  };
+};
+
+export const initSocket = (phone) => {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    return;
+  }
+  connect(phone);
 };
 
 export const getSocket = () => socket;
 
 export const closeSocket = () => {
+  if (reconnectInterval) {
+    clearInterval(reconnectInterval);
+    reconnectInterval = null;
+  }
   if (socket) {
     socket.close();
+    socket = null;
   }
+  messageListeners = []; // Clear listeners on close
+};
+
+export const addMessageListener = (listener) => {
+  messageListeners.push(listener);
+};
+
+export const removeMessageListener = (listener) => {
+  messageListeners = messageListeners.filter(l => l !== listener);
 };
