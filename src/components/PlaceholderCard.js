@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, StyleSheet, Animated } from "react-native";
 export default function PlaceholderCard({ title }) {
-  const opacity = new Animated.Value(0.3);
+  const opacity = useMemo(() => new Animated.Value(0.3), []);
 
   React.useEffect(() => {
     Animated.loop(
@@ -10,7 +10,7 @@ export default function PlaceholderCard({ title }) {
         Animated.timing(opacity, { toValue: 0.3, duration: 800, useNativeDriver: true }),
       ])
     ).start();
-  }, []);
+  }, [opacity]);
 
   return (
     <Animated.View style={[styles.card, { opacity }]}>
