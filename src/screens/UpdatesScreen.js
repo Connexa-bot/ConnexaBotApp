@@ -15,10 +15,6 @@ export default function UpdatesScreen() {
   const [error, setError] = useState(null);
 
   const fetchStatuses = useCallback(async () => {
-    if (!phone) {
-        setLoading(false);
-        return;
-    };
     setLoading(true);
     try {
       setError(null);
@@ -32,8 +28,12 @@ export default function UpdatesScreen() {
   }, [phone]);
 
   useEffect(() => {
-    fetchStatuses();
-  }, [fetchStatuses]);
+    if (phone) {
+      fetchStatuses();
+    } else {
+      setLoading(false);
+    }
+  }, [phone, fetchStatuses]);
 
   const handlePostStatus = async () => {
     if (!newStatus.trim()) {

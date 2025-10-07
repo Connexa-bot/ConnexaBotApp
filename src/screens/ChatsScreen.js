@@ -15,10 +15,6 @@ export default function ChatsScreen() {
   const [error, setError] = useState(null);
 
   const fetchChatList = useCallback(async () => {
-    if (!phone) {
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     try {
       setError(null);
@@ -33,8 +29,12 @@ export default function ChatsScreen() {
   }, [phone]);
 
   useEffect(() => {
-    fetchChatList();
-  }, [fetchChatList]);
+    if (phone) {
+      fetchChatList();
+    } else {
+      setLoading(false);
+    }
+  }, [phone, fetchChatList]);
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
