@@ -25,9 +25,7 @@ export default function LoginScreen() {
   const [error, setError] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
-  // Controls which screen is visible: phone input or QR/link view
   const [viewMode, setViewMode] = useState('phoneInput');
-  // Controls whether QR or link code is shown
   const [codeMode, setCodeMode] = useState('qr');
 
   const handleConnect = useCallback(async () => {
@@ -39,20 +37,25 @@ export default function LoginScreen() {
     setError(null);
     try {
       const { data } = await connectToServer(phone);
-      if (data.qrCode) {
+      if (data.connected) {
+        login(phone);
+        return;
+      }
+
+      if (data.qrCode || data.linkCode) {
         setQrCode(data.qrCode);
         setLinkCode(data.linkCode);
         setViewMode('qrOrLink');
-        setIsConnecting(true); // Start polling for connection status
+        setIsConnecting(true);
       } else {
-        setError('Could not retrieve QR code. Please try again.');
+        setError(data.message || 'Could not retrieve QR code. Please try again.');
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'An error occurred.');
+      setError(err.response?.data?.error || 'An error occurred during connection.');
     } finally {
       setLoading(false);
     }
-  }, [phone]);
+  }, [phone, login]);
 
   const checkStatus = useCallback(async () => {
     if (!isConnecting || !phone) return;
@@ -64,7 +67,6 @@ export default function LoginScreen() {
       }
     } catch (err) {
       console.error('Status check failed:', err.message);
-      // Don't set a generic error here, as it might overwrite a more specific one.
     }
   }, [isConnecting, phone, login]);
 
@@ -80,25 +82,15 @@ export default function LoginScreen() {
       <Text style={[styles.title, { color: theme.colors.text }]}>
         Connect Your WhatsApp
       </Text>
-
       <TextInput
-        style={[
-          styles.input,
-          { color: theme.colors.text, borderColor: theme.colors.border },
-        ]}
+        style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
         placeholder="Phone Number (e.g., 15551234567)"
         placeholderTextColor="gray"
         keyboardType="phone-pad"
         value={phone}
         onChangeText={setPhone}
       />
-
-      <Button
-        title={loading ? 'Connecting...' : 'Connect'}
-        onPress={handleConnect}
-        disabled={loading}
-      />
-
+      <Button title={loading ? 'Connecting...' : 'Connect'} onPress={handleConnect} disabled={loading} />
       {error && <Text style={styles.errorText}>{error}</Text>}
     </>
   );
@@ -110,10 +102,12 @@ export default function LoginScreen() {
 
       {codeMode === 'qr' && qrCode && (
         <View style={styles.qrContainer}>
-          <Text style={[styles.instruction, { color: theme.colors.text }]}>
+          <Text style={[styles.instruction, { color: theme.colors.textOnPrimary }]}>
             Scan this QR code in WhatsApp → Linked Devices → Link a Device
           </Text>
-          <QRCode value={qrCode} size={250} />
+          <View style={styles.qrCodeWrapper}>
+            <QRCode value={qrCode} size={230} />
+          </View>
           <TouchableOpacity onPress={() => setCodeMode('link')}>
             <Text style={styles.switchLink}>Link with phone number instead</Text>
           </TouchableOpacity>
@@ -122,7 +116,7 @@ export default function LoginScreen() {
 
       {codeMode === 'link' && linkCode && (
         <View style={styles.qrContainer}>
-          <Text style={[styles.instruction, { color: theme.colors.text }]}>
+          <Text style={[styles.instruction, { color: theme.colors.textOnPrimary }]}>
             Enter this code in WhatsApp → Linked Devices → Link with phone number
           </Text>
           <Text style={styles.linkCode}>{linkCode}</Text>
@@ -168,9 +162,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontSize: 16,
   },
-  feedback: {
-    marginVertical: 20,
-  },
   errorText: {
     color: 'red',
     marginVertical: 10,
@@ -179,24 +170,35 @@ const styles = StyleSheet.create({
   qrContainer: {
     alignItems: 'center',
     marginTop: 30,
-    padding: 15,
-    backgroundColor: '#fff',
+    padding: 20,
+    backgroundColor: '#1F2C34', // Dark background to match header
     borderRadius: 10,
+  },
+  qrCodeWrapper: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 8,
   },
   instruction: {
     textAlign: 'center',
     marginBottom: 15,
     fontSize: 14,
+    color: '#E9EDEF', // Light text for dark container
   },
   linkCode: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#075E54',
+    color: '#25D366', // WhatsApp green
     letterSpacing: 4,
     marginBottom: 20,
+    backgroundColor: '#E9EDEF',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    overflow: 'hidden', // Ensures background respects border radius
   },
   switchLink: {
-    color: '#075E54',
+    color: '#25D366', // WhatsApp green
     marginTop: 20,
     fontSize: 16,
   },

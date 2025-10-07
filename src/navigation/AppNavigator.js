@@ -6,10 +6,18 @@ import { useAuth } from '../contexts/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import ChatViewScreen from '../screens/ChatViewScreen';
 import MainTabNavigator from './MainTabNavigator';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator();
+
+const ReconnectingScreen = () => (
+  <View style={styles.container}>
+    <ActivityIndicator size="large" color="#00AF9C" />
+    <Text style={styles.loadingText}>Restoring your session...</Text>
+  </View>
+);
+
 
 const MainAppHeader = () => (
   <View
@@ -56,11 +64,15 @@ function MainAppStack() {
 }
 
 export default function AppNavigator() {
-  const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isConnected, isReconnecting } = useAuth();
+
+    if (isReconnecting) {
+        return <ReconnectingScreen />;
+    }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {isAuthenticated ? (
+      {isAuthenticated && isConnected ? (
         <Stack.Screen name="MainApp" component={MainAppStack} />
       ) : (
         <Stack.Screen name="Login" component={LoginScreen} />
@@ -68,3 +80,17 @@ export default function AppNavigator() {
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#111B21'
+    },
+    loadingText: {
+        marginTop: 10,
+        color: '#E9EDEF',
+        fontSize: 16
+    }
+});
