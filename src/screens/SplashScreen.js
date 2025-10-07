@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import WhatsappLogo from '../../assets/whatsapp-logo.svg';
-import MetaLogo from '../../assets/meta-logo.svg';
 
 export default function SplashScreen({ onFinish }) {
   useEffect(() => {
@@ -21,7 +20,7 @@ export default function SplashScreen({ onFinish }) {
       </View>
       <View style={styles.footer}>
         <Text style={styles.footerText}>from</Text>
-        <MetaLogo width={70} height={14} />
+        <Text style={[styles.footerText, { fontWeight: 'bold' }]}>Connexabot</Text>
       </View>
     </View>
   );
@@ -30,7 +29,7 @@ export default function SplashScreen({ onFinish }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: '100%', // Ensure the container fills the full width
+    width: '100%',
     backgroundColor: '#075e54',
     alignItems: 'center',
     justifyContent: 'center',
@@ -39,14 +38,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    transform: [{ translateY: -20 }], // Move logo up slightly
   },
   footer: {
-    paddingBottom: 50,
+    position: 'absolute', // Position at the bottom
+    bottom: 50, // Space from the bottom edge
     alignItems: 'center',
   },
   footerText: {
     color: '#AEBAC1',
-    fontSize: 14,
-    marginBottom: 8,
+    fontSize: 16,
   },
 });

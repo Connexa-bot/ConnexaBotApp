@@ -35,18 +35,17 @@ export const AuthProvider = ({ children }) => {
       try {
         phone = await SecureStore.getItemAsync('userPhone');
         if (phone) {
-          console.log(`Found stored phone: ${phone}.`);
-          const connectionActive = await verifyConnection(phone);
-          if (!connectionActive) {
-            // If verification fails, treat as logged out
-            await logout();
-          }
+          console.log(`Found stored phone: ${phone}. Attempting to verify connection.`);
+          // Attempt to verify, but don't log out on failure.
+          // Just set the user and let the navigator decide what to do based on isConnected state.
+          await verifyConnection(phone);
         } else {
           console.log('No stored user phone found.');
         }
       } catch (e) {
         console.error('Failed to load user from secure store', e);
       } finally {
+        // Ensure we always stop loading/reconnecting indicators
         setIsLoading(false);
         setIsReconnecting(false);
       }

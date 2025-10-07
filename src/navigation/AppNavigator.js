@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import SplashScreen from '../screens/SplashScreen'; // Use the new splash screen
 import WelcomeScreen from '../screens/WelcomeScreen';
 import LoginScreen from '../screens/LoginScreen';
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen'; // Import the new screen
 import ChatViewScreen from '../screens/ChatViewScreen';
 import MainTabNavigator from './MainTabNavigator';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
@@ -73,6 +74,7 @@ export default function AppNavigator() {
         <>
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
         </>
       )}
     </Stack.Navigator>
