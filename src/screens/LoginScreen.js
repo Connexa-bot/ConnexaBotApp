@@ -35,13 +35,13 @@ export default function LoginScreen() {
     setIsConnecting(true);
     try {
       const { data } = await connectToServer(phone);
-      if (data.qrCode) {
-        setQrCode(data.qrCode);
-        setLinkCode(data.linkCode); // The backend should provide both
-        setViewMode('qrOrLink');
-      } else {
-        setError('Could not retrieve QR code. Please try again.');
-      }
+      // The backend will start generating the QR code.
+      // We don't need to wait for it here.
+      // The checkStatus function will poll for it.
+      const { data } = await connectToServer(phone);
+      setQrCode(data.qrCode);
+      setLinkCode(data.linkCode);
+      setViewMode('qrOrLink');
     } catch (err) {
       setError(err.response?.data?.error || 'An error occurred.');
     } finally {
