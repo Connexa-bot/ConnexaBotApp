@@ -38,7 +38,7 @@ export default function LoginScreen() {
     try {
       const { data } = await connectToServer(phone);
       if (data.connected) {
-        login(phone);
+        await login(phone); // Await the login to ensure session is saved
         return;
       }
 
@@ -63,7 +63,7 @@ export default function LoginScreen() {
       const { data } = await getConnectionStatus(phone);
       if (data.connected) {
         setIsConnecting(false);
-        login(phone);
+        await login(phone); // Await the login to ensure session is saved
       }
     } catch (err) {
       console.error('Status check failed:', err.message);
@@ -108,9 +108,7 @@ export default function LoginScreen() {
         <>
           <View style={styles.instructionList}>
             <Text style={[styles.instructionText, { color: theme.colors.text }]}>1. Open WhatsApp on your phone</Text>
-            <Text style={[styles.instructionText, { color: theme.colors.text }]}>
-              2. Tap <Text style={{fontWeight: 'bold'}}>Menu</Text> or <Text style={{fontWeight: 'bold'}}>Settings</Text> and select <Text style={{fontWeight: 'bold'}}>Linked Devices</Text>
-            </Text>
+            <Text style={[styles.instructionText, { color: theme.colors.text }]}>2. Tap <Text style={{fontWeight: 'bold'}}>Menu</Text> or <Text style={{fontWeight: 'bold'}}>Settings</Text> and select <Text style={{fontWeight: 'bold'}}>Linked Devices</Text></Text>
             <Text style={[styles.instructionText, { color: theme.colors.text }]}>3. Tap on <Text style={{fontWeight: 'bold'}}>Link a device</Text></Text>
             <Text style={[styles.instructionText, { color: theme.colors.text }]}>4. Point your phone to this screen to capture the code</Text>
           </View>
@@ -118,10 +116,10 @@ export default function LoginScreen() {
             <View style={styles.qrCodeWrapper}>
               <QRCode value={qrCode} size={230} />
             </View>
-            <TouchableOpacity onPress={() => setCodeMode('link')}>
-              <Text style={styles.switchLink}>Link with phone number instead</Text>
-            </TouchableOpacity>
           </View>
+          <TouchableOpacity onPress={() => setCodeMode('link')}>
+            <Text style={styles.switchLink}>Link with phone number instead</Text>
+          </TouchableOpacity>
         </>
       )}
 
@@ -191,7 +189,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 30,
     padding: 20,
-    backgroundColor: '#1F2C34',
+    backgroundColor: '#1F2C34', // Dark background to match header
     borderRadius: 10,
   },
   qrCodeWrapper: {
@@ -203,22 +201,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 15,
     fontSize: 14,
-    color: '#E9EDEF',
+    color: '#E9EDEF', // Light text for dark container
   },
   linkCode: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#25D366',
+    color: '#25D366', // WhatsApp green
     letterSpacing: 4,
     marginBottom: 20,
     backgroundColor: '#E9EDEF',
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: 'hidden', // Ensures background respects border radius
   },
   switchLink: {
-    color: '#25D366',
+    color: '#25D366', // WhatsApp green
     marginTop: 20,
     fontSize: 16,
   },

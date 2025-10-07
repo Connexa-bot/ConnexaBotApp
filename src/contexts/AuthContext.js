@@ -55,25 +55,25 @@ export const AuthProvider = ({ children }) => {
     restoreSession();
   }, [verifyConnection]);
 
-  const login = async (phone) => {
+  const login = useCallback(async (phone) => {
     console.log(`Attempting to log in with ${phone}...`);
     setIsLoading(true);
     try {
-        // We assume the connection is established on the LoginScreen
-        // and this function is called upon success.
-        await SecureStore.setItemAsync('userPhone', phone);
-        setUser({ phone });
-        setIsConnected(true);
-        console.log('Login successful, user and connection state set.');
+      // We assume the connection is established on the LoginScreen
+      // and this function is called upon success.
+      await SecureStore.setItemAsync('userPhone', phone);
+      setUser({ phone });
+      setIsConnected(true);
+      console.log('Login successful, user and connection state set.');
     } catch (e) {
-        console.error('Failed to save user to secure store', e);
-        setIsConnected(false);
+      console.error('Failed to save user to secure store', e);
+      setIsConnected(false);
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     console.log('Logging out...');
     setIsLoading(true);
     try {
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(false);
       console.log('User logged out, session cleared.');
     }
-  };
+  }, []);
 
   return (
     <AuthContext.Provider

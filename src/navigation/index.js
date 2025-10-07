@@ -14,12 +14,9 @@ export default function RootNavigator() {
   const { user, isLoading } = useAuth();
   const [isSplashFinished, setIsSplashFinished] = React.useState(false);
 
+  // Keep showing splash screen until it finishes its animation AND auth state is loaded
   if (!isSplashFinished || isLoading) {
-    return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
-            { !isSplashFinished ? <SplashScreen onFinish={() => setIsSplashFinished(true)} /> : <ActivityIndicator size="large" color={theme.colors.primary} />}
-        </View>
-    )
+    return <SplashScreen onFinish={() => setIsSplashFinished(true)} />;
   }
 
   return (
