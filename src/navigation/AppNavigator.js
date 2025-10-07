@@ -8,11 +8,10 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import ChatViewScreen from '../screens/ChatViewScreen';
 import MainTabNavigator from './MainTabNavigator';
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator();
-
 
 const MainAppHeader = () => (
   <View
@@ -59,11 +58,11 @@ function MainAppStack() {
 }
 
 export default function AppNavigator() {
-    const { isAuthenticated, isConnected, isReconnecting } = useAuth();
+  const { isAuthenticated, isConnected, isReconnecting } = useAuth();
 
-    if (isReconnecting) {
-        return <SplashScreen />;
-    }
+  if (isReconnecting) {
+    return <SplashScreen />; // Keep your HEAD behavior
+  }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -79,7 +78,6 @@ export default function AppNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
-    // Styles for header, etc. can remain if needed by other components in this file.
-    // For now, removing the reconnecting screen styles as the component is removed.
-});
+const styles = {
+  // No reconnecting screen styles needed
+};
