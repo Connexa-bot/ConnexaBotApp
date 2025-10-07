@@ -2,28 +2,33 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
+  TextInput,
+  Button,
   StyleSheet,
   ActivityIndicator,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
+import { useThemeContext } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { connectToServer, getConnectionStatus } from '../services/api';
-import { MaterialIcons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
+  const { theme } = useThemeContext();
   const { login } = useAuth();
+
   const [phone, setPhone] = useState('');
   const [qrCode, setQrCode] = useState(null);
   const [linkCode, setLinkCode] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [viewMode, setViewMode] = useState('phoneInput'); // 'phoneInput' or 'qrOrLink'
-  const [codeMode, setCodeMode] = useState('qr'); // 'qr' or 'link'
+
+  // Controls which screen is visible: phone input or QR/link view
+  const [viewMode, setViewMode] = useState('phoneInput');
+  // Controls whether QR or link code is shown
+  const [codeMode, setCodeMode] = useState('qr');
 
   const handleConnect = useCallback(async () => {
     if (!phone) {
@@ -71,175 +76,128 @@ export default function LoginScreen() {
   }, [isConnecting, checkStatus]);
 
   const renderPhoneInputView = () => (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.headerTitle}>Link with Phone Number</Text>
-      <View style={styles.card}>
-        <Text style={styles.instruction}>
-          Enter your phone number to start the linking process.
-        </Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Phone Number (e.g., 15551234567)"
-          placeholderTextColor="#8696A0"
-          keyboardType="phone-pad"
-          value={phone}
-          onChangeText={setPhone}
-        />
-        <TouchableOpacity style={styles.connectButton} onPress={handleConnect} disabled={loading}>
-          <Text style={styles.connectButtonText}>{loading ? 'Connecting...' : 'Get Link Code'}</Text>
-        </TouchableOpacity>
-        {error && <Text style={styles.errorText}>{error}</Text>}
-      </View>
-    </ScrollView>
+    <>
+      <Text style={[styles.title, { color: theme.colors.text }]}>
+        Connect Your WhatsApp
+      </Text>
+
+      <TextInput
+        style={[
+          styles.input,
+          { color: theme.colors.text, borderColor: theme.colors.border },
+        ]}
+        placeholder="Phone Number (e.g., 15551234567)"
+        placeholderTextColor="gray"
+        keyboardType="phone-pad"
+        value={phone}
+        onChangeText={setPhone}
+      />
+
+      <Button
+        title={loading ? 'Connecting...' : 'Connect'}
+        onPress={handleConnect}
+        disabled={loading}
+      />
+
+      {error && <Text style={styles.errorText}>{error}</Text>}
+    </>
   );
 
   const renderQrOrLinkView = () => (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.headerTitle}>Link with {codeMode === 'qr' ? 'QR Code' : 'Phone Number'}</Text>
-      <View style={styles.card}>
-        {codeMode === 'qr' ? (
-          <>
-            <Text style={styles.instruction}>1. Open WhatsApp on your phone</Text>
-            <Text style={styles.instruction}>
-              2. Tap <Text style={styles.bold}>More options</Text> >{' '}
-              <Text style={styles.bold}>Linked devices</Text>
-            </Text>
-            <Text style={styles.instruction}>
-              3. Tap <Text style={styles.bold}>LINK A DEVICE</Text>
-            </Text>
-            <Text style={styles.instruction}>
-              4. Point your phone to this screen to capture the code
-            </Text>
-            <View style={styles.qrContainer}>
-              {qrCode ? (
-                <QRCode value={qrCode} size={250} backgroundColor="#FFF" color="#111B21" />
-              ) : (
-                <ActivityIndicator size="large" color="#00A884" />
-              )}
-            </View>
-          </>
-        ) : (
-          <>
-            <Text style={styles.instruction}>
-              Open WhatsApp on your phone, go to Linked Devices > Link with phone number, and enter this code.
-            </Text>
-            <Text style={styles.linkCodeText}>{linkCode || '...'}</Text>
-            <Text style={styles.instruction}>Waiting for you to confirm on your phone...</Text>
-          </>
-        )}
-        {error && <Text style={styles.errorText}>{error}</Text>}
-      </View>
-      <TouchableOpacity style={styles.switchButton} onPress={() => setCodeMode(codeMode === 'qr' ? 'link' : 'qr')}>
-        <Text style={styles.switchButtonText}>
-          {codeMode === 'qr' ? 'Link with phone number instead' : 'Scan QR code instead'}
+    <>
+      {loading && <ActivityIndicator size="large" color={theme.colors.primary} />}
+      {error && <Text style={styles.errorText}>{error}</Text>}
+
+      {codeMode === 'qr' && qrCode && (
+        <View style={styles.qrContainer}>
+          <Text style={[styles.instruction, { color: theme.colors.text }]}>
+            Scan this QR code in WhatsApp → Linked Devices → Link a Device
+          </Text>
+          <QRCode value={qrCode} size={250} />
+          <TouchableOpacity onPress={() => setCodeMode('link')}>
+            <Text style={styles.switchLink}>Link with phone number instead</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {codeMode === 'link' && linkCode && (
+        <View style={styles.qrContainer}>
+          <Text style={[styles.instruction, { color: theme.colors.text }]}>
+            Enter this code in WhatsApp → Linked Devices → Link with phone number
+          </Text>
+          <Text style={styles.linkCode}>{linkCode}</Text>
+          <TouchableOpacity onPress={() => setCodeMode('qr')}>
+            <Text style={styles.switchLink}>Scan QR code instead</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {codeMode === 'link' && !linkCode && !loading && (
+        <Text style={[styles.instruction, { color: theme.colors.text }]}>
+          Waiting for link code...
         </Text>
-      </TouchableOpacity>
-    </ScrollView>
+      )}
+    </>
   );
 
-  const renderContent = () => {
-    return viewMode === 'phoneInput' ? renderPhoneInputView() : renderQrOrLinkView();
-  };
-
-  return <View style={{ flex: 1, backgroundColor: '#111B21' }}>{renderContent()}</View>;
+  return (
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {viewMode === 'phoneInput' ? renderPhoneInputView() : renderQrOrLinkView()}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#111B21',
   },
-  headerTitle: {
-    fontSize: 22,
-    color: '#FFF',
-    fontWeight: '600',
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
     marginBottom: 20,
-    textAlign: 'center',
-  },
-  card: {
-    backgroundColor: '#202C33',
-    borderRadius: 12,
-    padding: 25,
-    width: '100%',
-    alignItems: 'center',
-  },
-  instruction: {
-    color: '#8696A0',
-    fontSize: 16,
-    textAlign: 'left',
-    marginBottom: 12,
-    width: '100%',
   },
   input: {
     width: '100%',
     height: 50,
-    backgroundColor: '#1F2C34',
+    borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 15,
     marginBottom: 20,
     fontSize: 16,
-    color: '#FFF',
-    borderWidth: 1,
-    borderColor: '#8696A0',
   },
-  connectButton: {
-    backgroundColor: '#00A884',
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    width: '100%',
-  },
-  connectButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  qrContainer: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    minHeight: 270,
-    minWidth: 270,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  linkCodeText: {
-    fontSize: 32,
-    color: '#FFF',
-    fontWeight: 'bold',
-    letterSpacing: 8,
+  feedback: {
     marginVertical: 20,
   },
   errorText: {
-    color: '#F15C6D',
-    marginTop: 20,
+    color: 'red',
+    marginVertical: 10,
     textAlign: 'center',
+  },
+  qrContainer: {
+    alignItems: 'center',
+    marginTop: 30,
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+  },
+  instruction: {
+    textAlign: 'center',
+    marginBottom: 15,
     fontSize: 14,
   },
-  switchButton: {
-    marginTop: 30,
+  linkCode: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#075E54',
+    letterSpacing: 4,
+    marginBottom: 20,
   },
-  switchButtonText: {
-    color: '#00A884',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  footerText: {
-    color: '#00A884',
-    marginLeft: 10,
+  switchLink: {
+    color: '#075E54',
+    marginTop: 20,
     fontSize: 16,
   },
 });
