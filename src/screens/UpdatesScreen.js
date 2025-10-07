@@ -35,7 +35,7 @@ const StatusItem = ({ name, time, avatar, isMyStatus = false }) => (
 );
 
 export default function UpdatesScreen() {
-  const { phone } = useSocket();
+  const { phone, isConnected } = useSocket();
 
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +57,6 @@ export default function UpdatesScreen() {
     }
   }, [phone]);
 
-  const { phone, isConnected } = useSocket();
   useEffect(() => {
     if (isConnected) {
       fetchStatuses();

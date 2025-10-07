@@ -15,7 +15,7 @@ import Avatar from '../components/Avatar';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export default function ChatsScreen() {
-  const { messages, phone } = useSocket();
+  const { messages, phone, isConnected } = useSocket(); // ✅ Added isConnected
   const navigation = useNavigation();
 
   const [chats, setChats] = useState([]);
@@ -33,8 +33,9 @@ export default function ChatsScreen() {
     try {
       setError(null);
       const { data } = await getChats(phone);
-      // Sort chats by timestamp descending
-      const sortedChats = (data.chats || []).sort((a, b) => (b.conversationTimestamp || 0) - (a.conversationTimestamp || 0));
+      const sortedChats = (data.chats || []).sort(
+        (a, b) => (b.conversationTimestamp || 0) - (a.conversationTimestamp || 0)
+      );
       setChats(sortedChats);
     } catch (err) {
       const errorMessage =
@@ -45,7 +46,6 @@ export default function ChatsScreen() {
     }
   }, [phone]);
 
-  const { messages, phone, isConnected } = useSocket();
   useEffect(() => {
     if (isConnected) {
       fetchChatList();
@@ -71,8 +71,7 @@ export default function ChatsScreen() {
           updatedChats.unshift(existingChat);
           return updatedChats;
         } else {
-          // If chat is new, refetch the whole list to get its name, etc.
-          fetchChatList();
+          fetchChatList(); // Fetch if it’s a new chat
           return prevChats;
         }
       });
