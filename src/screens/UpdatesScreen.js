@@ -12,6 +12,7 @@ import {
   Button,
   RefreshControl,
 } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
 import { getStatuses, postStatus } from '../services/api';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -35,7 +36,8 @@ const StatusItem = ({ name, time, avatar, isMyStatus = false }) => (
 );
 
 export default function UpdatesScreen() {
-  const { phone, isConnected } = useSocket();
+  const { user, isConnected } = useAuth();
+  const phone = user?.phone;
 
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);

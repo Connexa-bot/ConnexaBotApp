@@ -3,13 +3,16 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../contexts/AuthContext';
 
 // Screens
+import SplashScreen from '../screens/SplashScreen'; // Use the new splash screen
+import WelcomeScreen from '../screens/WelcomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import ChatViewScreen from '../screens/ChatViewScreen';
 import MainTabNavigator from './MainTabNavigator';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator();
+
 
 const MainAppHeader = () => (
   <View
@@ -56,15 +59,27 @@ function MainAppStack() {
 }
 
 export default function AppNavigator() {
-  const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isConnected, isReconnecting } = useAuth();
+
+    if (isReconnecting) {
+        return <SplashScreen />;
+    }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {isAuthenticated ? (
+      {isAuthenticated && isConnected ? (
         <Stack.Screen name="MainApp" component={MainAppStack} />
       ) : (
-        <Stack.Screen name="Login" component={LoginScreen} />
+        <>
+          <Stack.Screen name="Welcome" component={WelcomeScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+        </>
       )}
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+    // Styles for header, etc. can remain if needed by other components in this file.
+    // For now, removing the reconnecting screen styles as the component is removed.
+});

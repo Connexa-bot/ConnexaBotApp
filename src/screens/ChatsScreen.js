@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Button,
 } from 'react-native';
+import { useAuth } from '../contexts/AuthContext'; // Correct hook for auth state
 import { useSocket } from '../contexts/SocketContext';
 import { getChats } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
@@ -15,12 +16,14 @@ import Avatar from '../components/Avatar';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export default function ChatsScreen() {
-  const { messages, phone, isConnected } = useSocket(); // ✅ Added isConnected
+  const { user, isConnected } = useAuth(); // Use AuthContext for connection status and user info
+  const { messages } = useSocket();
   const navigation = useNavigation();
 
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const phone = user?.phone; // Get phone from user object
 
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
