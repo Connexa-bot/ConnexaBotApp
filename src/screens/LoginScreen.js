@@ -32,16 +32,16 @@ export default function LoginScreen() {
     }
     setLoading(true);
     setError(null);
-    setIsConnecting(true);
     try {
       const { data } = await connectToServer(phone);
-      // The backend will start generating the QR code.
-      // We don't need to wait for it here.
-      // The checkStatus function will poll for it.
-      const { data } = await connectToServer(phone);
-      setQrCode(data.qrCode);
-      setLinkCode(data.linkCode);
-      setViewMode('qrOrLink');
+      if (data.qrCode) {
+        setQrCode(data.qrCode);
+        setLinkCode(data.linkCode);
+        setViewMode('qrOrLink');
+        setIsConnecting(true); // Start polling for connection status
+      } else {
+        setError('Could not retrieve QR code. Please try again.');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'An error occurred.');
     } finally {
@@ -59,6 +59,7 @@ export default function LoginScreen() {
       }
     } catch (err) {
       console.error('Status check failed:', err.message);
+      // Don't set a generic error here, as it might overwrite a more specific one.
     }
   }, [isConnecting, phone, login]);
 
