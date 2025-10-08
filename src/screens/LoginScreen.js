@@ -46,7 +46,7 @@ export default function LoginScreen() {
       if (data.qrCode || data.linkCode) {
         setQrCode(data.qrCode);
         setLinkCode(data.linkCode);
-        setViewMode('qrOrLink');
+        setCurrentView('qrOrLink'); // Corrected from setViewMode to setCurrentView
         setIsConnecting(true);
       } else {
         setError(data.message || 'Could not retrieve QR code. Please try again.');
