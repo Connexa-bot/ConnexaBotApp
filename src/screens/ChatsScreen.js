@@ -32,10 +32,12 @@ export default function ChatsScreen() {
   };
 
   const fetchChatList = useCallback(async () => {
+    if (!phone) return;
     setLoading(true);
     try {
       setError(null);
       const { data } = await getChats(phone);
+      // The backend now provides the data in the correct shape, so we can simplify this.
       const sortedChats = (data.chats || []).sort(
         (a, b) => (b.conversationTimestamp || 0) - (a.conversationTimestamp || 0)
       );
@@ -67,7 +69,8 @@ export default function ChatsScreen() {
 
         if (existingChatIndex !== -1) {
           const existingChat = { ...updatedChats[existingChatIndex] };
-          existingChat.lastMessage = newMessage.content;
+          // Standardize the lastMessage object to match the initial fetch
+          existingChat.lastMessage = { text: newMessage.content };
           existingChat.conversationTimestamp = Math.floor(Date.now() / 1000);
           existingChat.unreadCount = (existingChat.unreadCount || 0) + 1;
           updatedChats.splice(existingChatIndex, 1);
