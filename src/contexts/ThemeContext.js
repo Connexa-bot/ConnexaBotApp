@@ -19,6 +19,14 @@ const darkColors = {
   notification: '#128C7E',
 };
 
+// ✅ Add font definitions (used internally by React Navigation)
+const fonts = {
+  regular: { fontFamily: 'System', fontWeight: '400' },
+  medium: { fontFamily: 'System', fontWeight: '500' },
+  bold: { fontFamily: 'System', fontWeight: '700' },
+  heavy: { fontFamily: 'System', fontWeight: '800' },
+};
+
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
@@ -27,6 +35,7 @@ export const ThemeProvider = ({ children }) => {
   const theme = {
     dark: isDarkMode,
     colors: isDarkMode ? darkColors : lightColors,
+    fonts, // ✅ Add this line
   };
 
   return (

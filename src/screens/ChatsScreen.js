@@ -1,26 +1,48 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useThemeContext } from '../contexts/ThemeContext';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
+  Button,
+} from 'react-native';
+import { useAuth } from '../contexts/AuthContext'; // Correct hook for auth state
 import { useSocket } from '../contexts/SocketContext';
 import { getChats } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
+import Avatar from '../components/Avatar';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function ChatsScreen() {
-  const { theme } = useThemeContext();
-  const { messages, phone } = useSocket();
+  const { user, isConnected } = useAuth(); // Use AuthContext for connection status and user info
+  const { messages } = useSocket();
   const navigation = useNavigation();
 
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const phone = user?.phone; // Get phone from user object
+
+  const formatTime = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   const fetchChatList = useCallback(async () => {
+    setLoading(true);
     try {
       setError(null);
       const { data } = await getChats(phone);
-      setChats(data.chats || []);
+      const sortedChats = (data.chats || []).sort(
+        (a, b) => (b.conversationTimestamp || 0) - (a.conversationTimestamp || 0)
+      );
+      setChats(sortedChats);
     } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch chats.';
+      const errorMessage =
+        err.response?.data?.error || err.message || 'Failed to fetch chats.';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -28,8 +50,10 @@ export default function ChatsScreen() {
   }, [phone]);
 
   useEffect(() => {
-    fetchChatList();
-  }, [fetchChatList]);
+    if (isConnected) {
+      fetchChatList();
+    }
+  }, [isConnected, fetchChatList]);
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
@@ -37,65 +61,90 @@ export default function ChatsScreen() {
       const newMessage = lastMessage.data;
       const chatId = newMessage.from;
 
-      setChats(prevChats => {
-        const existingChatIndex = prevChats.findIndex(chat => chat.id === chatId);
+      setChats((prevChats) => {
+        const existingChatIndex = prevChats.findIndex((chat) => chat.id === chatId);
         let updatedChats = [...prevChats];
 
         if (existingChatIndex !== -1) {
-          // Move existing chat to top
           const existingChat = { ...updatedChats[existingChatIndex] };
-          existingChat.lastMessage = newMessage.content; // Assuming we add this field
-          existingChat.time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          existingChat.lastMessage = newMessage.content;
+          existingChat.conversationTimestamp = Math.floor(Date.now() / 1000);
+          existingChat.unreadCount = (existingChat.unreadCount || 0) + 1;
           updatedChats.splice(existingChatIndex, 1);
           updatedChats.unshift(existingChat);
           return updatedChats;
         } else {
-          // If chat is new, refetch the whole list to get its name, etc.
-          fetchChatList();
-          return prevChats; // Return old state until fetch completes
+          fetchChatList(); // Fetch if it’s a new chat
+          return prevChats;
         }
       });
     }
   }, [messages, fetchChatList]);
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => navigation.navigate('ChatView', { chatId: item.id, chatName: item.name, phone })}>
-        <View style={[styles.chatItem, { borderBottomColor: theme.colors.border }]}>
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate('ChatView', {
+          chatId: item.id,
+          chatName: item.name,
+          phone,
+        })
+      }
+    >
+      <View style={styles.chatItem}>
+        <Avatar name={item.name} />
         <View style={styles.chatContent}>
-            <Text style={[styles.chatName, { color: theme.colors.text }]}>{item.name}</Text>
-            <Text style={[styles.chatMessage, { color: theme.colors.text }]} numberOfLines={1}>
-            {item.lastMessage || `Unread: ${item.unread}`}
-            </Text>
+          <Text style={styles.chatName}>{item.name || 'Unknown'}</Text>
+          <Text style={styles.chatMessage} numberOfLines={1}>
+            {item.lastMessage?.text || 'No messages yet'}
+          </Text>
         </View>
-        <Text style={[styles.chatTime, { color: theme.colors.text }]}>{item.time || ''}</Text>
+        <View style={styles.chatMeta}>
+          <Text style={styles.chatTime}>
+            {formatTime(item.conversationTimestamp)}
+          </Text>
+          {item.unreadCount > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadText}>{item.unreadCount}</Text>
+            </View>
+          )}
         </View>
+      </View>
     </TouchableOpacity>
   );
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+      <View style={[styles.centered, { backgroundColor: '#111B21' }]}>
+        <ActivityIndicator size="large" color="#00A884" />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={{ color: 'red' }}>{error}</Text>
+      <View style={[styles.centered, { backgroundColor: '#111B21' }]}>
+        <Text style={{ color: '#F15C6D' }}>{error}</Text>
+        <Button title="Retry" onPress={fetchChatList} color="#00A884" />
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={styles.container}>
       <FlatList
         data={chats}
         renderItem={renderItem}
-        keyExtractor={item => item.id}
-        ListEmptyComponent={<Text style={[styles.emptyText, {color: theme.colors.text}]}>No chats found.</Text>}
+        keyExtractor={(item) => item.id}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No chats found.</Text>
+        }
+        onRefresh={fetchChatList}
+        refreshing={loading}
       />
+      <TouchableOpacity style={styles.fab}>
+        <MaterialIcons name="chat" size={24} color="#FFF" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -105,32 +154,71 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#111B21',
   },
   container: {
     flex: 1,
+    backgroundColor: '#111B21',
   },
   chatItem: {
     flexDirection: 'row',
-    padding: 15,
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
     borderBottomWidth: 1,
+    borderBottomColor: 'rgba(134, 150, 160, 0.15)',
   },
   chatContent: {
     flex: 1,
+    marginLeft: 15,
   },
   chatName: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#E9EDEF',
   },
   chatMessage: {
-    fontSize: 14,
+    fontSize: 15,
+    color: '#8696A0',
     marginTop: 2,
+  },
+  chatMeta: {
+    alignItems: 'flex-end',
   },
   chatTime: {
     fontSize: 12,
+    color: '#8696A0',
+  },
+  unreadBadge: {
+    backgroundColor: '#25D366',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  unreadText: {
+    color: '#111B21',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   emptyText: {
-      textAlign: 'center',
-      marginTop: 50,
-      fontSize: 16,
-  }
+    textAlign: 'center',
+    marginTop: 50,
+    fontSize: 16,
+    color: '#8696A0',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    backgroundColor: '#00A884',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+  },
 });

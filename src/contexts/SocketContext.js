@@ -1,51 +1,67 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { getSocket, initSocket, closeSocket } from '../services/socket';
+import {
+  initSocket,
+  closeSocket,
+  addMessageListener,
+  removeMessageListener,
+  addConnectionStatusListener,
+  removeConnectionStatusListener,
+} from '../services/socket';
 import { getAutoReply } from '../services/autoReply';
 import { sendMessage } from '../services/api';
 
 const SocketContext = createContext();
 
-export const SocketProvider = ({ children, phone, serverUrl }) => {
-  const [socket, setSocket] = useState(null);
+export const SocketProvider = ({ children, phone }) => {
   const [messages, setMessages] = useState([]);
+  const [isConnected, setIsConnected] = useState(false);
 
-  const handleAutoReply = useCallback(async (messageData) => {
-    if (messageData.msg.key.fromMe) {
-      return; // Don't reply to our own messages
-    }
-
-    const replyText = getAutoReply(messageData.content);
-    if (replyText) {
-      try {
-        await sendMessage(phone, messageData.from, replyText);
-      } catch (error) {
-        console.error('Failed to send auto-reply:', error);
+  const handleAutoReply = useCallback(
+    async (messageData) => {
+      if (messageData.msg.key.fromMe) {
+        return; // Don't reply to our own messages
       }
-    }
-  }, [phone]);
+
+      const replyText = getAutoReply(messageData.content);
+      if (replyText) {
+        try {
+          await sendMessage(phone, messageData.from, replyText);
+        } catch (error) {
+          console.error('Failed to send auto-reply:', error);
+        }
+      }
+    },
+    [phone]
+  );
 
   useEffect(() => {
-    if (phone && serverUrl) {
-      initSocket(serverUrl, phone);
-      const newSocket = getSocket();
-      setSocket(newSocket);
+    if (phone) {
+      initSocket(phone);
 
-      newSocket.onmessage = (event) => {
-        const parsedData = JSON.parse(event.data);
+      const handleNewMessage = (parsedData) => {
         if (parsedData.event === 'new_message') {
           setMessages((prevMessages) => [...prevMessages, parsedData]);
           handleAutoReply(parsedData.data);
         }
       };
-    }
 
-    return () => {
-      closeSocket();
-    };
-  }, [phone, serverUrl, handleAutoReply]);
+      const handleConnectionStatus = (status) => {
+          setIsConnected(status);
+      }
+
+      addMessageListener(handleNewMessage);
+      addConnectionStatusListener(handleConnectionStatus);
+
+      return () => {
+        removeMessageListener(handleNewMessage);
+        removeConnectionStatusListener(handleConnectionStatus);
+        closeSocket();
+      };
+    }
+  }, [phone, handleAutoReply]);
 
   return (
-    <SocketContext.Provider value={{ socket, messages, phone }}>
+    <SocketContext.Provider value={{ messages, phone, isConnected }}>
       {children}
     </SocketContext.Provider>
   );
