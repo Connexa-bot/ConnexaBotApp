@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   StyleSheet,
   ActivityIndicator,
   Alert,
@@ -13,6 +12,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { useThemeContext } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { connectToServer, getConnectionStatus } from '../services/api';
+import WhatsappLogo from '../../assets/whatsapp-logo.svg'; // Import the logo
 
 export default function LoginScreen() {
   const { theme } = useThemeContext();
@@ -25,7 +25,8 @@ export default function LoginScreen() {
   const [error, setError] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const [viewMode, setViewMode] = useState('phoneInput');
+  // New state to manage the 3-step flow: 'initial', 'numberInput', 'qrOrLink'
+  const [currentView, setCurrentView] = useState('initial');
   const [codeMode, setCodeMode] = useState('qr');
 
   const handleConnect = useCallback(async () => {
@@ -77,10 +78,27 @@ export default function LoginScreen() {
     }
   }, [isConnecting, checkStatus]);
 
+  const renderInitialView = () => (
+    <View style={styles.initialView}>
+      <View style={styles.logoContainer}>
+        <WhatsappLogo width={150} height={150} />
+      </View>
+      <TouchableOpacity
+        style={styles.connectButton}
+        onPress={() => setCurrentView('numberInput')}
+      >
+        <Text style={styles.connectButtonText}>Connect Account</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderPhoneInputView = () => (
-    <>
-      <Text style={[styles.title, { color: theme.colors.text }]}>
-        Connect Your WhatsApp
+    <View style={styles.phoneInputView}>
+      <Text style={[styles.title, { color: theme.colors.text, fontSize: 20, marginBottom: 10 }]}>
+        Enter your phone number
+      </Text>
+      <Text style={[styles.instructionText, { color: theme.colors.text, textAlign: 'center', marginBottom: 20 }]}>
+        You'll need to confirm this number on your primary phone.
       </Text>
       <TextInput
         style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
@@ -90,9 +108,31 @@ export default function LoginScreen() {
         value={phone}
         onChangeText={setPhone}
       />
-      <Button title={loading ? 'Connecting...' : 'Connect'} onPress={handleConnect} disabled={loading} />
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={[styles.halfButton, { marginRight: 10 }]}
+          onPress={() => {
+            setCodeMode('qr');
+            handleConnect();
+          }}
+          disabled={loading}
+        >
+          <Text style={styles.connectButtonText}>Get QR</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.halfButton}
+          onPress={() => {
+            setCodeMode('link');
+            handleConnect();
+          }}
+          disabled={loading}
+        >
+          <Text style={styles.connectButtonText}>Get Code</Text>
+        </TouchableOpacity>
+      </View>
+      {loading && <ActivityIndicator style={{ marginTop: 20 }} size="large" color={theme.colors.primary} />}
       {error && <Text style={styles.errorText}>{error}</Text>}
-    </>
+    </View>
   );
 
   const renderQrOrLinkView = () => (
@@ -117,9 +157,6 @@ export default function LoginScreen() {
               <QRCode value={qrCode} size={230} />
             </View>
           </View>
-          <TouchableOpacity onPress={() => setCodeMode('link')}>
-            <Text style={styles.switchLink}>Link with phone number instead</Text>
-          </TouchableOpacity>
         </>
       )}
 
@@ -129,17 +166,30 @@ export default function LoginScreen() {
             Enter this code on your primary phone
           </Text>
           <Text style={styles.linkCode}>{linkCode}</Text>
-          <TouchableOpacity onPress={() => setCodeMode('qr')}>
-            <Text style={styles.switchLink}>Scan QR code instead</Text>
-          </TouchableOpacity>
         </View>
       )}
+
+      <TouchableOpacity onPress={() => setCurrentView('numberInput')}>
+        <Text style={styles.switchLink}>Wrong number?</Text>
+      </TouchableOpacity>
     </View>
   );
 
+  const renderContent = () => {
+    switch (currentView) {
+      case 'numberInput':
+        return renderPhoneInputView();
+      case 'qrOrLink':
+        return renderQrOrLinkView();
+      case 'initial':
+      default:
+        return renderInitialView();
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {viewMode === 'phoneInput' ? renderPhoneInputView() : renderQrOrLinkView()}
+      {renderContent()}
     </View>
   );
 }
@@ -147,9 +197,31 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
+  },
+  initialView: {
+    flex: 1,
+    justifyContent: 'space-between', // Pushes logo to top, button to bottom
+    alignItems: 'center',
+  },
+  logoContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    transform: [{ translateY: -50 }], // Move logo up
+  },
+  connectButton: {
+    backgroundColor: '#00A884',
+    paddingVertical: 12,
+    borderRadius: 25,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  connectButtonText: {
+    color: '#111B21',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   qrViewContainer: {
     flex: 1,
@@ -157,6 +229,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     width: '100%',
+  },
+  phoneInputView: {
+    flex: 1,
+    justifyContent: 'center',
+    width: '100%',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  halfButton: {
+    backgroundColor: '#00A884',
+    paddingVertical: 12,
+    borderRadius: 25,
+    flex: 1,
+    alignItems: 'center',
   },
   instructionList: {
     alignSelf: 'flex-start',
