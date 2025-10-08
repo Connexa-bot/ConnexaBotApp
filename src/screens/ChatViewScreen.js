@@ -12,6 +12,7 @@ import {
   ImageBackground,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
 import { getMessages, sendMessage } from '../services/api';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -27,7 +28,9 @@ const ChatViewHeader = ({ chatName }) => (
 );
 
 export default function ChatViewScreen() {
-  const { messages: socketMessages, phone } = useSocket();
+  const { user } = useAuth();
+  const { messages: socketMessages } = useSocket();
+  const phone = user?.phone;
   const route = useRoute();
   const navigation = useNavigation();
   const { chatId, chatName } = route.params;

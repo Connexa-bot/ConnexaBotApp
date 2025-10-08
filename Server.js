@@ -232,7 +232,21 @@ async function startBot(phone, isReconnect = false) {
 // --- WhatsApp Data Fetchers ---
 const fetchChats = async (store) => {
   try {
-    return store.chats.all();
+    const chats = store.chats.all();
+    // Manually enrich chats with the last message from the message store
+    const enrichedChats = Object.values(chats).map(chat => {
+      if (store.messages[chat.id]) {
+          const lastMsg = Object.values(store.messages[chat.id]).sort((a, b) => b.messageTimestamp - a.messageTimestamp)[0];
+          if (lastMsg) {
+            chat.lastMessage = {
+              text: lastMsg.message?.conversation || lastMsg.message?.extendedTextMessage?.text || '[media]',
+              timestamp: lastMsg.messageTimestamp
+            };
+          }
+      }
+      return chat;
+    });
+    return enrichedChats;
   } catch (err) {
     console.error("Failed to fetch chats:", err);
     return [];
