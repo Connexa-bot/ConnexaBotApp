@@ -35,17 +35,18 @@ export const AuthProvider = ({ children }) => {
       try {
         phone = await SecureStore.getItemAsync('userPhone');
         if (phone) {
-          console.log(`Found stored phone: ${phone}. Attempting to verify connection.`);
-          // Attempt to verify, but don't log out on failure.
-          // Just set the user and let the navigator decide what to do based on isConnected state.
-          await verifyConnection(phone);
+          console.log(`Found stored phone: ${phone}.`);
+          const connectionActive = await verifyConnection(phone);
+          if (!connectionActive) {
+            console.log('Session verification failed. Logging out.');
+            await logout();
+          }
         } else {
           console.log('No stored user phone found.');
         }
       } catch (e) {
         console.error('Failed to load user from secure store', e);
       } finally {
-        // Ensure we always stop loading/reconnecting indicators
         setIsLoading(false);
         setIsReconnecting(false);
       }
@@ -58,8 +59,6 @@ export const AuthProvider = ({ children }) => {
     console.log(`Attempting to log in with ${phone}...`);
     setIsLoading(true);
     try {
-      // We assume the connection is established on the LoginScreen
-      // and this function is called upon success.
       await SecureStore.setItemAsync('userPhone', phone);
       setUser({ phone });
       setIsConnected(true);
@@ -76,9 +75,6 @@ export const AuthProvider = ({ children }) => {
     console.log('Logging out...');
     setIsLoading(true);
     try {
-      // Also need to inform the backend if possible
-      const phone = await SecureStore.getItemAsync('userPhone');
-      // await apiClient.post('/logout', { phone }); // Optional: Depends on backend implementation
       await SecureStore.deleteItemAsync('userPhone');
     } catch (e) {
       console.error('Failed to remove user from secure store', e);
@@ -87,6 +83,15 @@ export const AuthProvider = ({ children }) => {
       setIsConnected(false);
       setIsLoading(false);
       console.log('User logged out, session cleared.');
+    }
+  }, []);
+
+  const clearPreviousSession = useCallback(async () => {
+    try {
+      await SecureStore.deleteItemAsync('userPhone');
+      console.log('Cleared previous session data from store.');
+    } catch (e) {
+      console.error('Failed to clear previous session from secure store', e);
     }
   }, []);
 
@@ -100,7 +105,8 @@ export const AuthProvider = ({ children }) => {
         isReconnecting,
         login,
         logout,
-        verifyConnection
+        verifyConnection,
+        clearPreviousSession,
       }}
     >
       {children}

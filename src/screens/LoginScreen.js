@@ -16,7 +16,7 @@ import WhatsappLogo from '../../assets/whatsapp-logo.svg'; // Import the logo
 
 export default function LoginScreen() {
   const { theme } = useThemeContext();
-  const { login } = useAuth();
+  const { login, clearPreviousSession } = useAuth();
 
   const [phone, setPhone] = useState('');
   const [qrCode, setQrCode] = useState(null);
@@ -37,6 +37,8 @@ export default function LoginScreen() {
     setLoading(true);
     setError(null);
     try {
+      // Clear any old session before attempting a new one
+      await clearPreviousSession();
       const { data } = await connectToServer(phone);
       if (data.connected) {
         await login(phone); // Await the login to ensure session is saved
@@ -56,7 +58,7 @@ export default function LoginScreen() {
     } finally {
       setLoading(false);
     }
-  }, [phone, login]);
+  }, [phone, login, clearPreviousSession]);
 
   const checkStatus = useCallback(async () => {
     if (!isConnecting || !phone) return;
