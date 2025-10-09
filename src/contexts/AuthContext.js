@@ -1,112 +1,106 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { connectToServer, getConnectionStatus } from '../services/api';
+import { connectToServer, getConnectionStatus, logoutWhatsApp } from '../services/api';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isReconnecting, setIsReconnecting] = useState(true);
-
-  const verifyConnection = useCallback(async (phone) => {
-    console.log(`Verifying connection for ${phone}...`);
-    try {
-      const { data } = await getConnectionStatus(phone);
-      console.log('Connection status:', data);
-      if (data.connected) {
-        setUser({ phone });
-        setIsConnected(true);
-        console.log('Session restored and connection verified.');
-        return true;
-      }
-    } catch (error) {
-      console.error('Connection verification failed:', error.message);
-    }
-    return false;
-  }, []);
+  const [loading, setLoading] = useState(true);
+  const [qrCode, setQrCode] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
   useEffect(() => {
-    const restoreSession = async () => {
-      console.log('Attempting to restore session...');
-      setIsReconnecting(true);
-      let phone = null;
-      try {
-        phone = await SecureStore.getItemAsync('userPhone');
-        if (phone) {
-          console.log(`Found stored phone: ${phone}.`);
-          const connectionActive = await verifyConnection(phone);
-          if (!connectionActive) {
-            console.log('Session verification failed. Logging out.');
-            await logout();
-          }
+    loadStoredUser();
+  }, []);
+
+  const loadStoredUser = async () => {
+    try {
+      const storedPhone = await SecureStore.getItemAsync('userPhone');
+      if (storedPhone) {
+        const status = await checkStatus(storedPhone);
+        if (status === 'connected') {
+          setUser({ phone: storedPhone });
+          setConnectionStatus('connected');
         } else {
-          console.log('No stored user phone found.');
+          await SecureStore.deleteItemAsync('userPhone');
         }
-      } catch (e) {
-        console.error('Failed to load user from secure store', e);
-      } finally {
-        setIsLoading(false);
-        setIsReconnecting(false);
       }
-    };
-
-    restoreSession();
-  }, [verifyConnection]);
-
-  const login = useCallback(async (phone) => {
-    console.log(`Attempting to log in with ${phone}...`);
-    setIsLoading(true);
-    try {
-      await SecureStore.setItemAsync('userPhone', phone);
-      setUser({ phone });
-      setIsConnected(true);
-      console.log('Login successful, user and connection state set.');
-    } catch (e) {
-      console.error('Failed to save user to secure store', e);
-      setIsConnected(false);
+    } catch (error) {
+      console.error('Error loading stored user:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, []);
+  };
 
-  const logout = useCallback(async () => {
-    console.log('Logging out...');
-    setIsLoading(true);
+  const checkStatus = async (phone) => {
     try {
-      await SecureStore.deleteItemAsync('userPhone');
-    } catch (e) {
-      console.error('Failed to remove user from secure store', e);
+      const response = await getConnectionStatus(phone);
+      return response.data.status;
+    } catch (error) {
+      console.error('Error checking status:', error);
+      return 'disconnected';
+    }
+  };
+
+  const login = async (phone) => {
+    try {
+      setLoading(true);
+      setConnectionStatus('connecting');
+      const response = await connectToServer(phone);
+      
+      if (response.data.qr) {
+        setQrCode(response.data.qr);
+        setConnectionStatus('qr_ready');
+        return { success: true, qr: response.data.qr };
+      } else if (response.data.status === 'connected') {
+        await SecureStore.setItemAsync('userPhone', phone);
+        setUser({ phone });
+        setConnectionStatus('connected');
+        setQrCode(null);
+        return { success: true, connected: true };
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setConnectionStatus('error');
+      return { success: false, error: error.message };
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      if (user?.phone) {
+        await logoutWhatsApp(user.phone);
+        await SecureStore.deleteItemAsync('userPhone');
+      }
       setUser(null);
-      setIsConnected(false);
-      setIsLoading(false);
-      console.log('User logged out, session cleared.');
+      setQrCode(null);
+      setConnectionStatus('disconnected');
+    } catch (error) {
+      console.error('Logout error:', error);
     }
-  }, []);
+  };
 
-  const clearPreviousSession = useCallback(async () => {
-    try {
-      await SecureStore.deleteItemAsync('userPhone');
-      console.log('Cleared previous session data from store.');
-    } catch (e) {
-      console.error('Failed to clear previous session from secure store', e);
+  const updateConnectionStatus = (status) => {
+    setConnectionStatus(status);
+    if (status === 'connected' && qrCode) {
+      setQrCode(null);
     }
-  }, []);
+  };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
-        isConnected,
-        isLoading,
-        isReconnecting,
+        loading,
+        qrCode,
+        connectionStatus,
         login,
         logout,
-        verifyConnection,
-        clearPreviousSession,
+        updateConnectionStatus,
+        setUser,
       }}
     >
       {children}
@@ -114,4 +108,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+};

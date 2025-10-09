@@ -1,48 +1,65 @@
-import React, { createContext, useContext, useState } from 'react';
-import { Appearance } from 'react-native';
-
-const lightColors = {
-  primary: '#075E54',
-  background: '#FFFFFF',
-  card: '#FFFFFF',
-  text: '#000000',
-  border: '#ECE5DD',
-  notification: '#128C7E',
-};
-
-const darkColors = {
-  primary: '#075E54',
-  background: '#121212',
-  card: '#1E1E1E',
-  text: '#FFFFFF',
-  border: '#272727',
-  notification: '#128C7E',
-};
-
-// ✅ Add font definitions (used internally by React Navigation)
-const fonts = {
-  regular: { fontFamily: 'System', fontWeight: '400' },
-  medium: { fontFamily: 'System', fontWeight: '500' },
-  bold: { fontFamily: 'System', fontWeight: '700' },
-  heavy: { fontFamily: 'System', fontWeight: '800' },
-};
+import React, { createContext, useState, useContext } from 'react';
+import { useColorScheme } from 'react-native';
 
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(Appearance.getColorScheme() === 'dark');
+  const systemColorScheme = useColorScheme();
+  const [theme, setTheme] = useState(systemColorScheme || 'light');
 
-  const theme = {
-    dark: isDarkMode,
-    colors: isDarkMode ? darkColors : lightColors,
-    fonts, // ✅ Add this line
+  const colors = {
+    light: {
+      primary: '#25D366',
+      background: '#FFFFFF',
+      secondaryBackground: '#F0F2F5',
+      chatBackground: '#EFEAE2',
+      text: '#000000',
+      secondaryText: '#667781',
+      border: '#E9EDEF',
+      messageSent: '#D9FDD3',
+      messageReceived: '#FFFFFF',
+      icon: '#54656F',
+      tabBar: '#F0F2F5',
+      header: '#008069',
+    },
+    dark: {
+      primary: '#25D366',
+      background: '#0B141A',
+      secondaryBackground: '#202C33',
+      chatBackground: '#0B141A',
+      text: '#E9EDEF',
+      secondaryText: '#8696A0',
+      border: '#2A3942',
+      messageSent: '#005C4B',
+      messageReceived: '#202C33',
+      icon: '#8696A0',
+      tabBar: '#1F2C34',
+      header: '#202C33',
+    },
+  };
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, isDarkMode, setIsDarkMode }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        colors: colors[theme],
+        toggleTheme,
+        isDark: theme === 'dark',
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
 };
 
-export const useThemeContext = () => useContext(ThemeContext);
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within ThemeProvider');
+  }
+  return context;
+};
