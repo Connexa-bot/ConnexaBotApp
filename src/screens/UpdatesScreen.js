@@ -1,9 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  TouchableOpacity, 
+  ActivityIndicator, 
+  RefreshControl,
+  Alert,
+  Modal,
+  TextInput,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import { Audio } from 'expo-av';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { getStatusUpdates } from '../services/api';
+import { 
+  getStatusUpdates, 
+  postTextStatus, 
+  postImageStatus, 
+  postVideoStatus, 
+  postAudioStatus 
+} from '../services/api';
 
 export default function UpdatesScreen() {
   const { colors } = useTheme();
@@ -11,6 +31,9 @@ export default function UpdatesScreen() {
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [statusText, setStatusText] = useState('');
+  const [posting, setPosting] = useState(false);
 
   useEffect(() => {
     loadStatuses();
@@ -20,7 +43,7 @@ export default function UpdatesScreen() {
     try {
       if (user?.phone) {
         const response = await getStatusUpdates(user.phone);
-        setStatuses(response.data.statuses || []);
+        setStatuses(response.data?.statuses || []);
       }
     } catch (error) {
       console.error('Error loading statuses:', error);
@@ -35,6 +58,80 @@ export default function UpdatesScreen() {
     loadStatuses();
   };
 
+  const handlePostTextStatus = async () => {
+    if (!statusText.trim()) {
+      Alert.alert('Error', 'Please enter some text');
+      return;
+    }
+
+    setPosting(true);
+    try {
+      await postTextStatus(user.phone, statusText);
+      setStatusText('');
+      setShowPostModal(false);
+      Alert.alert('Success', 'Status posted successfully');
+      loadStatuses();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to post status');
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const handlePostImageStatus = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        setPosting(true);
+        await postImageStatus(user.phone, result.assets[0].uri);
+        Alert.alert('Success', 'Image status posted successfully');
+        loadStatuses();
+        setPosting(false);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to post image status');
+      setPosting(false);
+    }
+  };
+
+  const handlePostVideoStatus = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        setPosting(true);
+        await postVideoStatus(user.phone, result.assets[0].uri);
+        Alert.alert('Success', 'Video status posted successfully');
+        loadStatuses();
+        setPosting(false);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to post video status');
+      setPosting(false);
+    }
+  };
+
+  const showStatusOptions = () => {
+    Alert.alert(
+      'Post Status',
+      'Choose status type',
+      [
+        { text: 'Text', onPress: () => setShowPostModal(true) },
+        { text: 'Image', onPress: handlePostImageStatus },
+        { text: 'Video', onPress: handlePostVideoStatus },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, styles.centerContainer, { backgroundColor: colors.background }]}>
@@ -44,6 +141,7 @@ export default function UpdatesScreen() {
   }
 
   return (
+    <View style={{flex: 1}}>
     <ScrollView 
       style={[styles.container, { backgroundColor: colors.background }]}
       refreshControl={
@@ -59,9 +157,10 @@ export default function UpdatesScreen() {
         
         <TouchableOpacity
           style={[styles.myStatus, { borderBottomColor: colors.border }]}
+          onPress={showStatusOptions}
         >
-          <View style={[styles.statusAvatar, { backgroundColor: colors.secondaryBackground }]}>
-            <Ionicons name="add" size={24} color={colors.icon} />
+          <View style={[styles.statusAvatar, { backgroundColor: colors.primary }]}>
+            <Ionicons name="add" size={24} color="#fff" />
           </View>
           <View style={styles.statusContent}>
             <Text style={[styles.statusName, { color: colors.text }]}>My status</Text>
@@ -85,7 +184,7 @@ export default function UpdatesScreen() {
             >
               <View style={[styles.statusAvatar, { borderColor: colors.primary, borderWidth: 2 }]}>
                 <Text style={[styles.avatarText, { color: colors.text }]}>
-                  {status.name.charAt(0)}
+                  {status.name?.charAt(0) || '?'}
                 </Text>
               </View>
               <View style={styles.statusContent}>
@@ -112,6 +211,47 @@ export default function UpdatesScreen() {
         </View>
       </View>
     </ScrollView>
+
+    <Modal
+      visible={showPostModal}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setShowPostModal(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+          <View style={styles.modalHeader}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Post Text Status</Text>
+            <TouchableOpacity onPress={() => setShowPostModal(false)}>
+              <Ionicons name="close" size={28} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+
+          <TextInput
+            style={[styles.textInput, { backgroundColor: colors.secondaryBackground, color: colors.text }]}
+            placeholder="What's on your mind?"
+            placeholderTextColor={colors.secondaryText}
+            value={statusText}
+            onChangeText={setStatusText}
+            multiline
+            maxLength={700}
+          />
+
+          <TouchableOpacity
+            style={[styles.postButton, { backgroundColor: colors.primary }]}
+            onPress={handlePostTextStatus}
+            disabled={posting}
+          >
+            {posting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.postButtonText}>Post Status</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+    </View>
   );
 }
 
@@ -190,6 +330,44 @@ const styles = StyleSheet.create({
   findButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
+    fontWeight: '600',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 20,
+  },
+  modalContent: {
+    borderRadius: 20,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  textInput: {
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    minHeight: 150,
+    textAlignVertical: 'top',
+    marginBottom: 20,
+  },
+  postButton: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  postButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: '600',
   },
 });

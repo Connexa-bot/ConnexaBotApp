@@ -7,15 +7,22 @@ import {
   TouchableOpacity,
   Alert,
   Switch,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAI } from '../contexts/AIContext';
+import { useWallpaper } from '../contexts/WallpaperContext';
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
   const { colors, isDark, toggleTheme } = useTheme();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const { settings, updateSettings } = useAI();
+  const { wallpapers, defaultWallpaper, setGlobalWallpaper, addCustomWallpaper } = useWallpaper();
+  const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -29,6 +36,48 @@ export default function SettingsScreen() {
           onPress: () => logout(),
         },
       ]
+    );
+  };
+
+  const handleWallpaperSelect = async (wallpaper) => {
+    await setGlobalWallpaper(wallpaper);
+    setShowWallpaperPicker(false);
+    Alert.alert('Success', 'Wallpaper updated successfully');
+  };
+
+  const handleCustomWallpaper = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        const newWallpaper = await addCustomWallpaper(result.assets[0].uri);
+        await setGlobalWallpaper(newWallpaper);
+        setShowWallpaperPicker(false);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to set custom wallpaper');
+    }
+  };
+
+  const personalities = [
+    { value: 'friendly and helpful', label: 'Friendly & Helpful' },
+    { value: 'professional and courteous', label: 'Professional' },
+    { value: 'casual and fun', label: 'Casual & Fun' },
+    { value: 'empathetic and understanding', label: 'Empathetic' },
+  ];
+
+  const handlePersonalityChange = () => {
+    Alert.alert(
+      'AI Personality',
+      'Choose how the AI should respond',
+      personalities.map(p => ({
+        text: p.label,
+        onPress: () => updateSettings({ personality: p.value }),
+      })).concat([{ text: 'Cancel', style: 'cancel' }])
     );
   };
 
@@ -53,7 +102,28 @@ export default function SettingsScreen() {
     </TouchableOpacity>
   );
 
+  const renderWallpaperItem = ({ item }) => (
+    <TouchableOpacity
+      style={[
+        styles.wallpaperItem,
+        { 
+          backgroundColor: item.color || '#ccc',
+          borderColor: item.id === defaultWallpaper.id ? colors.primary : 'transparent',
+        }
+      ]}
+      onPress={() => handleWallpaperSelect(item)}
+    >
+      {item.id === defaultWallpaper.id && (
+        <View style={styles.selectedBadge}>
+          <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+        </View>
+      )}
+      <Text style={styles.wallpaperName}>{item.name}</Text>
+    </TouchableOpacity>
+  );
+
   return (
+    <View style={{flex: 1}}>
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.profileSection, { borderBottomColor: colors.border }]}>
         <View style={[styles.profileAvatar, { backgroundColor: colors.primary }]}>
@@ -66,62 +136,13 @@ export default function SettingsScreen() {
             {user?.phone || 'User'}
           </Text>
           <Text style={[styles.profileStatus, { color: colors.secondaryText }]}>
-            {/* ENDPOINT NEEDED: GET /api/profile/:phone - Returns user profile info */}
             Hey there! I am using WhatsApp
           </Text>
         </View>
-        <TouchableOpacity>
-          <Ionicons name="qr-code-outline" size={24} color={colors.primary} />
-        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
-        <SettingItem
-          icon="key-outline"
-          title="Account"
-          subtitle="Security notifications, change number"
-          onPress={() => {}}
-        />
-        <SettingItem
-          icon="lock-closed-outline"
-          title="Privacy"
-          subtitle="Block contacts, disappearing messages"
-          onPress={() => {}}
-        />
-        <SettingItem
-          icon="person-outline"
-          title="Avatar"
-          subtitle="Create, edit, profile photo"
-          onPress={() => {}}
-        />
-        <SettingItem
-          icon="chatbubbles-outline"
-          title="Chats"
-          subtitle="Theme, wallpapers, chat history"
-          onPress={() => {}}
-        />
-        <SettingItem
-          icon="notifications-outline"
-          title="Notifications"
-          subtitle="Message, group & call tones"
-          onPress={() => setNotificationsEnabled(!notificationsEnabled)}
-          rightElement={
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ false: colors.border, true: colors.primary }}
-            />
-          }
-        />
-        <SettingItem
-          icon="analytics-outline"
-          title="Storage and data"
-          subtitle="Network usage, auto-download"
-          onPress={() => {}}
-        />
-      </View>
-
-      <View style={styles.section}>
+        <Text style={[styles.sectionHeader, { color: colors.primary }]}>Appearance</Text>
         <SettingItem
           icon="moon-outline"
           title="Dark Mode"
@@ -135,19 +156,73 @@ export default function SettingsScreen() {
             />
           }
         />
+        <SettingItem
+          icon="image-outline"
+          title="Chat Wallpaper"
+          subtitle={defaultWallpaper.name}
+          onPress={() => setShowWallpaperPicker(true)}
+        />
       </View>
 
       <View style={styles.section}>
+        <Text style={[styles.sectionHeader, { color: colors.primary }]}>AI Automation</Text>
         <SettingItem
-          icon="help-circle-outline"
-          title="Help"
-          subtitle="Help center, contact us, privacy policy"
-          onPress={() => {}}
+          icon="flash-outline"
+          title="Auto-Reply"
+          subtitle={settings.autoReplyEnabled ? "Enabled" : "Disabled"}
+          onPress={() => updateSettings({ autoReplyEnabled: !settings.autoReplyEnabled })}
+          rightElement={
+            <Switch
+              value={settings.autoReplyEnabled}
+              onValueChange={(val) => updateSettings({ autoReplyEnabled: val })}
+              trackColor={{ false: colors.border, true: colors.primary }}
+            />
+          }
         />
         <SettingItem
-          icon="people-outline"
-          title="Invite a friend"
-          onPress={() => {}}
+          icon="chatbubbles-outline"
+          title="Smart Replies"
+          subtitle={settings.smartRepliesEnabled ? "Enabled" : "Disabled"}
+          onPress={() => updateSettings({ smartRepliesEnabled: !settings.smartRepliesEnabled })}
+          rightElement={
+            <Switch
+              value={settings.smartRepliesEnabled}
+              onValueChange={(val) => updateSettings({ smartRepliesEnabled: val })}
+              trackColor={{ false: colors.border, true: colors.primary }}
+            />
+          }
+        />
+        <SettingItem
+          icon="image-outline"
+          title="Image Analysis"
+          subtitle={settings.imageAnalysisEnabled ? "Enabled" : "Disabled"}
+          onPress={() => updateSettings({ imageAnalysisEnabled: !settings.imageAnalysisEnabled })}
+          rightElement={
+            <Switch
+              value={settings.imageAnalysisEnabled}
+              onValueChange={(val) => updateSettings({ imageAnalysisEnabled: val })}
+              trackColor={{ false: colors.border, true: colors.primary }}
+            />
+          }
+        />
+        <SettingItem
+          icon="mic-outline"
+          title="Voice Transcription"
+          subtitle={settings.voiceTranscriptionEnabled ? "Enabled" : "Disabled"}
+          onPress={() => updateSettings({ voiceTranscriptionEnabled: !settings.voiceTranscriptionEnabled })}
+          rightElement={
+            <Switch
+              value={settings.voiceTranscriptionEnabled}
+              onValueChange={(val) => updateSettings({ voiceTranscriptionEnabled: val })}
+              trackColor={{ false: colors.border, true: colors.primary }}
+            />
+          }
+        />
+        <SettingItem
+          icon="person-circle-outline"
+          title="AI Personality"
+          subtitle={personalities.find(p => p.value === settings.personality)?.label || 'Friendly'}
+          onPress={handlePersonalityChange}
         />
       </View>
 
@@ -163,10 +238,47 @@ export default function SettingsScreen() {
 
       <View style={styles.footer}>
         <Text style={[styles.footerText, { color: colors.secondaryText }]}>
-          WhatsApp Clone v1.0.0
+          ConnexaBot v1.0.0
         </Text>
       </View>
     </ScrollView>
+
+    <Modal
+      visible={showWallpaperPicker}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setShowWallpaperPicker(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+          <View style={styles.modalHeader}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Choose Wallpaper
+            </Text>
+            <TouchableOpacity onPress={() => setShowWallpaperPicker(false)}>
+              <Ionicons name="close" size={28} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={wallpapers}
+            renderItem={renderWallpaperItem}
+            keyExtractor={item => item.id}
+            numColumns={2}
+            contentContainerStyle={styles.wallpaperList}
+          />
+
+          <TouchableOpacity
+            style={[styles.customWallpaperButton, { backgroundColor: colors.primary }]}
+            onPress={handleCustomWallpaper}
+          >
+            <Ionicons name="add" size={24} color="#fff" />
+            <Text style={styles.customWallpaperText}>Add Custom</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+    </View>
   );
 }
 
@@ -205,7 +317,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   section: {
-    marginTop: 20,
+    marginTop: 16,
+  },
+  sectionHeader: {
+    fontSize: 14,
+    fontWeight: '600',
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
   settingItem: {
     flexDirection: 'row',
@@ -248,5 +366,70 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 32,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  wallpaperList: {
+    padding: 16,
+  },
+  wallpaperItem: {
+    flex: 1,
+    height: 120,
+    margin: 8,
+    borderRadius: 12,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    padding: 12,
+    borderWidth: 3,
+  },
+  wallpaperName: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  selectedBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 12,
+  },
+  customWallpaperButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 16,
+    padding: 16,
+    borderRadius: 12,
+  },
+  customWallpaperText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });

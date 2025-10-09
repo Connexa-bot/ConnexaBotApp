@@ -42,11 +42,17 @@ export default function ChatViewScreen({ route, navigation }) {
   const { getChatSettings } = useAI();
   const flatListRef = useRef(null);
   const pollInterval = useRef(null);
+  const lastProcessedMessageId = useRef(null);
+  const isInitialLoad = useRef(true);
 
   const wallpaper = getChatWallpaper(chat.id);
   const aiSettings = getChatSettings(chat.id);
 
   useEffect(() => {
+    // Reset state when chat changes
+    lastProcessedMessageId.current = null;
+    isInitialLoad.current = true;
+    
     loadMessages();
     startMessagePolling();
 
@@ -55,7 +61,7 @@ export default function ChatViewScreen({ route, navigation }) {
         clearInterval(pollInterval.current);
       }
     };
-  }, []);
+  }, [chat.id]);
 
   useEffect(() => {
     if (messages.length > 0 && aiSettings.smartRepliesEnabled) {
@@ -67,6 +73,9 @@ export default function ChatViewScreen({ route, navigation }) {
   }, [messages]);
 
   const startMessagePolling = () => {
+    // NOTE: Using polling for real-time updates (3-second intervals)
+    // This is a reliable fallback until WebSocket support is added to the backend
+    // The Baileys library's event system can be integrated here when available
     pollInterval.current = setInterval(() => {
       loadMessages(true);
     }, 3000);
@@ -77,7 +86,30 @@ export default function ChatViewScreen({ route, navigation }) {
     try {
       const response = await getMessages(user.phone, chat.id, 50);
       if (response.data?.messages) {
-        setMessages(response.data.messages);
+        const newMessages = response.data.messages;
+        
+        // On very first load, mark existing messages as processed to prevent auto-replying to history
+        if (isInitialLoad.current) {
+          isInitialLoad.current = false;
+          if (newMessages.length > 0) {
+            const lastMessage = newMessages[newMessages.length - 1];
+            lastProcessedMessageId.current = lastMessage.id;
+          }
+        }
+        // After initial load, check for new incoming messages for auto-reply
+        else if (aiSettings.autoReplyEnabled && newMessages.length > 0) {
+          const lastNewMessage = newMessages[newMessages.length - 1];
+          
+          // Only auto-reply if this is a new incoming message we haven't processed
+          if (lastNewMessage && 
+              !lastNewMessage.fromMe && 
+              lastNewMessage.id !== lastProcessedMessageId.current) {
+            lastProcessedMessageId.current = lastNewMessage.id;
+            handleAutoReply(lastNewMessage.text);
+          }
+        }
+        
+        setMessages(newMessages);
       }
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -121,10 +153,6 @@ export default function ChatViewScreen({ route, navigation }) {
       setMessages((prev) => [...prev, newMessage]);
       setShowSuggestions(false);
       scrollToBottom();
-
-      if (aiSettings.autoReplyEnabled) {
-        setTimeout(() => handleAutoReply(text), 1000);
-      }
     } catch (error) {
       console.error('Error sending message:', error);
       Alert.alert('Error', 'Failed to send message');
@@ -145,7 +173,7 @@ export default function ChatViewScreen({ route, navigation }) {
         const aiMessage = {
           id: Date.now().toString(),
           text: response.data.reply,
-          fromMe: false,
+          fromMe: true,
           timestamp: Date.now() / 1000,
           aiGenerated: true,
         };
