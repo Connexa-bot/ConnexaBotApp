@@ -10,13 +10,13 @@ import { useTheme } from '../contexts/ThemeContext';
 
 export default function WelcomeSplashScreen({ onComplete }) {
   const { colors } = useTheme();
-  const fadeAnim = new Animated.Value(0);
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 800,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
 
     const timer = setTimeout(() => {
