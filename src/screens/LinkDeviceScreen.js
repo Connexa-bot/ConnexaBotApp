@@ -14,7 +14,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { getConnectionStatus } from '../services/api';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '../utils/storage';
 
 export default function LinkDeviceScreen() {
   const [phone, setPhone] = useState('');
@@ -30,7 +30,7 @@ export default function LinkDeviceScreen() {
         try {
           const response = await getConnectionStatus(phone);
           if (response.data.status === 'connected') {
-            await SecureStore.setItemAsync('userPhone', phone);
+            await storage.setItem('userPhone', phone);
             updateConnectionStatus('connected');
             setUser({ phone });
             clearInterval(statusInterval);

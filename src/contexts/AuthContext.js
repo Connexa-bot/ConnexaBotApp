@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import * as SecureStore from 'expo-secure-store';
 import { connectToServer, getConnectionStatus, logoutWhatsApp } from '../services/api';
+import { storage } from '../utils/storage';
 
 const AuthContext = createContext();
 
@@ -16,14 +16,14 @@ export const AuthProvider = ({ children }) => {
 
   const loadStoredUser = async () => {
     try {
-      const storedPhone = await SecureStore.getItemAsync('userPhone');
+      const storedPhone = await storage.getItem('userPhone');
       if (storedPhone) {
         const status = await checkStatus(storedPhone);
         if (status === 'connected') {
           setUser({ phone: storedPhone });
           setConnectionStatus('connected');
         } else {
-          await SecureStore.deleteItemAsync('userPhone');
+          await storage.deleteItem('userPhone');
         }
       }
     } catch (error) {
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
         setConnectionStatus('qr_ready');
         return { success: true, qr: response.data.qr };
       } else if (response.data.status === 'connected') {
-        await SecureStore.setItemAsync('userPhone', phone);
+        await storage.setItem('userPhone', phone);
         setUser({ phone });
         setConnectionStatus('connected');
         setQrCode(null);
@@ -63,7 +63,8 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Login error:', error);
       setConnectionStatus('error');
-      return { success: false, error: error.message };
+      const errorMsg = error.response?.data?.error || error.message || 'Unable to connect to server. Please check your internet connection and try again.';
+      return { success: false, error: errorMsg };
     } finally {
       setLoading(false);
     }
@@ -73,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     try {
       if (user?.phone) {
         await logoutWhatsApp(user.phone);
-        await SecureStore.deleteItemAsync('userPhone');
+        await storage.deleteItem('userPhone');
       }
       setUser(null);
       setQrCode(null);
