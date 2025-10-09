@@ -4,6 +4,7 @@ import { ThemeProvider } from "./src/contexts/ThemeContext";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import RootNavigator from "./src/navigation";
 import * as NavigationBar from 'expo-navigation-bar';
+import { StatusBar } from 'expo-status-bar';
 
 export default function App() {
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
+        <StatusBar style="light" />
         <RootNavigator />
       </ThemeProvider>
     </AuthProvider>

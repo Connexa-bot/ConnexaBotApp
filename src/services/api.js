@@ -261,4 +261,4 @@ export const getProfilePicture = async (phone, jid) => {
 
 // Export API instance and base URL for debugging
 export { api, API_BASE_URL };
-export default apiimportmportmportmportmport
+export default api;
