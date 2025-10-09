@@ -3,9 +3,9 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   Animated,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function WelcomeSplashScreen({ onComplete }) {
@@ -29,15 +29,12 @@ export default function WelcomeSplashScreen({ onComplete }) {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <Image
-          source={require('../../assets/images/icon.png')}
+        <Ionicons 
+          name="logo-whatsapp" 
+          size={120} 
+          color="#25D366" 
           style={styles.logo}
-          resizeMode="contain"
         />
-        <Text style={[styles.title, { color: colors.text }]}>ConnexaBot</Text>
-        <Text style={[styles.tagline, { color: colors.secondaryText }]}>
-          AI-Powered WhatsApp Experience
-        </Text>
       </Animated.View>
       
       <View style={styles.footer}>

@@ -5,8 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function TermsPrivacyScreen({ onContinue }) {
@@ -15,13 +15,14 @@ export default function TermsPrivacyScreen({ onContinue }) {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Image
-          source={require('../../assets/images/icon.png')}
+        <Ionicons 
+          name="logo-whatsapp" 
+          size={80} 
+          color="#25D366" 
           style={styles.logo}
-          resizeMode="contain"
         />
         <Text style={[styles.title, { color: colors.text }]}>
-          Welcome to ConnexaBot
+          Welcome to WhatsApp
         </Text>
       </View>
 
