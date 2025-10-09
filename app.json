@@ -51,6 +51,7 @@
         "projectId": "280b272e-8ca3-4358-91e6-4fa8a2e093e9"
       }
     },
-    "owner": "connexa-hub"
+    "owner": "connexa-hub",
+    "packageManager": "yarn"
   }
 }
