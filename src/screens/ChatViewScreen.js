@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
-import { getMessages, sendMessage } from '../services/api';
+import { sendMessage } from '../services/api';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Avatar from '../components/Avatar';
 
@@ -35,8 +35,38 @@ export default function ChatViewScreen() {
   const navigation = useNavigation();
   const { chatId, chatName } = route.params;
 
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { lastMessage: initialMessage } = route.params;
+
+  // Transforms different message formats into a consistent one for rendering.
+  const transformMessage = (msg, isIncoming = true) => {
+    if (!msg) return null;
+
+    // If it's an optimistic message sent by the user, it's already in the correct format.
+    if (msg.key?.fromMe) {
+      return msg;
+    }
+
+    // If it's the initial message passed from the chats list.
+    if (!isIncoming) {
+      return {
+        key: { id: msg.id || Date.now().toString(), fromMe: false }, // Assume not from me
+        message: { conversation: msg.lastMessage?.text || '' },
+        messageTimestamp: msg.conversationTimestamp,
+      };
+    }
+
+    // If it's a new message from the socket.
+    return {
+      key: { id: msg.id || Date.now().toString(), fromMe: false }, // Assume incoming are not from me
+      message: { conversation: msg.content || '' },
+      messageTimestamp: msg.timestamp || Math.floor(Date.now() / 1000),
+    };
+  };
+
+  const [messages, setMessages] = useState(
+    initialMessage ? [transformMessage(initialMessage, false)].filter(Boolean) : []
+  );
+  const [loading] = useState(false); // setLoading removed as it's not used
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState('');
 
@@ -50,30 +80,16 @@ export default function ChatViewScreen() {
 
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
-    const date = new Date(timestamp);
+    const date = new Date(timestamp * 1000); // Timestamps are in seconds
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const fetchMessageHistory = useCallback(async () => {
-    try {
-      setError(null);
-      const { data } = await getMessages(phone, chatId);
-      setMessages(data.messages?.reverse() || []);
-    } catch (err) {
-      setError(err.message || 'Failed to fetch messages.');
-    } finally {
-      setLoading(false);
-    }
-  }, [phone, chatId]);
-
-  useEffect(() => {
-    fetchMessageHistory();
-  }, [fetchMessageHistory]);
+  // Removed fetchMessageHistory as there's no endpoint for it.
 
   useEffect(() => {
     const lastSocketMessage = socketMessages[socketMessages.length - 1];
     if (lastSocketMessage?.event === 'new_message' && lastSocketMessage.data.from === chatId) {
-      setMessages((prev) => [...prev, lastSocketMessage.data]);
+      setMessages((prev) => [...prev, transformMessage(lastSocketMessage.data, true)]);
     }
   }, [socketMessages, chatId]);
 

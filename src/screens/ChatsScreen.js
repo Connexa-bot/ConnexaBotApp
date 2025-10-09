@@ -91,6 +91,7 @@ export default function ChatsScreen() {
           chatId: item.id,
           chatName: item.name,
           phone,
+          lastMessage: item, // Pass the entire chat item as the last message
         })
       }
     >
@@ -145,7 +146,10 @@ export default function ChatsScreen() {
         onRefresh={fetchChatList}
         refreshing={loading}
       />
-      <TouchableOpacity style={styles.fab}>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('Contacts')}
+      >
         <MaterialIcons name="chat" size={24} color="#FFF" />
       </TouchableOpacity>
     </View>
