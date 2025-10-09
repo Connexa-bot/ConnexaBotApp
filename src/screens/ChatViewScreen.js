@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { sendMessage } from '../services/api';
+import { sendMessage, getMessages } from '../services/api';
 
 export default function ChatViewScreen({ route, navigation }) {
   const { chat } = route.params;
@@ -35,9 +35,13 @@ export default function ChatViewScreen({ route, navigation }) {
   const loadMessages = async () => {
     setLoading(true);
     try {
-      setMessages([]);
+      const response = await getMessages(user.phone, chat.id);
+      if (response.data && response.data.messages) {
+        setMessages(response.data.messages);
+      }
     } catch (error) {
       console.error('Error loading messages:', error);
+      setMessages([]);
     } finally {
       setLoading(false);
     }

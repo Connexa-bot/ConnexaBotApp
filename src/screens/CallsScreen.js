@@ -1,11 +1,39 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { getCalls } from '../services/api';
 
 export default function CallsScreen() {
   const { colors } = useTheme();
-  const [calls, setCall] = React.useState([]);
+  const { user } = useAuth();
+  const [calls, setCalls] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    loadCalls();
+  }, []);
+
+  const loadCalls = async () => {
+    try {
+      if (user?.phone) {
+        const response = await getCalls(user.phone);
+        setCalls(response.data.calls || []);
+      }
+    } catch (error) {
+      console.error('Error loading calls:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadCalls();
+  };
 
   const renderCall = ({ item }) => (
     <TouchableOpacity
@@ -39,6 +67,14 @@ export default function CallsScreen() {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {calls.length === 0 ? (
@@ -48,7 +84,6 @@ export default function CallsScreen() {
             No calls yet
           </Text>
           <Text style={[styles.emptySubtext, { color: colors.secondaryText }]}>
-            {/* ENDPOINT NEEDED: GET /api/calls/:phone - Returns call history */}
             Call history will appear here
           </Text>
         </View>
@@ -57,6 +92,13 @@ export default function CallsScreen() {
           data={calls}
           renderItem={renderCall}
           keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+            />
+          }
         />
       )}
     </View>
@@ -66,6 +108,10 @@ export default function CallsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyContainer: {
     flex: 1,

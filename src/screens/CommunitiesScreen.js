@@ -1,14 +1,59 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { getCommunities } from '../services/api';
 
 export default function CommunitiesScreen() {
   const { colors } = useTheme();
-  const [communities, setCommunities] = React.useState([]);
+  const { user } = useAuth();
+  const [communities, setCommunities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    loadCommunities();
+  }, []);
+
+  const loadCommunities = async () => {
+    try {
+      if (user?.phone) {
+        const response = await getCommunities(user.phone);
+        setCommunities(response.data.communities || []);
+      }
+    } catch (error) {
+      console.error('Error loading communities:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadCommunities();
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: colors.background }]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.primary}
+        />
+      }
+    >
       <View style={styles.header}>
         <Image
           source={require('../../assets/whatsapp-logo.svg')}
@@ -23,7 +68,6 @@ export default function CommunitiesScreen() {
             Stay connected with a community
           </Text>
           <Text style={[styles.emptySubtext, { color: colors.secondaryText }]}>
-            {/* ENDPOINT NEEDED: GET /api/communities/:phone - Returns user communities */}
             Communities bring members together in topic-based groups and make it easy to get admin announcements
           </Text>
           <TouchableOpacity style={[styles.startButton, { backgroundColor: colors.primary }]}>
@@ -57,6 +101,10 @@ export default function CommunitiesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     alignItems: 'center',

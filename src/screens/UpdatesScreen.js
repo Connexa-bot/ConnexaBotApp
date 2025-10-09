@@ -1,16 +1,59 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { getStatusUpdates } from '../services/api';
 
 export default function UpdatesScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
-  const [statuses, setStatuses] = React.useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    loadStatuses();
+  }, []);
+
+  const loadStatuses = async () => {
+    try {
+      if (user?.phone) {
+        const response = await getStatusUpdates(user.phone);
+        setStatuses(response.data.statuses || []);
+      }
+    } catch (error) {
+      console.error('Error loading statuses:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadStatuses();
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: colors.background }]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.primary}
+        />
+      }
+    >
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>Status</Text>
         
@@ -31,7 +74,6 @@ export default function UpdatesScreen() {
         {statuses.length === 0 ? (
           <View style={styles.emptySection}>
             <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-              {/* ENDPOINT NEEDED: GET /api/status/:phone - Returns status updates */}
               No recent updates
             </Text>
           </View>
@@ -62,7 +104,6 @@ export default function UpdatesScreen() {
         <View style={styles.emptySection}>
           <Ionicons name="megaphone-outline" size={48} color={colors.secondaryText} />
           <Text style={[styles.emptyText, { color: colors.secondaryText, marginTop: 12 }]}>
-            {/* ENDPOINT NEEDED: GET /api/channels/:phone - Returns channel subscriptions */}
             Stay updated on topics that matter to you
           </Text>
           <TouchableOpacity style={[styles.findButton, { backgroundColor: colors.primary }]}>
@@ -77,6 +118,10 @@ export default function UpdatesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   section: {
     paddingVertical: 8,

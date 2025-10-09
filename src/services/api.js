@@ -259,6 +259,56 @@ export const getProfilePicture = async (phone, jid) => {
   return await profileAction(phone, 'getPicture', { jid });
 };
 
+// ============= ADDITIONAL ENDPOINTS NEEDED =============
+
+// ENDPOINT NEEDED: GET /api/messages/:phone/:chatId
+// Description: Get message history for a specific chat
+// Returns: Array of messages with id, text, fromMe, timestamp, etc.
+export const getMessages = async (phone, chatId) => {
+  // TODO: Implement this endpoint in backend
+  return await api.get(`/api/messages/${phone}/${chatId}`);
+};
+
+// ENDPOINT NEEDED: GET /api/calls/:phone
+// Description: Get call history for a user
+// Returns: Array of calls with id, name, type (incoming/outgoing), timestamp, missed, video
+export const getCalls = async (phone) => {
+  // TODO: Implement this endpoint in backend
+  return await api.get(`/api/calls/${phone}`);
+};
+
+// ENDPOINT NEEDED: GET /api/status-updates/:phone
+// Description: Get status updates (stories) from contacts
+// Returns: { statuses: Array of status updates with id, name, timestamp, media, viewed }
+export const getStatusUpdates = async (phone) => {
+  // TODO: Implement this endpoint in backend
+  return await api.get(`/api/status-updates/${phone}`);
+};
+
+// ENDPOINT NEEDED: GET /api/channels/:phone
+// Description: Get channel subscriptions for a user
+// Returns: Array of channels with id, name, description, subscribers
+export const getChannels = async (phone) => {
+  // TODO: Implement this endpoint in backend
+  return await api.get(`/api/channels/${phone}`);
+};
+
+// ENDPOINT NEEDED: GET /api/communities/:phone
+// Description: Get user's communities
+// Returns: Array of communities with id, name, memberCount, description
+export const getCommunities = async (phone) => {
+  // TODO: Implement this endpoint in backend
+  return await api.get(`/api/communities/${phone}`);
+};
+
+// ENDPOINT NEEDED: GET /api/profile/:phone
+// Description: Get user profile information
+// Returns: User profile with name, status, picture, etc.
+export const getUserProfile = async (phone) => {
+  // TODO: Implement this endpoint in backend
+  return await api.get(`/api/profile/${phone}`);
+};
+
 // Export API instance and base URL for debugging
 export { api, API_BASE_URL };
 export default api;
