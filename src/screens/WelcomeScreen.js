@@ -24,7 +24,7 @@ export default function WelcomeScreen() {
           <Text style={styles.link} onPress={handlePolicyPress}>
             Privacy Policy
           </Text>
-          . Tap &quot;Agree and continue&quot; to accept the{' '}
+          . Tap "Agree and continue" to accept the{' '}
           <Text style={styles.link} onPress={handlePolicyPress}>
             Terms of Service
           </Text>

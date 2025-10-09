@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
+  BackHandler,
 } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useThemeContext } from '../contexts/ThemeContext';
@@ -80,6 +81,27 @@ export default function LoginScreen() {
     }
   }, [isConnecting, checkStatus]);
 
+  useEffect(() => {
+    const backAction = () => {
+      if (currentView === 'qrOrLink') {
+        setCurrentView('numberInput');
+        return true; // Prevent default behavior
+      }
+      if (currentView === 'numberInput') {
+        setCurrentView('initial');
+        return true; // Prevent default behavior
+      }
+      return false; // Let the default back handler take over for the initial screen
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [currentView]);
+
   const renderInitialView = () => (
     <View style={styles.initialView}>
       <View style={styles.logoContainer}>
@@ -100,7 +122,7 @@ export default function LoginScreen() {
         Enter your phone number
       </Text>
       <Text style={[styles.instructionText, { color: theme.colors.text, textAlign: 'center', marginBottom: 20 }]}>
-        You&apos;ll need to confirm this number on your primary phone.
+        You'll need to confirm this number on your primary phone.
       </Text>
       <TextInput
         style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
@@ -159,15 +181,25 @@ export default function LoginScreen() {
               <QRCode value={qrCode} size={230} />
             </View>
           </View>
+          <TouchableOpacity style={{ marginTop: 20 }} onPress={() => setCodeMode('link')}>
+            <Text style={styles.switchLink}>Use Link Code instead</Text>
+          </TouchableOpacity>
         </>
       )}
 
-      {codeMode === 'link' && linkCode && (
+      {codeMode === 'link' && (
         <View style={{alignItems: 'center'}}>
           <Text style={[styles.instruction, { color: theme.colors.text, marginBottom: 20 }]}>
             Enter this code on your primary phone
           </Text>
-          <Text style={styles.linkCode}>{linkCode}</Text>
+          {linkCode ? (
+            <Text style={styles.linkCode}>{linkCode}</Text>
+          ) : (
+            <Text style={styles.linkCode}>---</Text>
+          )}
+          <TouchableOpacity style={{ marginTop: 20 }} onPress={() => setCodeMode('qr')}>
+            <Text style={styles.switchLink}>Scan QR Code instead</Text>
+          </TouchableOpacity>
         </View>
       )}
 
