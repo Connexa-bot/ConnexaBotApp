@@ -1,27 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
-  Modal,
-  TextInput,
-  Alert,
-  Button,
-  RefreshControl,
 } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
-import { useSocket } from '../contexts/SocketContext';
-import { getStatuses, postStatus } from '../services/api';
 import { MaterialIcons } from '@expo/vector-icons';
 import Avatar from '../components/Avatar';
 
-const StatusItem = ({ name, time, avatar, isMyStatus = false }) => (
-  <TouchableOpacity style={styles.statusItem}>
+// A static component representing a status item.
+const StatusItem = ({ name, time, isMyStatus = false }) => (
+  <TouchableOpacity style={styles.statusItem} disabled={!isMyStatus}>
     <View style={styles.avatarContainer}>
-      <Avatar source={avatar} name={name} size={60} />
+      <Avatar name={name} size={60} />
       {isMyStatus && (
         <View style={styles.plusIcon}>
           <MaterialIcons name="add-circle" size={22} color="#00A884" />
@@ -36,145 +28,12 @@ const StatusItem = ({ name, time, avatar, isMyStatus = false }) => (
 );
 
 export default function UpdatesScreen() {
-  const { user, isConnected } = useAuth();
-  const phone = user?.phone;
-
-  const [statuses, setStatuses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [newStatus, setNewStatus] = useState('');
-  const [posting, setPosting] = useState(false);
-
-  const fetchStatuses = useCallback(async () => {
-    setLoading(true);
-    try {
-      setError(null);
-      const { data } = await getStatuses(phone);
-      setStatuses(data.statuses || []);
-    } catch (_err) {
-      setError('Failed to fetch statuses.');
-    } finally {
-      setLoading(false);
-    }
-  }, [phone]);
-
-  useEffect(() => {
-    if (isConnected) {
-      fetchStatuses();
-    }
-  }, [isConnected, fetchStatuses]);
-
-  const handlePostStatus = async () => {
-    if (!newStatus.trim()) {
-      Alert.alert('Error', 'Status cannot be empty.');
-      return;
-    }
-    if (!phone) {
-      Alert.alert('Error', 'Not connected.');
-      return;
-    }
-
-    setPosting(true);
-    try {
-      await postStatus(phone, newStatus);
-      setNewStatus('');
-      setModalVisible(false);
-      await fetchStatuses();
-    } catch (_err) {
-      Alert.alert('Error', 'Failed to post status.');
-    } finally {
-      setPosting(false);
-    }
-  };
-
-  const recentUpdates = statuses.filter((s) => !s.isMyStatus);
-  const viewedUpdates = []; // Placeholder for viewed logic
-
-  const renderContent = () => {
-    if (loading) {
-      return <ActivityIndicator style={{ marginTop: 50 }} size="large" color="#00A884" />;
-    }
-    if (error) {
-      return (
-        <View style={styles.centered}>
-          <Text style={styles.errorText}>{error}</Text>
-          <Button title="Retry" onPress={fetchStatuses} color="#00A884" />
-        </View>
-      );
-    }
-    return (
-      <>
-        {recentUpdates.length > 0 && (
-          <Text style={styles.sectionTitle}>Recent updates</Text>
-        )}
-        {recentUpdates.map((status, index) => (
-          <StatusItem
-            key={index}
-            name={status.name || 'Unknown'}
-            time={status.time || 'Just now'}
-            avatar={status.avatar}
-          />
-        ))}
-        {viewedUpdates.length > 0 && (
-          <Text style={styles.sectionTitle}>Viewed updates</Text>
-        )}
-        {viewedUpdates.map((status, index) => (
-          <StatusItem
-            key={index}
-            name={status.name}
-            time={status.time}
-            avatar={status.avatar}
-          />
-        ))}
-      </>
-    );
-  };
+  // Since there are no backend endpoints for statuses, this screen is a placeholder.
+  // It shows a static UI representing where status updates would appear.
 
   return (
     <View style={styles.container}>
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalView}>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Type a status"
-              placeholderTextColor="#8696A0"
-              value={newStatus}
-              onChangeText={setNewStatus}
-              multiline
-            />
-            <View style={styles.modalButtonContainer}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.postButton]}
-                onPress={handlePostStatus}
-                disabled={posting}
-              >
-                <Text style={styles.modalButtonText}>
-                  {posting ? 'Posting...' : 'Post'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={fetchStatuses} tintColor="#00A884" />
-        }
-      >
+      <ScrollView>
         <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>Status</Text>
           <TouchableOpacity>
@@ -183,16 +42,20 @@ export default function UpdatesScreen() {
         </View>
 
         <StatusItem name="My status" time="Tap to add status update" isMyStatus />
-        {renderContent()}
+
+        <Text style={styles.sectionTitle}>Recent updates</Text>
+        <View style={styles.centered}>
+            <Text style={styles.placeholderText}>
+                Status updates from your contacts will appear here.
+            </Text>
+        </View>
+
       </ScrollView>
       <View style={styles.fabContainer}>
-        <TouchableOpacity
-          style={styles.fabSecondary}
-          onPress={() => setModalVisible(true)}
-        >
-          <MaterialIcons name="edit" size={20} color="#E9EDEF" />
+        <TouchableOpacity style={styles.fabSecondary} disabled>
+          <MaterialIcons name="edit" size={20} color="#8696A0" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.fabPrimary}>
+        <TouchableOpacity style={styles.fabPrimary} disabled>
           <MaterialIcons name="camera-alt" size={24} color="#111B21" />
         </TouchableOpacity>
       </View>
@@ -209,6 +72,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 50,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -257,10 +121,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: 'rgba(134, 150, 160, 0.1)',
   },
-  errorText: {
-    textAlign: 'center',
-    color: '#F15C6D',
-    marginTop: 50,
+  placeholderText: {
+      color: '#8696A0',
+      textAlign: 'center',
   },
   fabContainer: {
     position: 'absolute',
@@ -276,6 +139,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
+    opacity: 0.5,
   },
   fabSecondary: {
     backgroundColor: '#202C33',
@@ -286,43 +150,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 6,
     marginBottom: 15,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-  },
-  modalView: {
-    width: '80%',
-    backgroundColor: '#202C33',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-  },
-  modalInput: {
-    width: '100%',
-    height: 100,
-    color: '#E9EDEF',
-    fontSize: 18,
-    textAlignVertical: 'top',
-  },
-  modalButtonContainer: {
-    flexDirection: 'row',
-    marginTop: 20,
-    justifyContent: 'flex-end',
-    width: '100%',
-  },
-  modalButton: {
-    padding: 10,
-    marginLeft: 15,
-  },
-  postButton: {
-    backgroundColor: '#00A884',
-    borderRadius: 5,
-  },
-  modalButtonText: {
-    color: '#E9EDEF',
-    fontWeight: 'bold',
+    opacity: 0.5,
   },
 });

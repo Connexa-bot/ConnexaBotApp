@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { useThemeContext } from '../contexts/ThemeContext';
 import { MaterialIcons } from '@expo/vector-icons';
 

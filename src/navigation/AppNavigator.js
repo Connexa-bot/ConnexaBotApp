@@ -8,8 +8,10 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen'; // Import the new screen
 import ChatViewScreen from '../screens/ChatViewScreen';
+import CreateGroupScreen from '../screens/CreateGroupScreen';
+import ContactsScreen from '../screens/ContactsScreen'; // Import the new screen
 import MainTabNavigator from './MainTabNavigator';
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator();
@@ -55,6 +57,26 @@ function MainAppStack() {
         }}
       />
       <Stack.Screen name="ChatView" component={ChatViewScreen} />
+      <Stack.Screen
+        name="CreateGroup"
+        component={CreateGroupScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'New Group',
+          headerStyle: { backgroundColor: '#1F2C34' },
+          headerTintColor: '#FFF',
+        }}
+      />
+      <Stack.Screen
+        name="Contacts"
+        component={ContactsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'Select contact',
+          headerStyle: { backgroundColor: '#1F2C34' },
+          headerTintColor: '#FFF',
+        }}
+      />
     </Stack.Navigator>
   );
 }
@@ -81,7 +103,4 @@ export default function AppNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
-    // Styles for header, etc. can remain if needed by other components in this file.
-    // For now, removing the reconnecting screen styles as the component is removed.
-});
+// Unused styles variable removed.

@@ -100,7 +100,7 @@ export default function LoginScreen() {
         Enter your phone number
       </Text>
       <Text style={[styles.instructionText, { color: theme.colors.text, textAlign: 'center', marginBottom: 20 }]}>
-        You'll need to confirm this number on your primary phone.
+        You&apos;ll need to confirm this number on your primary phone.
       </Text>
       <TextInput
         style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
