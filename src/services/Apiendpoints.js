@@ -373,7 +373,7 @@ export const API_ENDPOINTS = {
     method: "POST",
     path: "/api/presence/action",
     description: "Manage presence (typing, recording, online/offline)",
-    actions: {
+    actiphone{
       update: {
         description: "Update presence in a chat",
         request: {

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { getConnectionStatus, logoutWhatsApp } from '../services/api';
+import { connectToServer, getConnectionStatus } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
           const connectionActive = await verifyConnection(phone);
           if (!connectionActive) {
             console.log('Session verification failed. Logging out.');
-            await logout(phone); // Pass phone to logout
+            await logout();
           }
         } else {
           console.log('No stored user phone found.');
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     restoreSession();
-  }, [verifyConnection, logout]);
+  }, [verifyConnection]);
 
   const login = useCallback(async (phone) => {
     console.log(`Attempting to log in with ${phone}...`);
@@ -71,16 +71,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const logout = useCallback(async (phone) => {
+  const logout = useCallback(async () => {
     console.log('Logging out...');
     setIsLoading(true);
     try {
-      if (phone) {
-        // No need to await, we want to clear local state regardless
-        logoutWhatsApp(phone).catch((err) =>
-          console.error('Backend logout failed:', err.message)
-        );
-      }
       await SecureStore.deleteItemAsync('userPhone');
     } catch (e) {
       console.error('Failed to remove user from secure store', e);
