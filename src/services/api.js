@@ -9,7 +9,7 @@ const apiClient = axios.create({
 });
 
 export const connectToServer = (phone) => {
-  return apiClient.post('/connect', { phone });
+  return apiClient.post('/api/connect', { phone });
 };
 
 export const getConnectionStatus = (phone) => {
