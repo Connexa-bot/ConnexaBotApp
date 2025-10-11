@@ -21,15 +21,17 @@ import { storage } from '../utils/storage';
 
 export default function LinkDeviceScreen() {
   const [phone, setPhone] = useState('');
+  const [cleanPhone, setCleanPhone] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [showLinkScreen, setShowLinkScreen] = useState(false);
   const [linkMethod, setLinkMethod] = useState('qr');
   const [pairingCode, setPairingCode] = useState('');
+  const [isCheckingConnection, setIsCheckingConnection] = useState(false);
 
   const { login, qrCode, linkCode, connectionStatus, updateConnectionStatus, setUser } = useAuth();
   const { colors } = useTheme();
 
-  // ✅ FIX: Initialize pairing code from context
+  // Initialize pairing code from context
   useEffect(() => {
     if (linkCode && linkCode !== pairingCode) {
       console.log('🔗 Setting pairing code from context:', linkCode);
@@ -37,7 +39,7 @@ export default function LinkDeviceScreen() {
     }
   }, [linkCode]);
 
-  // ✅ FIX 1: Auto-show link screen when QR code is ready
+  // Auto-show link screen when QR code is ready
   useEffect(() => {
     console.log('🔹 QR Code state changed:', qrCode ? 'Available' : 'Not available');
     console.log('🔹 Connection status:', connectionStatus);
@@ -48,38 +50,97 @@ export default function LinkDeviceScreen() {
     }
   }, [qrCode, connectionStatus]);
 
-  // ✅ FIX 2: Polling for connection status
+  // 🔥 FIXED: Polling for connection status
   useEffect(() => {
     let statusInterval;
+    let pollCount = 0;
+    const MAX_POLLS = 60; // 3 minutes max (60 * 3s)
 
-    if (showLinkScreen && phone) {
-      console.log('🔄 Starting polling for connection status for phone:', phone);
+    if (showLinkScreen && cleanPhone) {
+      console.log('🔄 Starting polling for connection status for phone:', cleanPhone);
+      setIsCheckingConnection(true);
 
       statusInterval = setInterval(async () => {
+        pollCount++;
+        console.log(`🔍 Poll #${pollCount}: Checking status for`, cleanPhone);
+
         try {
-          console.log('🔍 Polling getConnectionStatus for', phone);
-          const response = await getConnectionStatus(phone);
+          const response = await getConnectionStatus(cleanPhone);
           const data = response?.data;
-          console.log('📊 Connection status response:', data);
+          
+          // Log full response to see what backend returns
+          console.log('📊 Full status response:', JSON.stringify(data, null, 2));
 
           // Update pairing code if received
           if (data?.linkCode && data.linkCode !== pairingCode) {
-            console.log('🔗 Setting new pairingCode from backend:', data.linkCode);
+            console.log('🔗 Updating pairingCode from backend:', data.linkCode);
             setPairingCode(data.linkCode);
           }
 
-          // Check if connected
-          if (data?.status === 'connected' || data?.connected === true) {
+          // 🔥 FIXED: Check all possible connection indicators from backend
+          const isConnected = 
+            data?.status === 'connected' || 
+            data?.connected === true ||
+            data?.isConnected === true ||
+            data?.ready === true ||
+            data?.authenticated === true;
+
+          console.log('🔍 Connection check:', {
+            'data.status': data?.status,
+            'data.connected': data?.connected,
+            'data.isConnected': data?.isConnected,
+            'data.ready': data?.ready,
+            'data.authenticated': data?.authenticated,
+            'isConnected': isConnected
+          });
+
+          if (isConnected) {
             console.log('✅ Device connected successfully!');
-            await storage.setItem('userPhone', phone);
-            updateConnectionStatus('connected');
-            setUser({ phone });
+            console.log('📱 User data:', data?.user);
+            
+            setIsCheckingConnection(false);
             clearInterval(statusInterval);
+            
+            // Save phone to storage
+            await storage.setItem('userPhone', cleanPhone);
+            console.log('💾 Saved phone to storage:', cleanPhone);
+            
+            // Update connection status in context
+            updateConnectionStatus('connected');
+            console.log('🔄 Updated connection status to: connected');
+            
+            // 🔥 CRITICAL: Set user to trigger navigation
+            setUser({ phone: cleanPhone, ...data?.user });
+            console.log('👤 Set user in AuthContext:', { phone: cleanPhone });
+            
+            // Show success alert
+            Alert.alert('Success', 'WhatsApp connected successfully!');
+          } else if (pollCount >= MAX_POLLS) {
+            console.log('⏱️ Polling timeout reached');
+            setIsCheckingConnection(false);
+            clearInterval(statusInterval);
+            Alert.alert(
+              'Timeout',
+              'Connection attempt timed out. Please try again.',
+              [{ text: 'OK', onPress: handleBack }]
+            );
           }
         } catch (error) {
           console.error('❌ Status check error:', error);
+          console.error('❌ Error details:', error.response?.data || error.message);
+          
+          // Stop polling after too many errors
+          if (pollCount >= MAX_POLLS) {
+            setIsCheckingConnection(false);
+            clearInterval(statusInterval);
+            Alert.alert(
+              'Connection Error',
+              'Unable to verify connection. Please try again.',
+              [{ text: 'OK', onPress: handleBack }]
+            );
+          }
         }
-      }, 3000);
+      }, 3000); // Poll every 3 seconds
     }
 
     return () => {
@@ -88,7 +149,7 @@ export default function LinkDeviceScreen() {
         clearInterval(statusInterval);
       }
     };
-  }, [showLinkScreen, phone]);
+  }, [showLinkScreen, cleanPhone]);
 
   const handleConnect = async () => {
     if (!phone.trim()) {
@@ -96,16 +157,19 @@ export default function LinkDeviceScreen() {
       return;
     }
 
-    const cleanPhone = phone.replace(/\D/g, '');
-    if (cleanPhone.length < 10) {
+    // 🔥 FIXED: Normalize phone number (remove all non-digits)
+    const normalized = phone.replace(/\D/g, '');
+    
+    if (normalized.length < 10) {
       Alert.alert('Error', 'Please enter a valid phone number');
       return;
     }
 
-    console.log('📞 Attempting to connect for phone:', cleanPhone);
+    console.log('📞 Attempting to connect for phone:', normalized);
+    setCleanPhone(normalized); // Store normalized phone
 
     setIsConnecting(true);
-    const result = await login(cleanPhone);
+    const result = await login(normalized); // Use normalized phone
     setIsConnecting(false);
 
     console.log('📋 Login result:', JSON.stringify(result));
@@ -116,20 +180,19 @@ export default function LinkDeviceScreen() {
       return;
     }
 
-    // ✅ FIX 3: Set pairing code immediately if available
+    // Set pairing code immediately if available
     if (result.linkCode) {
       console.log('🔗 Backend returned linkCode:', result.linkCode);
       setPairingCode(result.linkCode);
       setLinkMethod('code');
     }
 
-    // ✅ FIX 4: Show link screen immediately if we have QR or code
+    // Show link screen immediately if we have QR or code
     if (result.linkCode || result.qrCode) {
       console.log('✅ Showing link screen now (have linkCode or qrCode)');
       setShowLinkScreen(true);
     } else {
       console.log('⚠️ Success but no linkCode or qrCode yet - will auto-show when ready');
-      // The useEffect above will show the screen when qrCode becomes available
     }
   };
 
@@ -143,8 +206,10 @@ export default function LinkDeviceScreen() {
   const handleBack = () => {
     console.log('⬅️ Returning to phone input screen');
     setShowLinkScreen(false);
+    setIsCheckingConnection(false);
     updateConnectionStatus('disconnected');
     setPhone('');
+    setCleanPhone('');
     setPairingCode('');
   };
 
@@ -261,6 +326,16 @@ export default function LinkDeviceScreen() {
       </View>
 
       <ScrollView style={styles.methodContent} contentContainerStyle={styles.methodContentContainer}>
+        {/* Connection Status Indicator */}
+        {isCheckingConnection && (
+          <View style={[styles.statusBanner, { backgroundColor: colors.primary + '20' }]}>
+            <ActivityIndicator size="small" color={colors.primary} />
+            <Text style={[styles.statusText, { color: colors.primary }]}>
+              Waiting for WhatsApp connection...
+            </Text>
+          </View>
+        )}
+
         {linkMethod === 'qr' ? (
           <>
             {qrCode ? (
@@ -450,4 +525,15 @@ const styles = StyleSheet.create({
   copyButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
   loadingContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 60 },
   loadingText: { marginTop: 20, fontSize: 16 },
+  statusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    gap: 10,
+    width: '90%',
+  },
+  statusText: { fontSize: 14, fontWeight: '500' },
 });
