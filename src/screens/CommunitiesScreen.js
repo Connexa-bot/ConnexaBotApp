@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getCommunities } from '../services/api';
 
 export default function CommunitiesScreen() {
-  const { colors } = useTheme();
+  const { colors } = { ...useTheme();
   const { user } = useAuth();
   const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
