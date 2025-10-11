@@ -25,7 +25,6 @@ export default function LinkDeviceScreen() {
   const [showLinkScreen, setShowLinkScreen] = useState(false);
   const [linkMethod, setLinkMethod] = useState('qr');
   const [pairingCode, setPairingCode] = useState('');
-  const [isCheckingConnection, setIsCheckingConnection] = useState(false);
 
   const { login, qrCode, linkCode, connectionStatus, updateConnectionStatus, setUser } = useAuth();
   const { colors } = useTheme();
@@ -52,30 +51,16 @@ export default function LinkDeviceScreen() {
   // ✅ FIX 2: Polling for connection status
   useEffect(() => {
     let statusInterval;
-    let pollCount = 0;
-    const MAX_POLLS = 60; // Poll for up to 3 minutes (60 * 3 seconds)
 
     if (showLinkScreen && phone) {
       console.log('🔄 Starting polling for connection status for phone:', phone);
 
-      // Initial immediate check
-      const checkConnection = async () => {
+      statusInterval = setInterval(async () => {
         try {
-          pollCount++;
-          console.log(`🔍 Polling getConnectionStatus for ${phone} (attempt ${pollCount}/${MAX_POLLS})`);
+          console.log('🔍 Polling getConnectionStatus for', phone);
           const response = await getConnectionStatus(phone);
           const data = response?.data;
-          console.log('📊 Connection status response:', JSON.stringify(data, null, 2));
-          
-          // On first poll, log all available fields
-          if (pollCount === 1) {
-            console.log('🔍 Available status fields in response:');
-            console.log('  - data.status:', data?.status);
-            console.log('  - data.connected:', data?.connected);
-            console.log('  - data.state:', data?.state);
-            console.log('  - data.isConnected:', data?.isConnected);
-            console.log('  - All keys:', Object.keys(data || {}));
-          }
+          console.log('📊 Connection status response:', data);
 
           // Update pairing code if received
           if (data?.linkCode && data.linkCode !== pairingCode) {
@@ -83,39 +68,18 @@ export default function LinkDeviceScreen() {
             setPairingCode(data.linkCode);
           }
 
-          // Check if connected - check multiple possible fields
-          const isConnected = 
-            data?.connected === true ||
-            data?.status === 'connected' || 
-            data?.state === 'open' ||
-            data?.isConnected === true;
-
-          console.log(`🔍 Poll ${pollCount}: isConnected = ${isConnected}`);
-
-          if (isConnected) {
+          // Check if connected
+          if (data?.status === 'connected' || data?.connected === true) {
             console.log('✅ Device connected successfully!');
-            console.log('📱 Connection data:', data);
             await storage.setItem('userPhone', phone);
             updateConnectionStatus('connected');
             setUser({ phone });
-            if (statusInterval) clearInterval(statusInterval);
-            Alert.alert('Success', 'WhatsApp connected successfully!');
-          } else if (pollCount >= MAX_POLLS) {
-            console.log('⏱️ Polling timeout reached - stopping');
-            console.log('⚠️ Final status was:', data);
-            if (statusInterval) clearInterval(statusInterval);
+            clearInterval(statusInterval);
           }
         } catch (error) {
           console.error('❌ Status check error:', error);
-          console.error('❌ Error details:', error.response?.data);
         }
-      };
-
-      // Check immediately
-      checkConnection();
-
-      // Then check every 3 seconds
-      statusInterval = setInterval(checkConnection, 3000);
+      }, 3000);
     }
 
     return () => {
@@ -174,59 +138,6 @@ export default function LinkDeviceScreen() {
     await Clipboard.setStringAsync(pairingCode);
     Alert.alert('Copied', 'Link code copied to clipboard');
     console.log('📋 Copied link code to clipboard:', pairingCode);
-  };
-
-  const handleCheckConnection = async () => {
-    if (!phone) return;
-    
-    setIsCheckingConnection(true);
-    console.log('🔍 Manually checking connection status...');
-    
-    try {
-      const response = await getConnectionStatus(phone);
-      const data = response?.data;
-      console.log('📊 Manual check response:', JSON.stringify(data, null, 2));
-      
-      // Log all possible status fields
-      console.log('🔍 Checking all status fields:');
-      console.log('  - data.status:', data?.status);
-      console.log('  - data.connected:', data?.connected);
-      console.log('  - data.state:', data?.state);
-      console.log('  - data.isConnected:', data?.isConnected);
-      console.log('  - Full data keys:', Object.keys(data || {}));
-
-      const isConnected = 
-        data?.connected === true ||
-        data?.status === 'connected' || 
-        data?.state === 'open' ||
-        data?.isConnected === true;
-
-      console.log('🔍 Final isConnected decision:', isConnected);
-
-      if (isConnected) {
-        console.log('✅ Connection verified!');
-        await storage.setItem('userPhone', phone);
-        updateConnectionStatus('connected');
-        setUser({ phone });
-        Alert.alert('Success', 'WhatsApp connected successfully!');
-      } else {
-        console.log('⚠️ Not connected. Full response:', data);
-        Alert.alert(
-          'Not Connected Yet', 
-          `Status: ${data?.connected ? 'Connected' : 'Disconnected'}\n\nPlease complete the linking process on WhatsApp and try again.`,
-          [
-            { text: 'Try Again', onPress: handleCheckConnection },
-            { text: 'Cancel', style: 'cancel' }
-          ]
-        );
-      }
-    } catch (error) {
-      console.error('❌ Manual check error:', error);
-      console.error('❌ Error response:', error.response?.data);
-      Alert.alert('Error', 'Could not check connection status. Please try again.');
-    } finally {
-      setIsCheckingConnection(false);
-    }
   };
 
   const handleBack = () => {
@@ -395,21 +306,6 @@ export default function LinkDeviceScreen() {
                     </Text>
                   </View>
                 </View>
-
-                <TouchableOpacity
-                  style={[styles.checkButton, { backgroundColor: colors.primary }]}
-                  onPress={handleCheckConnection}
-                  disabled={isCheckingConnection}
-                >
-                  {isCheckingConnection ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <>
-                      <Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />
-                      <Text style={styles.checkButtonText}>Check Connection</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
               </>
             ) : (
               <View style={styles.loadingContainer}>
@@ -469,21 +365,6 @@ export default function LinkDeviceScreen() {
                 </Text>
               </View>
             </View>
-
-            <TouchableOpacity
-              style={[styles.checkButton, { backgroundColor: colors.primary }]}
-              onPress={handleCheckConnection}
-              disabled={isCheckingConnection}
-            >
-              {isCheckingConnection ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <>
-                  <Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />
-                  <Text style={styles.checkButtonText}>Check Connection</Text>
-                </>
-              )}
-            </TouchableOpacity>
           </>
         )}
       </ScrollView>
@@ -569,16 +450,4 @@ const styles = StyleSheet.create({
   copyButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
   loadingContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 60 },
   loadingText: { marginTop: 20, fontSize: 16 },
-  checkButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 8,
-    marginTop: 20,
-    gap: 8,
-    minWidth: 200,
-  },
-  checkButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
 });
