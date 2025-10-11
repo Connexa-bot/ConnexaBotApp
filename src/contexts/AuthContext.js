@@ -1,162 +1,144 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { connectToServer, getConnectionStatus, logoutWhatsApp } from '../services/api';
+import { connectToServer, logoutWhatsApp } from '../services/api';
 import { storage } from '../utils/storage';
 
 const AuthContext = createContext();
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [qrCode, setQrCode] = useState(null);
-  const [linkCode, setLinkCode] = useState(null); // ✅ ADD THIS
+  const [linkCode, setLinkCode] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
   useEffect(() => {
-    loadStoredUser();
+    checkStoredUser();
   }, []);
 
-  const loadStoredUser = async () => {
+  const checkStoredUser = async () => {
     try {
       const storedPhone = await storage.getItem('userPhone');
-      console.log('🔹 Stored phone:', storedPhone);
+      console.log('📱 Checking stored phone:', storedPhone);
+      
       if (storedPhone) {
-        const status = await checkStatus(storedPhone);
-        console.log('🔹 Stored user status check:', status);
-        if (status === 'connected') {
-          setUser({ phone: storedPhone });
-          setConnectionStatus('connected');
-        } else {
-          await storage.deleteItem('userPhone');
-        }
+        console.log('✅ Found stored user, setting user state');
+        setUser({ phone: storedPhone });
+        setConnectionStatus('connected');
+      } else {
+        console.log('ℹ️ No stored user found');
       }
     } catch (error) {
-      console.error('❌ Error loading stored user:', error);
+      console.error('❌ Error checking stored user:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const checkStatus = async (phone) => {
-    try {
-      const response = await getConnectionStatus(phone);
-      console.log('🔹 getConnectionStatus response:', response.data);
-      return response.data.status || response.data.connected ? 'connected' : 'disconnected';
-    } catch (error) {
-      console.error('❌ Error checking status:', error);
-      return 'disconnected';
     }
   };
 
   const login = async (phone) => {
     try {
-      setLoading(true);
-      setConnectionStatus('connecting');
       console.log('🔹 [AUTH] Starting login for phone:', phone);
-
+      
       const response = await connectToServer(phone);
-      const data = response.data;
-      console.log('🔹 [AUTH] Full backend response:', JSON.stringify(data, null, 2));
+      console.log('🔹 [AUTH] Full backend response:', JSON.stringify(response.data, null, 2));
+      
+      const data = response?.data;
 
-      // ✅ Handle QR or Link Code from backend
-      if (data.qrCode || data.linkCode) {
-        console.log('🔹 [AUTH] ✅ QR/Link code received!');
-        console.log('🔹 [AUTH] QR Code length:', data.qrCode?.length || 0);
-        console.log('🔹 [AUTH] Link Code:', data.linkCode);
-        
-        // ✅ STORE BOTH IN STATE
-        setQrCode(data.qrCode || null);
-        setLinkCode(data.linkCode || null); // ✅ ADD THIS LINE
-        setConnectionStatus('qr_ready');
-        
-        const result = {
-          success: true,
-          qrCode: data.qrCode || null,
-          linkCode: data.linkCode || null,
-        };
-        console.log('🔹 [AUTH] Returning result:', JSON.stringify(result, null, 2));
-        return result;
-      }
-
-      // ✅ Handle already connected
-      if (data.connected || data.status === 'connected') {
-        console.log('🔹 [AUTH] Device already connected.');
-        await storage.setItem('userPhone', phone);
-        setUser({ phone });
-        setConnectionStatus('connected');
+      // 🔥 FIXED: Set qrCode state if present
+      if (data?.qrCode) {
+        console.log('🔹 [AUTH] ✅ QR Code received!');
+        console.log('🔹 [AUTH] QR Code length:', data.qrCode.length);
+        setQrCode(data.qrCode);
+      } else {
+        console.log('🔹 [AUTH] ⚠️ No QR Code in response');
         setQrCode(null);
-        setLinkCode(null); // ✅ ADD THIS LINE
-        return { success: true, connected: true };
       }
 
-      // ❌ Fallback for unexpected response
-      console.warn('⚠️ [AUTH] Unexpected response from backend:', data);
-      setConnectionStatus('error');
-      return { success: false, error: 'Unexpected response from server.' };
+      // 🔥 FIXED: Set linkCode state if present
+      if (data?.linkCode) {
+        console.log('🔹 [AUTH] ✅ Link Code received:', data.linkCode);
+        setLinkCode(data.linkCode);
+      } else {
+        console.log('🔹 [AUTH] ⚠️ No Link Code in response');
+        setLinkCode(null);
+      }
 
-    } catch (error) {
-      console.error('❌ [AUTH] Login error:', error);
-      console.error('❌ [AUTH] Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
+      // Update connection status
+      if (data?.connected) {
+        setConnectionStatus('connected');
+        setUser({ phone });
+      } else {
+        setConnectionStatus('qr_ready');
+      }
+
+      console.log('🔹 [AUTH] Returning result:', {
+        success: true,
+        qrCode: data?.qrCode ? 'present' : 'missing',
+        linkCode: data?.linkCode || 'missing'
       });
+
+      // 🔥 CRITICAL: Return the actual values, not just success
+      return {
+        success: true,
+        qrCode: data?.qrCode,
+        linkCode: data?.linkCode,
+        connected: data?.connected
+      };
+    } catch (error) {
+      console.error('🔹 [AUTH] ❌ Login error:', error);
+      console.error('🔹 [AUTH] Error details:', error.response?.data || error.message);
+      
       setConnectionStatus('error');
-      const errorMsg = error.response?.data?.error || error.message || 'Unable to connect to server. Please check your internet connection and try again.';
-      return { success: false, error: errorMsg };
-    } finally {
-      setLoading(false);
-      console.log('🔹 [AUTH] Login attempt completed');
+      
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Network Error'
+      };
     }
   };
 
   const logout = async () => {
     try {
       if (user?.phone) {
-        console.log('🔹 Logging out user:', user.phone);
+        console.log('🔹 [AUTH] Logging out phone:', user.phone);
         await logoutWhatsApp(user.phone);
-        await storage.deleteItem('userPhone');
       }
+      
+      await storage.removeItem('userPhone');
       setUser(null);
       setQrCode(null);
-      setLinkCode(null); // ✅ ADD THIS LINE
+      setLinkCode(null);
       setConnectionStatus('disconnected');
+      
+      console.log('✅ Logout successful');
     } catch (error) {
       console.error('❌ Logout error:', error);
     }
   };
 
   const updateConnectionStatus = (status) => {
-    console.log('🔹 Updating connection status:', status);
+    console.log('🔹 [AUTH] Connection status updated:', status);
     setConnectionStatus(status);
-    if (status === 'connected') {
-      setQrCode(null);
-      setLinkCode(null); // ✅ ADD THIS LINE
-    }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        qrCode,
-        linkCode, // ✅ ADD THIS TO THE CONTEXT
-        connectionStatus,
-        login,
-        logout,
-        updateConnectionStatus,
-        setUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  const value = {
+    user,
+    setUser,
+    loading,
+    login,
+    logout,
+    qrCode,
+    linkCode,
+    connectionStatus,
+    updateConnectionStatus,
+  };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
