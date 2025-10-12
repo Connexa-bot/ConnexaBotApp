@@ -52,7 +52,6 @@ export default function App() {
       <ThemeProvider>
         <WallpaperProvider>
           <AIProvider>
-            <StatusBar style="light" />
             <RootNavigator />
           </AIProvider>
         </WallpaperProvider>

@@ -10,23 +10,26 @@ import CallsScreen from '../screens/CallsScreen';
 const Tab = createMaterialTopTabNavigator();
 
 export default function MainTabNavigator() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   return (
     <View style={{ flex: 1 }}>
       <Tab.Navigator
         initialRouteName="Chats"
         screenOptions={({ route }) => ({
-          tabBarActiveTintColor: '#FFFFFF',
-          tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.6)',
+          tabBarActiveTintColor: colors.tabIconSelected,
+          tabBarInactiveTintColor: colors.tabIconDefault,
           tabBarIndicatorStyle: {
-            backgroundColor: '#FFFFFF',
+            backgroundColor: colors.tabIconSelected,
             height: 3,
           },
           tabBarStyle: {
             backgroundColor: colors.header,
             elevation: 0,
             shadowOpacity: 0,
+          },
+          tabBarContentContainerStyle: {
+            backgroundColor: colors.header,
           },
           tabBarLabelStyle: {
             fontSize: 14,

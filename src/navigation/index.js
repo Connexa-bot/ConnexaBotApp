@@ -8,13 +8,14 @@ import LinkDeviceScreen from '../screens/LinkDeviceScreen';
 import WelcomeSplashScreen from '../screens/WelcomeSplashScreen';
 import TermsPrivacyScreen from '../screens/TermsPrivacyScreen';
 import { ActivityIndicator, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { storage } from '../utils/storage';
 
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
   const { user, loading } = useAuth();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [showWelcome, setShowWelcome] = useState(true);
   const [showTerms, setShowTerms] = useState(false);
   const [hasSeenWelcome, setHasSeenWelcome] = useState(false);
@@ -67,14 +68,17 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {user ? (
-          <Stack.Screen name="App" component={AppNavigator} />
-        ) : (
-          <Stack.Screen name="LinkDevice" component={LinkDeviceScreen} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <>
+      <StatusBar style={isDark ? 'light' : 'light'} backgroundColor={colors.header} />
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {user ? (
+            <Stack.Screen name="App" component={AppNavigator} />
+          ) : (
+            <Stack.Screen name="LinkDevice" component={LinkDeviceScreen} />
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </>
   );
 }

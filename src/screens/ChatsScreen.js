@@ -79,7 +79,7 @@ export default function ChatsScreen() {
             {item.lastMessage || 'No messages yet'}
           </Text>
           {item.unreadCount > 0 && (
-            <View style={[styles.unreadBadge, { backgroundColor: colors.primary }]}>
+            <View style={[styles.unreadBadge, { backgroundColor: colors.unreadBadge }]}>
               <Text style={styles.unreadText}>{item.unreadCount}</Text>
             </View>
           )}

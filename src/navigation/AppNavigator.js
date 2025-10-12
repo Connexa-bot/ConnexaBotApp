@@ -16,7 +16,7 @@ const HEADER_HEIGHT = Platform.select({
 });
 
 export default function AppNavigator() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   return (
     <Stack.Navigator
@@ -37,26 +37,26 @@ export default function AppNavigator() {
             backgroundColor: colors.header,
             height: HEADER_HEIGHT,
           },
-          headerTintColor: '#FFFFFF',
+          headerTintColor: colors.headerText,
           headerRight: () => (
             <View style={{ flexDirection: 'row', marginRight: 8 }}>
               <TouchableOpacity
                 style={{ padding: 8 }}
                 onPress={() => {}}
               >
-                <Ionicons name="camera-outline" size={24} color="#FFFFFF" />
+                <Ionicons name="camera-outline" size={24} color={colors.headerText} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={{ padding: 8, marginLeft: 8 }}
                 onPress={() => {}}
               >
-                <Ionicons name="search-outline" size={24} color="#FFFFFF" />
+                <Ionicons name="search-outline" size={24} color={colors.headerText} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={{ padding: 8, marginLeft: 8 }}
                 onPress={() => navigation.navigate('Settings')}
               >
-                <Ionicons name="ellipsis-vertical" size={24} color="#FFFFFF" />
+                <Ionicons name="ellipsis-vertical" size={24} color={colors.headerText} />
               </TouchableOpacity>
             </View>
           ),
@@ -77,7 +77,7 @@ export default function AppNavigator() {
           headerStyle: {
             backgroundColor: colors.header,
           },
-          headerTintColor: '#FFFFFF',
+          headerTintColor: colors.headerText,
         }}
       />
     </Stack.Navigator>
