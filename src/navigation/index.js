@@ -37,15 +37,19 @@ export default function RootNavigator() {
   };
 
   const handleWelcomeComplete = async () => {
+    console.log('🔵 [NAV] Welcome complete, showing terms');
     setShowWelcome(false);
     setShowTerms(true);
   };
 
   const handleTermsAccept = async () => {
+    console.log('🔵 [NAV] Terms accepted, saving to storage');
     try {
       await storage.setItem('hasSeenWelcome', 'true');
+      console.log('🔵 [NAV] Storage saved, updating state');
       setShowTerms(false);
       setHasSeenWelcome(true);
+      console.log('🔵 [NAV] State updated, should show main app');
     } catch (error) {
       console.error('Error saving welcome status:', error);
     }
@@ -60,16 +64,30 @@ export default function RootNavigator() {
   }
 
   if (showWelcome) {
-    return <WelcomeSplashScreen onComplete={handleWelcomeComplete} />;
+    console.log('🔵 [NAV] Rendering WelcomeSplashScreen');
+    return (
+      <>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <WelcomeSplashScreen onComplete={handleWelcomeComplete} />
+      </>
+    );
   }
 
   if (showTerms) {
-    return <TermsPrivacyScreen onContinue={handleTermsAccept} />;
+    console.log('🔵 [NAV] Rendering TermsPrivacyScreen');
+    return (
+      <>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <TermsPrivacyScreen onContinue={handleTermsAccept} />
+      </>
+    );
   }
+  
+  console.log('🔵 [NAV] Rendering main navigation, user:', user ? 'logged in' : 'not logged in');
 
   return (
     <>
-      <StatusBar style={isDark ? 'light' : 'light'} backgroundColor={colors.header} />
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.header} />
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {user ? (

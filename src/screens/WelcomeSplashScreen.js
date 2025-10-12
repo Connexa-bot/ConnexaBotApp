@@ -13,17 +13,27 @@ export default function WelcomeSplashScreen({ onComplete }) {
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    console.log('🟢 [SPLASH] Starting fade animation');
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 800,
       useNativeDriver: false,
     }).start();
 
+    console.log('🟢 [SPLASH] Setting timeout for 2.5s');
     const timer = setTimeout(() => {
-      onComplete();
+      console.log('🟢 [SPLASH] Timeout fired, calling onComplete');
+      if (onComplete) {
+        onComplete();
+      } else {
+        console.error('🔴 [SPLASH] onComplete is not defined!');
+      }
     }, 2500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('🟢 [SPLASH] Cleanup - clearing timeout');
+      clearTimeout(timer);
+    };
   }, []);
 
   return (

@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import "react-native-gesture-handler";
-import { Platform } from "react-native";
+import { Platform, View, ActivityIndicator } from "react-native";
 import { ThemeProvider } from "./src/contexts/ThemeContext";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { WallpaperProvider } from "./src/contexts/WallpaperContext";
@@ -8,12 +8,13 @@ import { AIProvider } from "./src/contexts/AIContext";
 import RootNavigator from "./src/navigation";
 import * as NavigationBar from 'expo-navigation-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
 
-SplashScreen.preventAutoHideAsync();
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync();
+}
 
 export default function App() {
-  const [appIsReady, setAppIsReady] = useState(false);
+  const [appIsReady, setAppIsReady] = useState(Platform.OS === 'web');
 
   useEffect(() => {
     async function prepare() {
@@ -26,7 +27,9 @@ export default function App() {
           await setupNavigationBar();
         }
         
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (Platform.OS !== 'web') {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       } catch (e) {
         console.warn(e);
       } finally {
@@ -34,17 +37,23 @@ export default function App() {
       }
     }
 
-    prepare();
+    if (Platform.OS !== 'web') {
+      prepare();
+    }
   }, []);
 
   useEffect(() => {
-    if (appIsReady) {
+    if (appIsReady && Platform.OS !== 'web') {
       SplashScreen.hideAsync();
     }
   }, [appIsReady]);
 
   if (!appIsReady) {
-    return null;
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#008069" />
+      </View>
+    );
   }
 
   return (

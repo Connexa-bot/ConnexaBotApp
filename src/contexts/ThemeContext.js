@@ -97,10 +97,6 @@ export const ThemeProvider = ({ children }) => {
     [themePreference, actualTheme]
   );
 
-  if (isLoading) {
-    return null;
-  }
-
   return (
     <ThemeContext.Provider value={value}>
       {children}
