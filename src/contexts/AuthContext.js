@@ -30,7 +30,14 @@ export const AuthProvider = ({ children }) => {
       
       if (storedPhone) {
         console.log('🔹 [AUTH] Verifying connection for stored user...');
-        const statusResponse = await callAPI(API_ENDPOINTS.GET_STATUS(storedPhone));
+        
+        const statusResponse = await Promise.race([
+          callAPI(API_ENDPOINTS.GET_STATUS(storedPhone)),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('API timeout')), 5000))
+        ]).catch(err => {
+          console.warn('⚠️ API check failed:', err.message);
+          return null;
+        });
 
         if (statusResponse?.connected) {
           console.log('✅ Connection verified, setting user state');

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import "react-native-gesture-handler";
+import { Platform } from "react-native";
 import { ThemeProvider } from "./src/contexts/ThemeContext";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { WallpaperProvider } from "./src/contexts/WallpaperContext";
@@ -17,11 +18,13 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        const setupNavigationBar = async () => {
-          await NavigationBar.setBehaviorAsync('inset-swipe');
-          await NavigationBar.setVisibilityAsync('hidden');
-        };
-        await setupNavigationBar();
+        if (Platform.OS === 'android') {
+          const setupNavigationBar = async () => {
+            await NavigationBar.setBehaviorAsync('inset-swipe');
+            await NavigationBar.setVisibilityAsync('hidden');
+          };
+          await setupNavigationBar();
+        }
         
         await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (e) {
@@ -34,9 +37,9 @@ export default function App() {
     prepare();
   }, []);
 
-  const onLayoutRootView = useCallback(async () => {
+  useEffect(() => {
     if (appIsReady) {
-      await SplashScreen.hideAsync();
+      SplashScreen.hideAsync();
     }
   }, [appIsReady]);
 
@@ -50,7 +53,7 @@ export default function App() {
         <WallpaperProvider>
           <AIProvider>
             <StatusBar style="light" />
-            <RootNavigator onReady={onLayoutRootView} />
+            <RootNavigator />
           </AIProvider>
         </WallpaperProvider>
       </ThemeProvider>
