@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { connectToServer, logoutWhatsApp } from '../services/api';
+import { connectToServer, logoutWhatsApp, getConnectionStatus } from '../services/api';
 import { storage } from '../utils/storage';
 
 const AuthContext = createContext();
@@ -29,14 +29,30 @@ export const AuthProvider = ({ children }) => {
       console.log('📱 Checking stored phone:', storedPhone);
       
       if (storedPhone) {
-        console.log('✅ Found stored user, setting user state');
-        setUser({ phone: storedPhone });
-        setConnectionStatus('connected');
+        // 🔥 FIXED: Verify connection with backend before setting status
+        console.log('🔹 [AUTH] Verifying connection for stored user...');
+        const statusResponse = await getConnectionStatus(storedPhone);
+
+        if (statusResponse.data?.connected) {
+          console.log('✅ Connection verified, setting user state');
+          setUser({ phone: storedPhone });
+          setConnectionStatus('connected');
+        } else {
+          console.log('⚠️ Connection not active, logging out');
+          // If not connected, treat as logged out
+          await storage.deleteItem('userPhone');
+          setUser(null);
+          setConnectionStatus('disconnected');
+        }
       } else {
         console.log('ℹ️ No stored user found');
       }
     } catch (error) {
       console.error('❌ Error checking stored user:', error);
+      // Also logout if there's an error verifying
+      await storage.deleteItem('userPhone');
+      setUser(null);
+      setConnectionStatus('disconnected');
     } finally {
       setLoading(false);
     }
@@ -111,7 +127,7 @@ export const AuthProvider = ({ children }) => {
         await logoutWhatsApp(user.phone);
       }
       
-      await storage.removeItem('userPhone');
+      await storage.deleteItem('userPhone');
       setUser(null);
       setQrCode(null);
       setLinkCode(null);
