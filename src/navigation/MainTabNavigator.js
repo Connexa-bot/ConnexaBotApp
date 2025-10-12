@@ -17,7 +17,7 @@ export default function MainTabNavigator() {
   return (
     <View style={{ flex: 1 }}>
       <Tab.Navigator
-        screenOptions={{
+        screenOptions={({ route }) => ({
           tabBarActiveTintColor: colors.text,
           tabBarInactiveTintColor: colors.secondaryText,
           tabBarIndicatorStyle: {
@@ -32,7 +32,18 @@ export default function MainTabNavigator() {
             fontWeight: '600',
             textTransform: 'none',
           },
-        }}
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+            if (route.name === 'Chats') {
+              iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+            } else if (route.name === 'Updates') {
+              iconName = focused ? 'sync-circle' : 'sync-circle-outline';
+            } else if (route.name === 'Calls') {
+              iconName = focused ? 'call' : 'call-outline';
+            }
+            return <Ionicons name={iconName} size={22} color={color} />;
+          },
+        })}
       >
         <Tab.Screen 
           name="Chats" 
