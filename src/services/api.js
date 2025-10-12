@@ -1,412 +1,332 @@
-import axios from 'axios';
-import { SERVER_URL as API_BASE_URL } from '../config';
+/**
+ * CONNEXA-BOT API ENDPOINTS
+ * 
+ * Base URL (Development): http://localhost:5000
+ * Base URL (Production/Replit): Auto-detected from environment
+ */
 
-// Validate API_BASE_URL
-if (!API_BASE_URL) {
-  console.error('⚠️ API_BASE_URL is not defined!');
-  console.error('Please set SERVER_URL in src/config.js');
-}
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 
+                     process.env.REACT_APP_API_URL || 
+                     process.env.SERVER_URL || 
+                     'https://1b6bc53f-e595-4c09-bbdf-56c62421c642-00-18ocnnrogz8bw.kirk.replit.dev';
 
-console.log('🔗 API Base URL:', API_BASE_URL);
+export const API_ENDPOINTS = {
+  
+  // ========== HEALTH & STATUS ==========
+  
+  /**
+   * Health Check
+   * GET /health
+   * Returns: { status: string, uptime: number, timestamp: string, serverUrl: string }
+   */
+  HEALTH: () => ({
+    url: `${API_BASE_URL}/health`,
+    method: 'GET'
+  }),
 
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+  /**
+   * API Health Check
+   * GET /api/health
+   * Returns: { status: string, uptime: number, timestamp: string, activeSessions: number }
+   */
+  API_HEALTH: () => ({
+    url: `${API_BASE_URL}/api/health`,
+    method: 'GET'
+  }),
+  
+  // ========== CONNECTION ENDPOINTS ==========
+  
+  /**
+   * Connect WhatsApp Session
+   * POST /api/connect
+   * Body: { phone: string }
+   * Returns: { qrCode?: string, linkCode?: string, message: string, connected: boolean }
+   */
+  CONNECT: (phone) => ({
+    url: `${API_BASE_URL}/api/connect`,
+    method: 'POST',
+    body: { phone }
+  }),
+  
+  /**
+   * Check Connection Status
+   * GET /api/status/:phone
+   * Returns: { connected: boolean, status: string, authenticated: boolean, ready: boolean, 
+   *            qrCode?: string, linkCode?: string, user?: object, phone: string, error?: string }
+   */
+  GET_STATUS: (phone) => ({
+    url: `${API_BASE_URL}/api/status/${phone}`,
+    method: 'GET'
+  }),
+  
+  /**
+   * Logout Session
+   * POST /api/logout
+   * Body: { phone: string }
+   * Returns: { message: string }
+   */
+  LOGOUT: (phone) => ({
+    url: `${API_BASE_URL}/api/logout`,
+    method: 'POST',
+    body: { phone }
+  }),
+  
+  /**
+   * Clear Session State
+   * POST /api/clear-state/:phoneNumber?fullReset=false
+   * Query: fullReset (boolean) - true for complete reset, false for partial
+   * Returns: { success: boolean, message: string }
+   */
+  CLEAR_STATE: (phone, fullReset = false) => ({
+    url: `${API_BASE_URL}/api/clear-state/${phone}?fullReset=${fullReset}`,
+    method: 'POST'
+  }),
+  
+  // ========== DATA ENDPOINTS ==========
+  
+  /**
+   * Get All Chats
+   * GET /api/chats/:phone
+   * Returns: { success: boolean, chats: array, count: number, timestamp: string }
+   */
+  GET_CHATS: (phone) => ({
+    url: `${API_BASE_URL}/api/chats/${phone}`,
+    method: 'GET'
+  }),
+  
+  /**
+   * Get Messages from Specific Chat
+   * GET /api/messages/:phone/:chatId?limit=50
+   * Query: limit (number) - max messages to fetch
+   * Returns: { success: boolean, data: { messages: array } }
+   */
+  GET_MESSAGES: (phone, chatId, limit = 50) => ({
+    url: `${API_BASE_URL}/api/messages/${phone}/${chatId}?limit=${limit}`,
+    method: 'GET'
+  }),
+  
+  /**
+   * Get Call History
+   * GET /api/calls/:phone
+   * Returns: { success: boolean, data: { calls: array } }
+   */
+  GET_CALLS: (phone) => ({
+    url: `${API_BASE_URL}/api/calls/${phone}`,
+    method: 'GET'
+  }),
+  
+  /**
+   * Get Status Updates
+   * GET /api/status-updates/:phone
+   * Returns: { success: boolean, statusUpdates: array, count: number }
+   */
+  GET_STATUS_UPDATES: (phone) => ({
+    url: `${API_BASE_URL}/api/status-updates/${phone}`,
+    method: 'GET'
+  }),
+  
+  /**
+   * Get Channels
+   * GET /api/channels/:phone
+   * Returns: { success: boolean, data: { channels: array } }
+   */
+  GET_CHANNELS: (phone) => ({
+    url: `${API_BASE_URL}/api/channels/${phone}`,
+    method: 'GET'
+  }),
+  
+  /**
+   * Get Communities
+   * GET /api/communities/:phone
+   * Returns: { success: boolean, data: { communities: array } }
+   */
+  GET_COMMUNITIES: (phone) => ({
+    url: `${API_BASE_URL}/api/communities/${phone}`,
+    method: 'GET'
+  }),
+  
+  /**
+   * Get Profile
+   * GET /api/profile/:phone
+   * Returns: { success: boolean, data: { name: string, phone: string, status: string, picture: string } }
+   */
+  GET_PROFILE: (phone) => ({
+    url: `${API_BASE_URL}/api/profile/${phone}`,
+    method: 'GET'
+  }),
+  
+  /**
+   * Get Contacts
+   * GET /api/contacts/:phone
+   * Returns: { success: boolean, contacts: array }
+   */
+  GET_CONTACTS: (phone) => ({
+    url: `${API_BASE_URL}/api/contacts/${phone}`,
+    method: 'GET'
+  }),
+  
+  /**
+   * Get Groups
+   * GET /api/groups/:phone
+   * Returns: { success: boolean, groups: array }
+   */
+  GET_GROUPS: (phone) => ({
+    url: `${API_BASE_URL}/api/groups/${phone}`,
+    method: 'GET'
+  }),
+  
+  // ========== ACTION ENDPOINTS ==========
+  
+  /**
+   * Send Text Message
+   * POST /api/messages/send
+   * Body: { phone: string, to: string, message: string }
+   * Returns: { success: boolean, messageId?: string }
+   */
+  SEND_MESSAGE: (phone, to, message) => ({
+    url: `${API_BASE_URL}/api/messages/send`,
+    method: 'POST',
+    body: { phone, to, message }
+  }),
+  
+  /**
+   * Download Message Media
+   * POST /api/messages/download
+   * Body: { phone: string, messageKey: object }
+   * Returns: { success: boolean, filePath?: string }
+   */
+  DOWNLOAD_MEDIA: (phone, messageKey) => ({
+    url: `${API_BASE_URL}/api/messages/download`,
+    method: 'POST',
+    body: { phone, messageKey }
+  }),
+  
+  /**
+   * Message Action (delete, forward, star, react, edit)
+   * POST /api/messages/action
+   * Body: { phone: string, action: string, messageKey: object, data?: object }
+   * Returns: { success: boolean }
+   */
+  MESSAGE_ACTION: (phone, action, messageKey, data = {}) => ({
+    url: `${API_BASE_URL}/api/messages/action`,
+    method: 'POST',
+    body: { phone, action, messageKey, data }
+  }),
+  
+  /**
+   * Post Status Update
+   * POST /api/status/post
+   * Body: { phone: string, type: string, content: string, contacts?: array }
+   * Returns: { success: boolean }
+   */
+  POST_STATUS: (phone, type, content, contacts = []) => ({
+    url: `${API_BASE_URL}/api/status/post`,
+    method: 'POST',
+    body: { phone, type, content, contacts }
+  }),
+  
+  /**
+   * Create Group
+   * POST /api/groups/create
+   * Body: { phone: string, name: string, participants: array }
+   * Returns: { success: boolean, groupId?: string }
+   */
+  CREATE_GROUP: (phone, name, participants) => ({
+    url: `${API_BASE_URL}/api/groups/create`,
+    method: 'POST',
+    body: { phone, name, participants }
+  }),
+  
+  /**
+   * Update Profile
+   * POST /api/profile/update
+   * Body: { phone: string, name?: string, status?: string, picture?: string }
+   * Returns: { success: boolean }
+   */
+  UPDATE_PROFILE: (phone, updates) => ({
+    url: `${API_BASE_URL}/api/profile/update`,
+    method: 'POST',
+    body: { phone, ...updates }
+  }),
+  
+  /**
+   * Update Presence (online/offline/typing/recording)
+   * POST /api/presence/update
+   * Body: { phone: string, chatId: string, state: string }
+   * Returns: { success: boolean }
+   */
+  UPDATE_PRESENCE: (phone, chatId, state) => ({
+    url: `${API_BASE_URL}/api/presence/update`,
+    method: 'POST',
+    body: { phone, chatId, state }
+  }),
+  
+  // ========== AI ENDPOINTS ==========
+  
+  /**
+   * Generate Smart Reply Suggestions
+   * POST /api/ai/smart-reply
+   * Body: { phone: string, context: string }
+   * Returns: { success: boolean, suggestions: array }
+   */
+  AI_SMART_REPLY: (phone, context) => ({
+    url: `${API_BASE_URL}/api/ai/smart-reply`,
+    method: 'POST',
+    body: { phone, context }
+  }),
+  
+  /**
+   * Translate Message
+   * POST /api/ai/translate
+   * Body: { phone: string, text: string, targetLang: string }
+   * Returns: { success: boolean, translation: string }
+   */
+  AI_TRANSLATE: (phone, text, targetLang) => ({
+    url: `${API_BASE_URL}/api/ai/translate`,
+    method: 'POST',
+    body: { phone, text, targetLang }
+  }),
+  
+  /**
+   * Summarize Conversation
+   * POST /api/ai/summarize
+   * Body: { phone: string, chatId: string, messageCount?: number }
+   * Returns: { success: boolean, summary: string }
+   */
+  AI_SUMMARIZE: (phone, chatId, messageCount = 50) => ({
+    url: `${API_BASE_URL}/api/ai/summarize`,
+    method: 'POST',
+    body: { phone, chatId, messageCount }
+  }),
+};
 
-// Add request interceptor for logging
-api.interceptors.request.use(
-  (config) => {
-    console.log('📤 API Request:', config.method.toUpperCase(), config.url);
-    return config;
-  },
-  (error) => {
-    console.error('❌ API Request Error:', error);
-    return Promise.reject(error);
-  }
-);
-
-// Add response interceptor for logging
-api.interceptors.response.use(
-  (response) => {
-    console.log('✅ API Response:', response.config.url, response.status);
-    return response;
-  },
-  (error) => {
-    if (error.response) {
-      console.error('❌ API Response Error:', error.response.status, error.response.data);
-    } else if (error.request) {
-      console.error('❌ Network Error: No response received');
-      console.error('❌ Check if backend is running at:', API_BASE_URL);
-    } else {
-      console.error('❌ Error:', error.message);
+// Helper function to make API calls
+export const callAPI = async (endpoint) => {
+  try {
+    console.log('📤 API Request:', endpoint.method, endpoint.url);
+    
+    const response = await fetch(endpoint.url, {
+      method: endpoint.method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: endpoint.body ? JSON.stringify(endpoint.body) : undefined
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ API Error:', response.status, errorText);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    return Promise.reject(error);
+    
+    const data = await response.json();
+    console.log('✅ API Response:', endpoint.url, response.status);
+    return data;
+  } catch (error) {
+    console.error('❌ API call failed:', error);
+    throw error;
   }
-);
-
-// ============= CONNECTION & SESSION =============
-
-export const checkApiStatus = async () => {
-  return await api.get('/api');
 };
 
-export const connectToServer = async (phone) => {
-  return await api.post('/api/connect', { phone });
-};
-
-export const getConnectionStatus = async (phone) => {
-  return await api.get(`/api/status/${phone}`);
-};
-
-export const logoutWhatsApp = async (phone) => {
-  return await api.post('/api/logout', { phone });
-};
-
-// ============= CHATS =============
-
-export const getChats = async (phone) => {
-  return await api.get(`/api/chats/${phone}`);
-};
-
-// ============= MESSAGES =============
-
-export const getMessages = async (phone, chatId, limit = 50) => {
-  return await api.get(`/api/messages/${phone}/${chatId}?limit=${limit}`);
-};
-
-export const sendMessage = async (phone, to, text) => {
-  return await api.post('/api/messages/send', { phone, to, text });
-};
-
-export const sendMediaMessage = async (phone, to, media, type, caption = '') => {
-  return await api.post('/api/messages/send-media', { phone, to, media, type, caption });
-};
-
-export const downloadMedia = async (phone, chatId, msgId, type) => {
-  return await api.post('/api/messages/download', {
-    phone,
-    chatId,
-    msgId,
-    type,
-  });
-};
-
-export const messageAction = async (phone, action, data = {}) => {
-  return await api.post('/api/messages/action', {
-    phone,
-    action,
-    ...data,
-  });
-};
-
-export const deleteMessage = async (phone, chatId, messageKey) => {
-  return await messageAction(phone, 'delete', { chatId, messageKey });
-};
-
-export const forwardMessage = async (phone, to, messageKey) => {
-  return await messageAction(phone, 'forward', { to, messageKey });
-};
-
-export const starMessage = async (phone, chatId, messageId) => {
-  return await messageAction(phone, 'star', { chatId, messageId });
-};
-
-export const reactToMessage = async (phone, chatId, messageKey, emoji) => {
-  return await messageAction(phone, 'react', { chatId, messageKey, emoji });
-};
-
-export const editMessage = async (phone, chatId, messageKey, newText) => {
-  return await messageAction(phone, 'edit', { chatId, messageKey, newText });
-};
-
-// ============= CALLS =============
-
-export const getCalls = async (phone) => {
-  return await api.get(`/api/calls/${phone}`);
-};
-
-// ============= STATUS/STORIES =============
-
-export const getStatusUpdates = async (phone) => {
-  return await api.get(`/api/status-updates/${phone}`);
-};
-
-export const postTextStatus = async (phone, text, statusJidList = [], options = {}) => {
-  return await api.post('/api/status/post', {
-    phone,
-    type: 'text',
-    content: text,
-    statusJidList,
-    options
-  });
-};
-
-export const postImageStatus = async (phone, image, caption = '', statusJidList = [], options = {}) => {
-  return await api.post('/api/status/post', {
-    phone,
-    type: 'image',
-    content: image,
-    caption,
-    statusJidList,
-    options
-  });
-};
-
-export const postVideoStatus = async (phone, video, caption = '', statusJidList = [], options = {}) => {
-  return await api.post('/api/status/post', {
-    phone,
-    type: 'video',
-    content: video,
-    caption,
-    statusJidList,
-    options
-  });
-};
-
-export const postAudioStatus = async (phone, audio, statusJidList = [], options = {}) => {
-  return await api.post('/api/status/post', {
-    phone,
-    type: 'audio',
-    content: audio,
-    statusJidList,
-    options
-  });
-};
-
-export const getStatusContacts = async (phone) => {
-  return await api.get(`/api/status/contacts/${phone}`);
-};
-
-// ============= CHANNELS =============
-
-export const getChannels = async (phone) => {
-  return await api.get(`/api/channels/${phone}`);
-};
-
-// ============= COMMUNITIES =============
-
-export const getCommunities = async (phone) => {
-  return await api.get(`/api/communities/${phone}`);
-};
-
-// ============= PROFILE =============
-
-export const getUserProfile = async (phone) => {
-  return await api.get(`/api/profile/${phone}`);
-};
-
-export const profileAction = async (phone, action, data = {}) => {
-  return await api.post('/api/profile/action', {
-    phone,
-    action,
-    ...data,
-  });
-};
-
-export const updateProfileName = async (phone, name) => {
-  return await profileAction(phone, 'updateName', { name });
-};
-
-export const updateProfileStatus = async (phone, status) => {
-  return await profileAction(phone, 'updateStatus', { status });
-};
-
-export const updateProfilePicture = async (phone, jid, imageBuffer) => {
-  return await profileAction(phone, 'updatePicture', { jid, imageBuffer });
-};
-
-export const removeProfilePicture = async (phone, jid) => {
-  return await profileAction(phone, 'removePicture', { jid });
-};
-
-export const getProfilePicture = async (phone, jid) => {
-  return await profileAction(phone, 'getPicture', { jid });
-};
-
-// ============= CONTACTS =============
-
-export const getContacts = async (phone) => {
-  return await api.get(`/api/contacts/${phone}`);
-};
-
-export const contactAction = async (phone, action, data = {}) => {
-  return await api.post('/api/contacts/action', {
-    phone,
-    action,
-    ...data,
-  });
-};
-
-export const blockContact = async (phone, jid) => {
-  return await contactAction(phone, 'block', { jid });
-};
-
-export const unblockContact = async (phone, jid) => {
-  return await contactAction(phone, 'unblock', { jid });
-};
-
-export const getBlockedContacts = async (phone) => {
-  return await contactAction(phone, 'blocked');
-};
-
-// ============= GROUPS =============
-
-export const getGroups = async (phone) => {
-  return await api.get(`/api/groups/${phone}`);
-};
-
-export const groupAction = async (phone, action, data = {}) => {
-  return await api.post('/api/groups/action', {
-    phone,
-    action,
-    ...data,
-  });
-};
-
-export const createGroup = async (phone, name, participants) => {
-  return await groupAction(phone, 'create', { name, participants });
-};
-
-export const addParticipants = async (phone, groupId, participants) => {
-  return await groupAction(phone, 'add', { groupId, participants });
-};
-
-export const removeParticipants = async (phone, groupId, participants) => {
-  return await groupAction(phone, 'remove', { groupId, participants });
-};
-
-export const promoteParticipants = async (phone, groupId, participants) => {
-  return await groupAction(phone, 'promote', { groupId, participants });
-};
-
-export const demoteParticipants = async (phone, groupId, participants) => {
-  return await groupAction(phone, 'demote', { groupId, participants });
-};
-
-export const updateGroupSubject = async (phone, groupId, subject) => {
-  return await groupAction(phone, 'updateSubject', { groupId, subject });
-};
-
-export const updateGroupDescription = async (phone, groupId, description) => {
-  return await groupAction(phone, 'updateDescription', { groupId, description });
-};
-
-export const updateGroupSettings = async (phone, groupId, setting) => {
-  return await groupAction(phone, 'updateSettings', { groupId, setting });
-};
-
-export const leaveGroup = async (phone, groupId) => {
-  return await groupAction(phone, 'leave', { groupId });
-};
-
-export const getGroupInviteCode = async (phone, groupId) => {
-  return await groupAction(phone, 'getInviteCode', { groupId });
-};
-
-export const revokeGroupInviteCode = async (phone, groupId) => {
-  return await groupAction(phone, 'revokeInviteCode', { groupId });
-};
-
-export const acceptGroupInvite = async (phone, inviteCode) => {
-  return await groupAction(phone, 'acceptInvite', { inviteCode });
-};
-
-export const getGroupMetadata = async (phone, groupId) => {
-  return await groupAction(phone, 'getMetadata', { groupId });
-};
-
-// ============= PRESENCE =============
-
-export const presenceAction = async (phone, action, data = {}) => {
-  return await api.post('/api/presence/action', {
-    phone,
-    action,
-    ...data,
-  });
-};
-
-export const updatePresence = async (phone, chatId, presence) => {
-  return await presenceAction(phone, 'update', { chatId, presence });
-};
-
-export const subscribeToPresence = async (phone, jid) => {
-  return await presenceAction(phone, 'subscribe', { jid });
-};
-
-// ============= AI AUTOMATION =============
-
-export const generateAIResponse = async (phone, chatId, message, options = {}) => {
-  return await api.post('/api/ai/generate-response', {
-    phone,
-    chatId,
-    message,
-    options
-  });
-};
-
-export const autoReplyAI = async (phone, chatId, message, settings = {}) => {
-  return await api.post('/api/ai/auto-reply', {
-    phone,
-    chatId,
-    message,
-    settings
-  });
-};
-
-export const getSmartReplies = async (phone, chatId, context = {}) => {
-  return await api.post('/api/ai/smart-replies', {
-    phone,
-    chatId,
-    context
-  });
-};
-
-export const analyzeImageAI = async (phone, base64Image, prompt = 'Describe this image') => {
-  return await api.post('/api/ai/analyze-image', {
-    phone,
-    base64Image,
-    prompt
-  });
-};
-
-export const transcribeAudioAI = async (phone, audioFilePath) => {
-  return await api.post('/api/ai/transcribe-audio', {
-    phone,
-    audioFilePath
-  });
-};
-
-export const analyzeSentimentAI = async (phone, text) => {
-  return await api.post('/api/ai/analyze-sentiment', {
-    phone,
-    text
-  });
-};
-
-export const summarizeConversation = async (phone, chatId, messageCount = 20) => {
-  return await api.post('/api/ai/summarize', {
-    phone,
-    chatId,
-    messageCount
-  });
-};
-
-export const getAIChatHistory = async (phone, chatId) => {
-  return await api.get(`/api/ai/chat-history/${phone}/${chatId}`);
-};
-
-export const clearAIChatHistory = async (phone, chatId = null) => {
-  const url = chatId 
-    ? `/api/ai/chat-history/${phone}/${chatId}`
-    : `/api/ai/chat-history/${phone}`;
-  return await api.delete(url);
-};
-
-// Export API instance and base URL for debugging
-export { api, API_BASE_URL };
-export default api;
+export { API_BASE_URL };
+export default API_ENDPOINTS;
