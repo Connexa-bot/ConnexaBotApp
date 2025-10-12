@@ -16,7 +16,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { getConnectionStatus } from '../services/api';
+import { callAPI, API_ENDPOINTS } from '../services/api';
 import { storage } from '../utils/storage';
 
 export default function LinkDeviceScreen() {
@@ -31,7 +31,6 @@ export default function LinkDeviceScreen() {
   const { login, qrCode, linkCode, connectionStatus, updateConnectionStatus, setUser } = useAuth();
   const { colors } = useTheme();
 
-  // Initialize pairing code from context
   useEffect(() => {
     if (linkCode && linkCode !== pairingCode) {
       console.log('🔗 Setting pairing code from context:', linkCode);
@@ -39,7 +38,6 @@ export default function LinkDeviceScreen() {
     }
   }, [linkCode]);
 
-  // Auto-show link screen when QR code is ready
   useEffect(() => {
     console.log('🔹 QR Code state changed:', qrCode ? 'Available' : 'Not available');
     console.log('🔹 Connection status:', connectionStatus);
@@ -50,11 +48,10 @@ export default function LinkDeviceScreen() {
     }
   }, [qrCode, connectionStatus]);
 
-  // 🔥 FIXED: Polling for connection status
   useEffect(() => {
     let statusInterval;
     let pollCount = 0;
-    const MAX_POLLS = 60; // 3 minutes max (60 * 3s)
+    const MAX_POLLS = 60;
 
     if (showLinkScreen && cleanPhone) {
       console.log('🔄 Starting polling for connection status for phone:', cleanPhone);
@@ -65,19 +62,15 @@ export default function LinkDeviceScreen() {
         console.log(`🔍 Poll #${pollCount}: Checking status for`, cleanPhone);
 
         try {
-          const response = await getConnectionStatus(cleanPhone);
-          const data = response?.data;
+          const data = await callAPI(API_ENDPOINTS.GET_STATUS(cleanPhone));
           
-          // Log full response to see what backend returns
           console.log('📊 Full status response:', JSON.stringify(data, null, 2));
 
-          // Update pairing code if received
           if (data?.linkCode && data.linkCode !== pairingCode) {
             console.log('🔗 Updating pairingCode from backend:', data.linkCode);
             setPairingCode(data.linkCode);
           }
 
-          // 🔥 FIXED: Check all possible connection indicators from backend
           const isConnected = 
             data?.status === 'connected' || 
             data?.connected === true ||
@@ -101,19 +94,15 @@ export default function LinkDeviceScreen() {
             setIsCheckingConnection(false);
             clearInterval(statusInterval);
             
-            // Save phone to storage
             await storage.setItem('userPhone', cleanPhone);
             console.log('💾 Saved phone to storage:', cleanPhone);
             
-            // Update connection status in context
             updateConnectionStatus('connected');
             console.log('🔄 Updated connection status to: connected');
             
-            // 🔥 CRITICAL: Set user to trigger navigation
             setUser({ phone: cleanPhone, ...data?.user });
             console.log('👤 Set user in AuthContext:', { phone: cleanPhone });
             
-            // Show success alert
             Alert.alert('Success', 'WhatsApp connected successfully!');
           } else if (pollCount >= MAX_POLLS) {
             console.log('⏱️ Polling timeout reached');
@@ -127,9 +116,8 @@ export default function LinkDeviceScreen() {
           }
         } catch (error) {
           console.error('❌ Status check error:', error);
-          console.error('❌ Error details:', error.response?.data || error.message);
+          console.error('❌ Error details:', error.message);
           
-          // Stop polling after too many errors
           if (pollCount >= MAX_POLLS) {
             setIsCheckingConnection(false);
             clearInterval(statusInterval);
@@ -140,7 +128,7 @@ export default function LinkDeviceScreen() {
             );
           }
         }
-      }, 3000); // Poll every 3 seconds
+      }, 3000);
     }
 
     return () => {
@@ -157,7 +145,6 @@ export default function LinkDeviceScreen() {
       return;
     }
 
-    // 🔥 FIXED: Normalize phone number (remove all non-digits)
     const normalized = phone.replace(/\D/g, '');
     
     if (normalized.length < 10) {
@@ -166,10 +153,10 @@ export default function LinkDeviceScreen() {
     }
 
     console.log('📞 Attempting to connect for phone:', normalized);
-    setCleanPhone(normalized); // Store normalized phone
+    setCleanPhone(normalized);
 
     setIsConnecting(true);
-    const result = await login(normalized); // Use normalized phone
+    const result = await login(normalized);
     setIsConnecting(false);
 
     console.log('📋 Login result:', JSON.stringify(result));
@@ -180,14 +167,12 @@ export default function LinkDeviceScreen() {
       return;
     }
 
-    // Set pairing code immediately if available
     if (result.linkCode) {
       console.log('🔗 Backend returned linkCode:', result.linkCode);
       setPairingCode(result.linkCode);
       setLinkMethod('code');
     }
 
-    // Show link screen immediately if we have QR or code
     if (result.linkCode || result.qrCode) {
       console.log('✅ Showing link screen now (have linkCode or qrCode)');
       setShowLinkScreen(true);
@@ -213,7 +198,6 @@ export default function LinkDeviceScreen() {
     setPairingCode('');
   };
 
-  // -------- RENDERING: Phone Input Screen --------
   if (!showLinkScreen) {
     return (
       <KeyboardAvoidingView
@@ -272,7 +256,6 @@ export default function LinkDeviceScreen() {
     );
   }
 
-  // -------- RENDERING: Linking Screen --------
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
@@ -326,7 +309,6 @@ export default function LinkDeviceScreen() {
       </View>
 
       <ScrollView style={styles.methodContent} contentContainerStyle={styles.methodContentContainer}>
-        {/* Connection Status Indicator */}
         {isCheckingConnection && (
           <View style={[styles.statusBanner, { backgroundColor: colors.primary + '20' }]}>
             <ActivityIndicator size="small" color={colors.primary} />

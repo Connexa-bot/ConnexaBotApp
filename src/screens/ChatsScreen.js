@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { getChats } from '../services/api';
+import { callAPI, API_ENDPOINTS } from '../services/api';
 
 export default function ChatsScreen() {
   const [chats, setChats] = useState([]);
@@ -27,8 +27,8 @@ export default function ChatsScreen() {
   const loadChats = async () => {
     try {
       if (user?.phone) {
-        const response = await getChats(user.phone);
-        setChats(response.data.chats || []);
+        const response = await callAPI(API_ENDPOINTS.GET_CHATS(user.phone));
+        setChats(response.chats || []);
       }
     } catch (error) {
       console.error('Error loading chats:', error);

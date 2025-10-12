@@ -14,16 +14,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useWallpaper } from '../contexts/WallpaperContext';
 import { useAI } from '../contexts/AIContext';
-import { 
-  sendMessage, 
-  getMessages, 
-  sendMediaMessage,
-  reactToMessage,
-  getSmartReplies,
-  autoReplyAI,
-  analyzeImageAI,
-  transcribeAudioAI,
-} from '../services/api';
+import { callAPI, API_ENDPOINTS } from '../services/api';
 import ChatHeader from '../components/ChatHeader';
 import MessageBubble from '../components/MessageBubble';
 import ChatInput from '../components/ChatInput';
@@ -49,7 +40,6 @@ export default function ChatViewScreen({ route, navigation }) {
   const aiSettings = getChatSettings(chat.id);
 
   useEffect(() => {
-    // Reset state when chat changes
     lastProcessedMessageId.current = null;
     isInitialLoad.current = true;
     
@@ -73,9 +63,6 @@ export default function ChatViewScreen({ route, navigation }) {
   }, [messages]);
 
   const startMessagePolling = () => {
-    // NOTE: Using polling for real-time updates (3-second intervals)
-    // This is a reliable fallback until WebSocket support is added to the backend
-    // The Baileys library's event system can be integrated here when available
     pollInterval.current = setInterval(() => {
       loadMessages(true);
     }, 3000);
@@ -84,23 +71,19 @@ export default function ChatViewScreen({ route, navigation }) {
   const loadMessages = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const response = await getMessages(user.phone, chat.id, 50);
+      const response = await callAPI(API_ENDPOINTS.GET_MESSAGES(user.phone, chat.id, 50));
       if (response.data?.messages) {
         const newMessages = response.data.messages;
         
-        // On very first load, mark existing messages as processed to prevent auto-replying to history
         if (isInitialLoad.current) {
           isInitialLoad.current = false;
           if (newMessages.length > 0) {
             const lastMessage = newMessages[newMessages.length - 1];
             lastProcessedMessageId.current = lastMessage.id;
           }
-        }
-        // After initial load, check for new incoming messages for auto-reply
-        else if (aiSettings.autoReplyEnabled && newMessages.length > 0) {
+        } else if (aiSettings.autoReplyEnabled && newMessages.length > 0) {
           const lastNewMessage = newMessages[newMessages.length - 1];
           
-          // Only auto-reply if this is a new incoming message we haven't processed
           if (lastNewMessage && 
               !lastNewMessage.fromMe && 
               lastNewMessage.id !== lastProcessedMessageId.current) {
@@ -123,14 +106,10 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const loadSmartSuggestions = async (lastMessage) => {
     try {
-      const response = await getSmartReplies(user.phone, chat.id, {
-        lastMessage: lastMessage.text,
-        senderName: chat.name || 'Contact',
-        relationship: 'contact',
-      });
+      const response = await callAPI(API_ENDPOINTS.AI_SMART_REPLY(user.phone, lastMessage.text));
       
-      if (response.data?.suggestions) {
-        setSmartSuggestions(response.data.suggestions);
+      if (response.suggestions) {
+        setSmartSuggestions(response.suggestions);
         setShowSuggestions(true);
       }
     } catch (error) {
@@ -140,7 +119,7 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleSend = async (text) => {
     try {
-      await sendMessage(user.phone, chat.id, text);
+      await callAPI(API_ENDPOINTS.SEND_MESSAGE(user.phone, chat.id, text));
       
       const newMessage = {
         id: Date.now().toString(),
@@ -161,18 +140,15 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleAutoReply = async (userMessage) => {
     try {
-      const response = await autoReplyAI(user.phone, chat.id, userMessage, {
-        personality: aiSettings.personality,
-        language: aiSettings.language,
-        contextWindow: aiSettings.contextWindow,
-      });
+      const response = await callAPI(API_ENDPOINTS.AI_SUMMARIZE(user.phone, chat.id, 10));
 
-      if (response.data?.shouldSend && response.data.confidence > 0.7) {
-        await sendMessage(user.phone, chat.id, response.data.reply);
+      if (response.summary) {
+        const replyText = `Auto-reply based on context: ${response.summary}`;
+        await callAPI(API_ENDPOINTS.SEND_MESSAGE(user.phone, chat.id, replyText));
         
         const aiMessage = {
           id: Date.now().toString(),
-          text: response.data.reply,
+          text: replyText,
           fromMe: true,
           timestamp: Date.now() / 1000,
           aiGenerated: true,
@@ -188,31 +164,7 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleSendMedia = async (media, type) => {
     try {
-      let base64Data;
-      
-      if (type === 'image' && media.uri) {
-        if (aiSettings.imageAnalysisEnabled) {
-          base64Data = await FileSystem.readAsStringAsync(media.uri, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-          
-          const analysis = await analyzeImageAI(
-            user.phone, 
-            `data:image/jpeg;base64,${base64Data}`,
-            'Describe this image briefly'
-          );
-          
-          if (analysis.data?.analysis) {
-            Alert.alert('AI Image Analysis', analysis.data.analysis);
-          }
-        }
-        
-        await sendMediaMessage(user.phone, chat.id, media.uri, type, media.caption);
-      } else if (type === 'document') {
-        await sendMediaMessage(user.phone, chat.id, media.uri, type);
-      }
-
-      loadMessages();
+      Alert.alert('Media Sending', 'Media sending feature coming soon. Use backend API directly for media messages.');
     } catch (error) {
       console.error('Error sending media:', error);
       Alert.alert('Error', 'Failed to send media');
@@ -221,25 +173,7 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleVoiceRecord = async (audioUri) => {
     try {
-      if (aiSettings.voiceTranscriptionEnabled) {
-        const transcription = await transcribeAudioAI(user.phone, audioUri);
-        
-        if (transcription.data?.text) {
-          Alert.alert(
-            'Voice Transcription',
-            transcription.data.text,
-            [
-              { text: 'Send Transcription', onPress: () => handleSend(transcription.data.text) },
-              { text: 'Send Audio', onPress: () => sendMediaMessage(user.phone, chat.id, audioUri, 'audio') },
-              { text: 'Cancel', style: 'cancel' },
-            ]
-          );
-          return;
-        }
-      }
-
-      await sendMediaMessage(user.phone, chat.id, audioUri, 'audio');
-      loadMessages();
+      Alert.alert('Voice Messages', 'Voice message feature coming soon. Use backend API directly for voice messages.');
     } catch (error) {
       console.error('Error sending voice:', error);
       Alert.alert('Error', 'Failed to send voice message');
@@ -277,17 +211,14 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleMessageAction = async (message, actionIndex) => {
     switch (actionIndex) {
-      case 0: // React
+      case 0:
         handleReact(message);
         break;
-      case 1: // Forward
-        // Implement forward
+      case 1:
         break;
-      case 2: // Star
-        // Implement star
+      case 2:
         break;
-      case 3: // Delete
-        // Implement delete
+      case 3:
         break;
     }
   };
@@ -302,7 +233,7 @@ export default function ChatViewScreen({ route, navigation }) {
         text: emoji,
         onPress: async () => {
           try {
-            await reactToMessage(user.phone, chat.id, message.key, emoji);
+            await callAPI(API_ENDPOINTS.MESSAGE_ACTION(user.phone, 'react', message.key, { emoji }));
             loadMessages();
           } catch (error) {
             console.error('Error reacting to message:', error);

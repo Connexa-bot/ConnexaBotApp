@@ -14,12 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  getStatusUpdates, 
-  postTextStatus, 
-  postImageStatus, 
-  postVideoStatus, 
-} from '../services/api';
+import { callAPI, API_ENDPOINTS } from '../services/api';
 
 export default function UpdatesScreen() {
   const { colors } = useTheme();
@@ -37,8 +32,8 @@ export default function UpdatesScreen() {
   const loadStatuses = async () => {
     try {
       if (user?.phone) {
-        const response = await getStatusUpdates(user.phone);
-        setStatuses(response.data?.statuses || []);
+        const response = await callAPI(API_ENDPOINTS.GET_STATUS_UPDATES(user.phone));
+        setStatuses(response.statusUpdates || []);
       }
     } catch (error) {
       console.error('Error loading statuses:', error);
@@ -60,7 +55,7 @@ export default function UpdatesScreen() {
 
     setPosting(true);
     try {
-      await postTextStatus(user.phone, statusText);
+      await callAPI(API_ENDPOINTS.POST_STATUS(user.phone, 'text', statusText));
       setStatusText('');
       setShowPostModal(false);
       Alert.alert('Success', 'Status posted successfully');
@@ -82,7 +77,7 @@ export default function UpdatesScreen() {
 
       if (!result.canceled) {
         setPosting(true);
-        await postImageStatus(user.phone, result.assets[0].uri);
+        await callAPI(API_ENDPOINTS.POST_STATUS(user.phone, 'image', result.assets[0].uri));
         Alert.alert('Success', 'Image status posted successfully');
         loadStatuses();
         setPosting(false);
@@ -102,7 +97,7 @@ export default function UpdatesScreen() {
 
       if (!result.canceled) {
         setPosting(true);
-        await postVideoStatus(user.phone, result.assets[0].uri);
+        await callAPI(API_ENDPOINTS.POST_STATUS(user.phone, 'video', result.assets[0].uri));
         Alert.alert('Success', 'Video status posted successfully');
         loadStatuses();
         setPosting(false);

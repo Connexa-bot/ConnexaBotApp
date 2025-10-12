@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } fr
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { getCalls } from '../services/api';
+import { callAPI, API_ENDPOINTS } from '../services/api';
 
 export default function CallsScreen() {
   const { colors } = useTheme();
@@ -18,8 +18,8 @@ export default function CallsScreen() {
   const loadCalls = async () => {
     try {
       if (user?.phone) {
-        const response = await getCalls(user.phone);
-        setCalls(response.data.calls || []);
+        const response = await callAPI(API_ENDPOINTS.GET_CALLS(user.phone));
+        setCalls(response.data?.calls || []);
       }
     } catch (error) {
       console.error('Error loading calls:', error);
