@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { TouchableOpacity, View, Text } from 'react-native';
+import { TouchableOpacity, View, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import MainTabNavigator from './MainTabNavigator';
@@ -8,6 +8,12 @@ import ChatViewScreen from '../screens/ChatViewScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
+
+const HEADER_HEIGHT = Platform.select({
+  ios: 100,
+  android: 80,
+  web: 60
+});
 
 export default function AppNavigator() {
   const { colors } = useTheme();
@@ -29,6 +35,7 @@ export default function AppNavigator() {
           title: 'WhatsApp',
           headerStyle: {
             backgroundColor: colors.header,
+            height: HEADER_HEIGHT,
           },
           headerTintColor: '#FFFFFF',
           headerRight: () => (
@@ -59,11 +66,7 @@ export default function AppNavigator() {
         name="ChatView"
         component={ChatViewScreen}
         options={{
-          headerBackTitleVisible: false,
-          headerStyle: {
-            backgroundColor: colors.header,
-          },
-          headerTintColor: '#FFFFFF',
+          headerShown: false,
         }}
       />
       <Stack.Screen
