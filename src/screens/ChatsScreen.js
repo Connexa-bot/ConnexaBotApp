@@ -5,7 +5,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -16,7 +15,6 @@ import { getChats } from '../services/api';
 
 export default function ChatsScreen() {
   const [chats, setChats] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
   const { user } = useAuth();
@@ -35,7 +33,6 @@ export default function ChatsScreen() {
     } catch (error) {
       console.error('Error loading chats:', error);
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   };
@@ -91,40 +88,31 @@ export default function ChatsScreen() {
     </TouchableOpacity>
   );
 
-  if (loading) {
-    return (
-      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {chats.length === 0 ? (
-        <View style={styles.centerContainer}>
-          <Ionicons name="chatbubbles-outline" size={64} color={colors.secondaryText} />
-          <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-            No chats yet
-          </Text>
-          <Text style={[styles.emptySubtext, { color: colors.secondaryText }]}>
-            Start a conversation by tapping the new chat button
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={chats}
-          renderItem={renderChat}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.primary}
-            />
-          }
-        />
-      )}
+      <FlatList
+        data={chats}
+        renderItem={renderChat}
+        keyExtractor={(item) => item.id}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons name="chatbubbles-outline" size={80} color={colors.secondaryText} />
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              Start a conversation
+            </Text>
+            <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
+              Tap the new chat button to message someone
+            </Text>
+          </View>
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
+        }
+      />
     </View>
   );
 }
@@ -133,21 +121,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  centerContainer: {
+  emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingTop: 100,
+    paddingHorizontal: 40,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '500',
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   chatItem: {
     flexDirection: 'row',
     padding: 12,
-    borderBottomWidth: 1,
+    paddingHorizontal: 16,
+    borderBottomWidth: 0.5,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: '#FFFFFF',
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   chatContent: {
     flex: 1,
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
   },
   chatName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
     flex: 1,
   },
   chatTime: {
@@ -194,17 +195,7 @@ const styles = StyleSheet.create({
   },
   unreadText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    marginTop: 8,
-    textAlign: 'center',
   },
 });

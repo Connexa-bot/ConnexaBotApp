@@ -19,10 +19,11 @@ import { useWallpaper } from '../contexts/WallpaperContext';
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
-  const { colors, isDark, toggleTheme } = useTheme();
+  const { colors, isDark, themePreference, setTheme } = useTheme();
   const { settings, updateSettings } = useAI();
   const { wallpapers, defaultWallpaper, setGlobalWallpaper, addCustomWallpaper } = useWallpaper();
   const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
+  const [showThemePicker, setShowThemePicker] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -145,16 +146,9 @@ export default function SettingsScreen() {
         <Text style={[styles.sectionHeader, { color: colors.primary }]}>Appearance</Text>
         <SettingItem
           icon="moon-outline"
-          title="Dark Mode"
-          subtitle={isDark ? 'On' : 'Off'}
-          onPress={toggleTheme}
-          rightElement={
-            <Switch
-              value={isDark}
-              onValueChange={toggleTheme}
-              trackColor={{ false: colors.border, true: colors.primary }}
-            />
-          }
+          title="Theme"
+          subtitle={themePreference === 'system' ? 'System default' : themePreference === 'dark' ? 'Dark' : 'Light'}
+          onPress={() => setShowThemePicker(true)}
         />
         <SettingItem
           icon="image-outline"
@@ -274,6 +268,74 @@ export default function SettingsScreen() {
           >
             <Ionicons name="add" size={24} color="#fff" />
             <Text style={styles.customWallpaperText}>Add Custom</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+
+    <Modal
+      visible={showThemePicker}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setShowThemePicker(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+          <View style={styles.modalHeader}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Choose Theme
+            </Text>
+            <TouchableOpacity onPress={() => setShowThemePicker(false)}>
+              <Ionicons name="close" size={28} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.themeOption, { borderBottomColor: colors.border }]}
+            onPress={() => {
+              setTheme('light');
+              setShowThemePicker(false);
+            }}
+          >
+            <View style={styles.themeOptionContent}>
+              <Ionicons name="sunny-outline" size={24} color={colors.icon} style={{ marginRight: 16 }} />
+              <Text style={[styles.themeOptionText, { color: colors.text }]}>Light</Text>
+            </View>
+            {themePreference === 'light' && (
+              <Ionicons name="checkmark" size={24} color={colors.primary} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.themeOption, { borderBottomColor: colors.border }]}
+            onPress={() => {
+              setTheme('dark');
+              setShowThemePicker(false);
+            }}
+          >
+            <View style={styles.themeOptionContent}>
+              <Ionicons name="moon-outline" size={24} color={colors.icon} style={{ marginRight: 16 }} />
+              <Text style={[styles.themeOptionText, { color: colors.text }]}>Dark</Text>
+            </View>
+            {themePreference === 'dark' && (
+              <Ionicons name="checkmark" size={24} color={colors.primary} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.themeOption, { borderBottomWidth: 0 }]}
+            onPress={() => {
+              setTheme('system');
+              setShowThemePicker(false);
+            }}
+          >
+            <View style={styles.themeOptionContent}>
+              <Ionicons name="phone-portrait-outline" size={24} color={colors.icon} style={{ marginRight: 16 }} />
+              <Text style={[styles.themeOptionText, { color: colors.text }]}>System default</Text>
+            </View>
+            {themePreference === 'system' && (
+              <Ionicons name="checkmark" size={24} color={colors.primary} />
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -431,5 +493,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  themeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  themeOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  themeOptionText: {
+    fontSize: 16,
   },
 });

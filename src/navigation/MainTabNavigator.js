@@ -6,7 +6,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
 import ChatsScreen from '../screens/ChatsScreen';
 import UpdatesScreen from '../screens/UpdatesScreen';
-import CommunitiesScreen from '../screens/CommunitiesScreen';
 import CallsScreen from '../screens/CallsScreen';
 
 const Tab = createMaterialTopTabNavigator();
@@ -42,10 +41,6 @@ export default function MainTabNavigator() {
         <Tab.Screen 
           name="Updates" 
           component={UpdatesScreen}
-        />
-        <Tab.Screen 
-          name="Communities" 
-          component={CommunitiesScreen}
         />
         <Tab.Screen 
           name="Calls" 

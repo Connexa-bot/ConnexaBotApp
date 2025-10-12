@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,7 +9,6 @@ export default function CallsScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [calls, setCalls] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -25,7 +24,6 @@ export default function CallsScreen() {
     } catch (error) {
       console.error('Error loading calls:', error);
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   };
@@ -48,7 +46,7 @@ export default function CallsScreen() {
         <View style={styles.callInfo}>
           <Ionicons
             name={item.type === 'incoming' ? 'arrow-down' : 'arrow-up'}
-            size={16}
+            size={14}
             color={item.missed ? '#F44336' : colors.secondaryText}
           />
           <Text style={[styles.callTime, { color: colors.secondaryText }]}>
@@ -60,47 +58,40 @@ export default function CallsScreen() {
       <TouchableOpacity style={styles.callButton}>
         <Ionicons
           name={item.video ? 'videocam' : 'call'}
-          size={24}
+          size={22}
           color={colors.primary}
         />
       </TouchableOpacity>
     </TouchableOpacity>
   );
 
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.centerContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {calls.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="call-outline" size={64} color={colors.secondaryText} />
-          <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-            No calls yet
-          </Text>
-          <Text style={[styles.emptySubtext, { color: colors.secondaryText }]}>
-            Call history will appear here
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={calls}
-          renderItem={renderCall}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.primary}
-            />
-          }
-        />
-      )}
+      <FlatList
+        data={calls}
+        renderItem={renderCall}
+        keyExtractor={(item) => item.id}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <View style={[styles.emptyIconContainer, { backgroundColor: colors.secondaryBackground }]}>
+              <Ionicons name="call-outline" size={48} color={colors.icon} />
+            </View>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              No recent calls
+            </Text>
+            <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
+              Make a call to see your call history here
+            </Text>
+          </View>
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
+        }
+      />
     </View>
   );
 }
@@ -109,36 +100,42 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  centerContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingTop: 100,
+    paddingHorizontal: 40,
+  },
+  emptyIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '500',
+    marginBottom: 8,
   },
   emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
-  },
-  emptySubtext: {
     fontSize: 14,
-    marginTop: 8,
     textAlign: 'center',
+    lineHeight: 20,
   },
   callItem: {
     flexDirection: 'row',
     padding: 12,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -146,14 +143,14 @@ const styles = StyleSheet.create({
   avatarText: {
     color: '#FFFFFF',
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   callContent: {
     flex: 1,
   },
   callName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
     marginBottom: 4,
   },
   callInfo: {
@@ -162,7 +159,7 @@ const styles = StyleSheet.create({
   },
   callTime: {
     fontSize: 14,
-    marginLeft: 8,
+    marginLeft: 6,
   },
   callButton: {
     padding: 8,

@@ -5,7 +5,6 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  ActivityIndicator, 
   RefreshControl,
   Alert,
   Modal,
@@ -13,8 +12,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
-import { Audio } from 'expo-av';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -22,14 +19,12 @@ import {
   postTextStatus, 
   postImageStatus, 
   postVideoStatus, 
-  postAudioStatus 
 } from '../services/api';
 
 export default function UpdatesScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [statuses, setStatuses] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [statusText, setStatusText] = useState('');
@@ -48,7 +43,6 @@ export default function UpdatesScreen() {
     } catch (error) {
       console.error('Error loading statuses:', error);
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   };
@@ -132,13 +126,36 @@ export default function UpdatesScreen() {
     );
   };
 
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.centerContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+  const EmptyStatusView = () => (
+    <View style={styles.emptyContainer}>
+      <View style={[styles.emptyIconContainer, { backgroundColor: colors.secondaryBackground }]}>
+        <Ionicons name="sync-circle-outline" size={56} color={colors.icon} />
       </View>
-    );
-  }
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        No recent updates
+      </Text>
+      <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
+        View updates from your contacts here
+      </Text>
+    </View>
+  );
+
+  const ChannelsEmptyView = () => (
+    <View style={styles.channelsEmpty}>
+      <View style={[styles.channelIconContainer, { backgroundColor: colors.secondaryBackground }]}>
+        <Ionicons name="megaphone-outline" size={40} color={colors.icon} />
+      </View>
+      <Text style={[styles.channelTitle, { color: colors.text }]}>
+        Stay updated on topics that matter to you
+      </Text>
+      <Text style={[styles.channelText, { color: colors.secondaryText }]}>
+        Find channels to follow
+      </Text>
+      <TouchableOpacity style={[styles.findButton, { backgroundColor: colors.primary }]}>
+        <Text style={styles.findButtonText}>Find channels</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <View style={{flex: 1}}>
@@ -159,8 +176,8 @@ export default function UpdatesScreen() {
           style={[styles.myStatus, { borderBottomColor: colors.border }]}
           onPress={showStatusOptions}
         >
-          <View style={[styles.statusAvatar, { backgroundColor: colors.primary }]}>
-            <Ionicons name="add" size={24} color="#fff" />
+          <View style={[styles.statusAvatar, { backgroundColor: colors.secondaryBackground }]}>
+            <Ionicons name="add" size={24} color={colors.primary} />
           </View>
           <View style={styles.statusContent}>
             <Text style={[styles.statusName, { color: colors.text }]}>My status</Text>
@@ -171,18 +188,14 @@ export default function UpdatesScreen() {
         </TouchableOpacity>
 
         {statuses.length === 0 ? (
-          <View style={styles.emptySection}>
-            <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-              No recent updates
-            </Text>
-          </View>
+          <EmptyStatusView />
         ) : (
           statuses.map((status) => (
             <TouchableOpacity
               key={status.id}
               style={[styles.statusItem, { borderBottomColor: colors.border }]}
             >
-              <View style={[styles.statusAvatar, { borderColor: colors.primary, borderWidth: 2 }]}>
+              <View style={[styles.statusAvatar, { borderColor: colors.primary, borderWidth: 2, backgroundColor: colors.secondaryBackground }]}>
                 <Text style={[styles.avatarText, { color: colors.text }]}>
                   {status.name?.charAt(0) || '?'}
                 </Text>
@@ -198,17 +211,9 @@ export default function UpdatesScreen() {
         )}
       </View>
 
-      <View style={[styles.section, { marginTop: 20 }]}>
+      <View style={[styles.section, { marginTop: 24 }]}>
         <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>Channels</Text>
-        <View style={styles.emptySection}>
-          <Ionicons name="megaphone-outline" size={48} color={colors.secondaryText} />
-          <Text style={[styles.emptyText, { color: colors.secondaryText, marginTop: 12 }]}>
-            Stay updated on topics that matter to you
-          </Text>
-          <TouchableOpacity style={[styles.findButton, { backgroundColor: colors.primary }]}>
-            <Text style={styles.findButtonText}>Find channels to follow</Text>
-          </TouchableOpacity>
-        </View>
+        <ChannelsEmptyView />
       </View>
     </ScrollView>
 
@@ -242,11 +247,7 @@ export default function UpdatesScreen() {
             onPress={handlePostTextStatus}
             disabled={posting}
           >
-            {posting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.postButtonText}>Post Status</Text>
-            )}
+            <Text style={styles.postButtonText}>Post Status</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -259,52 +260,49 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  centerContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   section: {
     paddingVertical: 8,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   myStatus: {
     flexDirection: 'row',
     padding: 12,
     paddingHorizontal: 16,
     alignItems: 'center',
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5,
   },
   statusItem: {
     flexDirection: 'row',
     padding: 12,
     paddingHorizontal: 16,
     alignItems: 'center',
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5,
   },
   statusAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   avatarText: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   statusContent: {
     flex: 1,
   },
   statusName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
     marginBottom: 2,
   },
   statusText: {
@@ -313,19 +311,56 @@ const styles = StyleSheet.create({
   statusTime: {
     fontSize: 14,
   },
-  emptySection: {
+  emptyContainer: {
     alignItems: 'center',
-    padding: 32,
+    paddingVertical: 40,
+    paddingHorizontal: 32,
+  },
+  emptyIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
     textAlign: 'center',
   },
+  channelsEmpty: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 32,
+  },
+  channelIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  channelTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  channelText: {
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
   findButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: 32,
+    paddingVertical: 10,
     borderRadius: 20,
-    marginTop: 16,
   },
   findButtonText: {
     color: '#FFFFFF',

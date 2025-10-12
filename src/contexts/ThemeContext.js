@@ -1,9 +1,9 @@
-import React, { createContext, useState, useContext, useMemo } from 'react';
+import React, { createContext, useState, useContext, useMemo, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
+import { storage } from '../utils/storage';
 
 const ThemeContext = createContext();
 
-// Move color schemes outside component to prevent recreation
 const colorSchemes = {
   light: {
     primary: '#25D366',
@@ -37,22 +37,57 @@ const colorSchemes = {
 
 export const ThemeProvider = ({ children }) => {
   const systemColorScheme = useColorScheme();
-  const [theme, setTheme] = useState(systemColorScheme || 'light');
+  const [themePreference, setThemePreference] = useState('system');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  useEffect(() => {
+    loadThemePreference();
+  }, []);
+
+  const loadThemePreference = async () => {
+    try {
+      const savedPreference = await storage.getItem('themePreference');
+      if (savedPreference) {
+        setThemePreference(savedPreference);
+      }
+    } catch (error) {
+      console.error('Error loading theme preference:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Use useMemo to prevent object recreation on every render
+  const saveThemePreference = async (preference) => {
+    try {
+      await storage.setItem('themePreference', preference);
+    } catch (error) {
+      console.error('Error saving theme preference:', error);
+    }
+  };
+
+  const setTheme = async (preference) => {
+    setThemePreference(preference);
+    await saveThemePreference(preference);
+  };
+
+  const actualTheme = themePreference === 'system' 
+    ? (systemColorScheme || 'light')
+    : themePreference;
+
   const value = useMemo(
     () => ({
-      theme,
-      colors: colorSchemes[theme],
-      toggleTheme,
-      isDark: theme === 'dark',
+      themePreference,
+      actualTheme,
+      colors: colorSchemes[actualTheme],
+      setTheme,
+      isDark: actualTheme === 'dark',
     }),
-    [theme]
+    [themePreference, actualTheme]
   );
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={value}>
