@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
 
-export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore }) {
+export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onSearch }) {
   const navigation = useNavigation();
   const { colors } = useTheme();
 
@@ -50,6 +50,13 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore }) {
       </TouchableOpacity>
 
       <View style={styles.actions}>
+        <TouchableOpacity 
+          style={styles.actionButton}
+          onPress={onSearch}
+        >
+          <Ionicons name="search-outline" size={22} color="#fff" />
+        </TouchableOpacity>
+
         <TouchableOpacity 
           style={styles.actionButton}
           onPress={onVideoCall}

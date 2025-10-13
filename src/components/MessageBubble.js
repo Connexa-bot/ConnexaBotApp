@@ -86,6 +86,12 @@ export default function MessageBubble({ message, onLongPress, onReact }) {
             <Text style={styles.aiText}>AI</Text>
           </View>
         )}
+
+        {message.isEphemeral && (
+          <View style={styles.disappearingBadge}>
+            <Ionicons name="timer-outline" size={12} color={isFromMe ? '#fff' : colors.primary} />
+          </View>
+        )}
         
         <View style={styles.footer}>
           <Text style={[styles.time, { color: '#8696A0' }]}>
@@ -210,6 +216,14 @@ const styles = StyleSheet.create({
     color: '#FFD700',
     marginLeft: 4,
     fontWeight: '600',
+  },
+  disappearingBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 10,
+    padding: 4,
   },
   media: {
     width: 250,

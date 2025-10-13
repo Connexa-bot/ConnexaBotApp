@@ -227,11 +227,18 @@ export const API_ENDPOINTS = {
     description: 'Delete message for everyone'
   }),
 
-  FORWARD_MESSAGE: (phone, to, message) => ({
+  FORWARD_MESSAGE: (phone, to, messageKey) => ({
     url: `${API_BASE_URL}/api/messages/forward`,
     method: 'POST',
-    body: { phone, to, message },
+    body: { phone, to, messageKey },
     description: 'Forward message to another chat'
+  }),
+
+  SEARCH_MESSAGES: (phone, chatId, query) => ({
+    url: `${API_BASE_URL}/api/messages/search`,
+    method: 'POST',
+    body: { phone, chatId, query },
+    description: 'Search messages in chat'
   }),
 
   REACT_MESSAGE: (phone, chatId, messageKey, emoji) => ({

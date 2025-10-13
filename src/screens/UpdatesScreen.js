@@ -16,7 +16,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { callAPI, API_ENDPOINTS } from '../services/api';
 
-export default function UpdatesScreen() {
+export default function UpdatesScreen({ navigation }) {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [statuses, setStatuses] = useState([]);
@@ -152,6 +152,66 @@ export default function UpdatesScreen() {
     </View>
   );
 
+  const renderStatusUpdate = ({ item }) => (
+    <TouchableOpacity 
+      style={styles.statusItem}
+      onPress={() => viewStatus(item)}
+      onLongPress={() => handleStatusAction(item)}
+    >
+      <View style={[styles.statusRing, { borderColor: item.viewed ? colors.divider : colors.primary }]}>
+        <View style={[styles.statusAvatar, { backgroundColor: colors.primary }]}>
+          <Text style={styles.statusAvatarText}>
+            {item.name?.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.statusInfo}>
+        <Text style={[styles.statusName, { color: colors.text }]}>
+          {item.name}
+        </Text>
+        <Text style={[styles.statusTime, { color: colors.secondaryText }]}>
+          {item.time}
+        </Text>
+      </View>
+      {item.viewCount > 0 && (
+        <View style={styles.viewCountContainer}>
+          <Ionicons name="eye-outline" size={14} color={colors.secondaryText} />
+          <Text style={[styles.viewCount, { color: colors.secondaryText }]}>
+            {item.viewCount}
+          </Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+
+  const viewStatus = async (status) => {
+    try {
+      await callAPI(API_ENDPOINTS.VIEW_STATUS(user.phone, status.jid, [status.key]));
+      Alert.alert('Status Viewed', `Viewing ${status.name}'s status`);
+    } catch (error) {
+      console.error('Error viewing status:', error);
+    }
+  };
+
+  const handleStatusAction = (status) => {
+    Alert.alert(
+      'Status Actions',
+      'Choose an action',
+      [
+        { text: 'Reply to Status', onPress: () => replyToStatus(status) },
+        { text: 'View Profile', onPress: () => {} },
+        { text: 'Cancel', style: 'cancel' }
+      ]
+    );
+  };
+
+  const replyToStatus = (status) => {
+    navigation.navigate('ChatView', { 
+      chat: { id: status.jid, name: status.name },
+      replyToStatus: true 
+    });
+  };
+
   return (
     <View style={{flex: 1}}>
     <ScrollView 
@@ -166,7 +226,7 @@ export default function UpdatesScreen() {
     >
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>Status</Text>
-        
+
         <TouchableOpacity
           style={[styles.myStatus, { borderBottomColor: colors.border }]}
           onPress={showStatusOptions}
@@ -304,7 +364,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   statusTime: {
-    fontSize: 14,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  viewCountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
+  },
+  viewCount: {
+    fontSize: 12,
+    marginLeft: 4,
   },
   emptyContainer: {
     alignItems: 'center',

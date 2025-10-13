@@ -211,16 +211,67 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleMessageAction = async (message, actionIndex) => {
     switch (actionIndex) {
-      case 0:
+      case 0: // React
         handleReact(message);
         break;
-      case 1:
+      case 1: // Forward
+        handleForward(message);
         break;
-      case 2:
+      case 2: // Star
+        handleStar(message);
         break;
-      case 3:
+      case 3: // Delete
+        handleDelete(message);
         break;
     }
+  };
+
+  const handleForward = (message) => {
+    navigation.navigate('ForwardMessage', { message, chatId: chat.id });
+  };
+
+  const handleStar = async (message) => {
+    try {
+      await callAPI(API_ENDPOINTS.STAR_MESSAGE(user.phone, chat.id, message.key, true));
+      Alert.alert('Success', 'Message starred');
+      loadMessages();
+    } catch (error) {
+      console.error('Error starring message:', error);
+      Alert.alert('Error', 'Failed to star message');
+    }
+  };
+
+  const handleDelete = async (message) => {
+    Alert.alert(
+      'Delete Message',
+      'Delete message for everyone?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete for Me',
+          onPress: async () => {
+            try {
+              await callAPI(API_ENDPOINTS.DELETE_MESSAGE(user.phone, chat.id, message.key));
+              loadMessages();
+            } catch (error) {
+              console.error('Error deleting message:', error);
+            }
+          }
+        },
+        {
+          text: 'Delete for Everyone',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await callAPI(API_ENDPOINTS.DELETE_MESSAGE(user.phone, chat.id, message.key));
+              loadMessages();
+            } catch (error) {
+              console.error('Error deleting message:', error);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleReact = async (message) => {
@@ -269,6 +320,10 @@ export default function ChatViewScreen({ route, navigation }) {
     navigation.navigate('ChatSettings', { chat });
   };
 
+  const handleSearch = () => {
+    Alert.alert('Search', 'Message search feature coming soon');
+  };
+
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
@@ -284,6 +339,7 @@ export default function ChatViewScreen({ route, navigation }) {
         onVideoCall={handleVideoCall}
         onVoiceCall={handleVoiceCall}
         onMore={handleMore}
+        onSearch={handleSearch}
       />
 
       <KeyboardAvoidingView
