@@ -47,7 +47,7 @@ export default function ChatsScreen() {
     if (!timestamp) return '';
     const date = new Date(timestamp * 1000);
     const today = new Date();
-    
+
     if (date.toDateString() === today.toDateString()) {
       return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     }
@@ -57,7 +57,7 @@ export default function ChatsScreen() {
   const renderChat = ({ item }) => {
     const isPinned = item.isPinned || false;
     const isMuted = item.isMuted || false;
-    
+
     return (
       <TouchableOpacity
         style={[styles.chatItem, { backgroundColor: colors.background, borderBottomColor: colors.divider }]}
@@ -73,7 +73,7 @@ export default function ChatsScreen() {
             </Text>
           )}
         </View>
-        
+
         <View style={styles.chatContent}>
           <View style={styles.chatHeader}>
             <View style={styles.chatNameRow}>
@@ -90,7 +90,7 @@ export default function ChatsScreen() {
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.chatFooter}>
             <View style={styles.messageRow}>
               {item.lastMessageFromMe && (
@@ -157,6 +157,14 @@ export default function ChatsScreen() {
           />
         }
       />
+      <View style={styles.fabContainer}>
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: colors.primary }]}
+          onPress={() => navigation.navigate('NewChat')}
+        >
+          <Ionicons name="chatbubble-ellipses-sharp" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -273,7 +281,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   unreadText: {
-    fontSize: 12,
+    color: '#FFFFFF',
+    fontSize: 11,
     fontWeight: '600',
+  },
+  fabContainer: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    alignItems: 'flex-end',
+  },
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  fabSecondary: {
+    marginBottom: 12,
   },
 });

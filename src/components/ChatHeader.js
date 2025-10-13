@@ -8,6 +8,14 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore }) {
   const navigation = useNavigation();
   const { colors } = useTheme();
 
+  const handleMorePress = () => {
+    if (onMore) {
+      onMore();
+    } else {
+      navigation.navigate('ChatSettings', { chat });
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.header || '#202C33' }]}>
       <TouchableOpacity 
@@ -19,7 +27,7 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore }) {
 
       <TouchableOpacity 
         style={styles.chatInfo}
-        onPress={onMore}
+        onPress={handleMorePress}
       >
         <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
           {chat.profilePic ? (
@@ -58,7 +66,7 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore }) {
 
         <TouchableOpacity 
           style={styles.actionButton}
-          onPress={onMore}
+          onPress={handleMorePress}
         >
           <Ionicons name="ellipsis-vertical" size={22} color="#fff" />
         </TouchableOpacity>

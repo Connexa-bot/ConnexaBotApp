@@ -6,6 +6,12 @@ import { useTheme } from '../contexts/ThemeContext';
 import MainTabNavigator from './MainTabNavigator';
 import ChatViewScreen from '../screens/ChatViewScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import LinkDeviceScreen from '../screens/LinkDeviceScreen';
+import ContactsScreen from '../screens/ContactsScreen';
+import GroupCreateScreen from '../screens/GroupCreateScreen';
+import StarredMessagesScreen from '../screens/StarredMessagesScreen';
+import ChatSettingsScreen from '../screens/ChatSettingsScreen';
+import TermsPrivacyScreen from '../screens/TermsPrivacyScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -79,6 +85,36 @@ export default function AppNavigator() {
           },
           headerTintColor: colors.headerText,
         }}
+      />
+      <Stack.Screen
+        name="LinkDevice"
+        component={LinkDeviceScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TermsPrivacy"
+        component={TermsPrivacyScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Contacts"
+        component={ContactsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="GroupCreate"
+        component={GroupCreateScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="StarredMessages"
+        component={StarredMessagesScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ChatSettings"
+        component={ChatSettingsScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
