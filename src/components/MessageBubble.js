@@ -59,11 +59,12 @@ export default function MessageBubble({ message, onLongPress, onReact }) {
         style={[
           styles.bubble,
           isFromMe 
-            ? { backgroundColor: colors.messageBubbleSent || '#005C4B' } 
-            : { backgroundColor: colors.messageBubbleReceived || '#202C33' }
+            ? { backgroundColor: colors.messageBubbleSent } 
+            : { backgroundColor: colors.messageBubbleReceived },
+          message.type === 'image' || message.type === 'video' ? styles.mediaBubble : null
         ]}
         onLongPress={() => onLongPress?.(message)}
-        activeOpacity={0.8}
+        activeOpacity={0.95}
       >
         {!isFromMe && message.senderName && (
           <Text style={[styles.senderName, { color: colors.primary }]}>
@@ -74,7 +75,7 @@ export default function MessageBubble({ message, onLongPress, onReact }) {
         {renderMedia()}
         
         {message.text && (
-          <Text style={[styles.messageText, { color: '#fff' }]}>
+          <Text style={[styles.messageText, { color: isFromMe ? colors.messageBubbleSentText : colors.messageBubbleReceivedText }]}>
             {message.text}
           </Text>
         )}
@@ -129,8 +130,8 @@ export default function MessageBubble({ message, onLongPress, onReact }) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    marginVertical: 4,
-    paddingHorizontal: 12,
+    marginVertical: 2,
+    paddingHorizontal: 8,
     alignItems: 'flex-end',
   },
   sentContainer: {
@@ -140,14 +141,18 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   bubble: {
-    maxWidth: '80%',
-    borderRadius: 8,
-    padding: 8,
-    elevation: 1,
+    maxWidth: '75%',
+    borderRadius: 7.5,
+    paddingHorizontal: 7,
+    paddingVertical: 6,
+    elevation: 0.5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 0.5 },
+    shadowOpacity: 0.1,
     shadowRadius: 1,
+  },
+  mediaBubble: {
+    padding: 3,
   },
   senderName: {
     fontSize: 12,
@@ -155,18 +160,19 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   messageText: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 14.2,
+    lineHeight: 19,
+    marginBottom: 2,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 2,
     alignSelf: 'flex-end',
   },
   time: {
     fontSize: 11,
-    marginRight: 4,
+    marginRight: 3,
   },
   statusIcon: {
     marginLeft: 2,

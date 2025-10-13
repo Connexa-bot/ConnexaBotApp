@@ -71,9 +71,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    height: 64,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    height: 60,
   },
   backButton: {
     padding: 8,
