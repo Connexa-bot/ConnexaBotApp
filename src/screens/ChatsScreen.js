@@ -7,9 +7,14 @@ import {
   TouchableOpacity,
   RefreshControl,
   Image,
+  TextInput,
+  ScrollView,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { callAPI, API_ENDPOINTS } from '../services/api';
@@ -17,9 +22,12 @@ import { callAPI, API_ENDPOINTS } from '../services/api';
 export default function ChatsScreen() {
   const [chats, setChats] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState('All');
+  const [menuVisible, setMenuVisible] = useState(false);
   const navigation = useNavigation();
   const { user } = useAuth();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadChats();
@@ -139,8 +147,165 @@ export default function ChatsScreen() {
     );
   };
 
+  const filters = [
+    { id: 'All', label: 'All' },
+    { id: 'Unread', label: 'Unread', count: chats.filter(c => c.unreadCount > 0).length },
+    { id: 'Favorites', label: 'Favorites' },
+    { id: 'Groups', label: 'Groups' },
+  ];
+
+  const menuOptions = [
+    { id: 'new_group', label: 'New group', icon: 'people-outline' },
+    { id: 'new_broadcast', label: 'New broadcast', icon: 'megaphone-outline' },
+    { id: 'linked_devices', label: 'Linked devices', icon: 'laptop-outline' },
+    { id: 'starred', label: 'Starred', icon: 'star-outline' },
+    { id: 'settings', label: 'Settings', icon: 'settings-outline' },
+  ];
+
+  const handleMenuPress = () => {
+    if (Platform.OS === 'ios') {
+      const { ActionSheetIOS } = require('react-native');
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [...menuOptions.map(o => o.label), 'Cancel'],
+          cancelButtonIndex: menuOptions.length,
+        },
+        (buttonIndex) => {
+          if (buttonIndex < menuOptions.length) {
+            const option = menuOptions[buttonIndex];
+            if (option.id === 'settings') {
+              navigation.navigate('Settings');
+            }
+          }
+        }
+      );
+    } else {
+      setMenuVisible(!menuVisible);
+    }
+  };
+
+  const handleMenuOptionPress = (optionId) => {
+    setMenuVisible(false);
+    if (optionId === 'settings') {
+      navigation.navigate('Settings');
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar backgroundColor="#075E54" barStyle="light-content" />
+      
+      {/* WhatsApp Header */}
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <Text style={styles.headerTitle}>WhatsApp</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={async () => {
+              const { requestCameraPermissionsAsync, launchCameraAsync, MediaTypeOptions } = require('expo-image-picker');
+              const { status } = await requestCameraPermissionsAsync();
+              if (status === 'granted') {
+                const result = await launchCameraAsync({
+                  mediaTypes: MediaTypeOptions.All,
+                  allowsEditing: true,
+                  quality: 1,
+                });
+                if (!result.canceled) {
+                  console.log('Camera result:', result);
+                }
+              }
+            }}
+          >
+            <Ionicons name="camera-outline" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={handleMenuPress}
+          >
+            <Ionicons name="ellipsis-vertical" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Menu Dropdown (Android) */}
+      {menuVisible && Platform.OS === 'android' && (
+        <>
+          <TouchableOpacity 
+            style={styles.menuOverlay} 
+            activeOpacity={1}
+            onPress={() => setMenuVisible(false)}
+          />
+          <View style={[styles.menuDropdown, { backgroundColor: colors.secondaryBackground }]}>
+            {menuOptions.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                style={styles.menuItem}
+                onPress={() => handleMenuOptionPress(option.id)}
+              >
+                <Text style={[styles.menuItemText, { color: colors.text }]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </>
+      )}
+
+      {/* Search Bar */}
+      <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
+        <View style={[styles.searchBar, { backgroundColor: colors.secondaryBackground }]}>
+          <Ionicons name="search" size={20} color={colors.tertiaryText} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Ask Meta AI or Search"
+            placeholderTextColor={colors.tertiaryText}
+            onFocus={() => navigation.navigate('Search')}
+          />
+        </View>
+      </View>
+
+      {/* Filter Chips */}
+      <View style={styles.filtersContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filtersContent}
+        >
+          {filters.map((filter) => (
+            <TouchableOpacity
+              key={filter.id}
+              style={[
+                styles.filterChip,
+                selectedFilter === filter.id && { backgroundColor: '#E7F8EE' },
+                selectedFilter !== filter.id && { backgroundColor: colors.secondaryBackground },
+              ]}
+              onPress={() => setSelectedFilter(filter.id)}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  selectedFilter === filter.id && { color: '#075E54' },
+                  selectedFilter !== filter.id && { color: colors.text },
+                ]}
+              >
+                {filter.label}
+                {filter.count > 0 && ` ${filter.count}`}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity style={[styles.filterChip, { backgroundColor: colors.secondaryBackground }]}>
+            <Ionicons name="add" size={20} color={colors.text} />
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+
+      {/* Archived Section */}
+      <TouchableOpacity style={[styles.archivedSection, { backgroundColor: colors.background }]}>
+        <Ionicons name="archive-outline" size={24} color={colors.tertiaryText} />
+        <Text style={[styles.archivedText, { color: colors.text }]}>Archived</Text>
+      </TouchableOpacity>
+
+      {/* Chat List */}
       <FlatList
         data={chats}
         renderItem={renderChat}
@@ -178,11 +343,11 @@ export default function ChatsScreen() {
       {/* Floating Action Button */}
       <View style={styles.fabContainer}>
         <TouchableOpacity
-          style={[styles.fab, { backgroundColor: colors.primary }]}
+          style={styles.fab}
           onPress={() => navigation.navigate('Contacts')}
           activeOpacity={0.8}
         >
-          <Ionicons name="chatbubble-ellipses" size={26} color="#FFFFFF" />
+          <Ionicons name="add" size={28} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>
@@ -192,6 +357,104 @@ export default function ChatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    backgroundColor: '#075E54',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 24,
+  },
+  headerButton: {
+    padding: 4,
+  },
+  menuOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 999,
+  },
+  menuDropdown: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 56 : 100,
+    right: 16,
+    width: 200,
+    borderRadius: 8,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    zIndex: 1000,
+  },
+  menuItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#E5E5E5',
+  },
+  menuItemText: {
+    fontSize: 16,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    padding: 0,
+  },
+  filtersContainer: {
+    paddingVertical: 8,
+  },
+  filtersContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  filterText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  archivedSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 28,
+  },
+  archivedText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   emptyListContainer: {
     flexGrow: 1,
@@ -341,9 +604,10 @@ const styles = StyleSheet.create({
     right: 16,
   },
   fab: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#25D366',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
