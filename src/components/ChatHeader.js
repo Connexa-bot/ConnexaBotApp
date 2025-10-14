@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, ActionSheetIOS } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,9 +12,51 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
   const insets = useSafeAreaInsets();
 
   const handleMorePress = () => {
-    if (onMore) {
-      onMore();
+    const options = [
+      'View contact',
+      'Media, links, and docs',
+      'Search',
+      'Mute notifications',
+      'Disappearing messages',
+      'Wallpaper',
+      'More',
+      'Cancel'
+    ];
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: options.length - 1,
+        },
+        (buttonIndex) => {
+          switch (buttonIndex) {
+            case 0:
+              navigation.navigate('ChatSettings', { chat });
+              break;
+            case 1:
+              // Media gallery
+              break;
+            case 2:
+              navigation.navigate('Search');
+              break;
+            case 3:
+              // Mute
+              break;
+            case 4:
+              // Disappearing messages
+              break;
+            case 5:
+              // Wallpaper
+              break;
+            case 6:
+              navigation.navigate('ChatSettings', { chat });
+              break;
+          }
+        }
+      );
     } else {
+      // Android - navigate directly to settings
       navigation.navigate('ChatSettings', { chat });
     }
   };

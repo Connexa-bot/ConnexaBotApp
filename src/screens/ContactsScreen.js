@@ -8,6 +8,8 @@ import {
   RefreshControl,
   TextInput,
   Alert,
+  Platform,
+  ActionSheetIOS,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -58,17 +60,90 @@ export default function ContactsScreen() {
   };
 
   const handleContactPress = (contact) => {
-    navigation.navigate('ChatView', {
-      chat: {
-        id: contact.id,
-        name: contact.name,
-        profilePic: contact.profilePic,
-      }
-    });
+    // Show contact profile options
+    const options = ['View contact', 'Message', 'Video call', 'Voice call', 'Cancel'];
+    
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: options.length - 1,
+        },
+        (buttonIndex) => {
+          switch (buttonIndex) {
+            case 0:
+              navigation.navigate('ContactProfile', { contact });
+              break;
+            case 1:
+              navigation.navigate('ChatView', {
+                chat: {
+                  id: contact.id,
+                  name: contact.name,
+                  profilePic: contact.profilePic,
+                }
+              });
+              break;
+            case 2:
+              Alert.alert('Video Call', 'Video calling is not supported');
+              break;
+            case 3:
+              Alert.alert('Voice Call', 'Voice calling is not supported');
+              break;
+          }
+        }
+      );
+    } else {
+      navigation.navigate('ChatView', {
+        chat: {
+          id: contact.id,
+          name: contact.name,
+          profilePic: contact.profilePic,
+        }
+      });
+    }
   };
 
   const handleNewContact = () => {
-    Alert.alert('Add Contact', 'This feature requires native contact permissions');
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        'Add Contact',
+        'Enter phone number',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Save',
+            onPress: async (number) => {
+              if (number && number.trim()) {
+                try {
+                  await callAPI(API_ENDPOINTS.ADD_CONTACT(user.phone, number));
+                  Alert.alert('Success', 'Contact saved');
+                  loadContacts();
+                } catch (error) {
+                  Alert.alert('Error', 'Failed to save contact');
+                }
+              }
+            }
+          }
+        ],
+        'plain-text'
+      );
+    } else {
+      // Android - show a simple input dialog
+      Alert.alert(
+        'Add Contact',
+        'Enter phone number',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Save',
+            onPress: () => {
+              // In production, use a proper input modal
+              Alert.alert('Info', 'Use the + button to add contacts');
+            }
+          }
+        ]
+      );
+    }
   };
 
   const renderContact = ({ item, index }) => (

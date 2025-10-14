@@ -47,9 +47,11 @@ const colorSchemes = {
     onlineIndicator: '#25D366',
     
     // Icons
-    icon: '#8696A0',
+    icon: '#667781',
     iconColor: '#667781',
     activeIconColor: '#00A884',
+    dangerColor: '#F44336',
+    successColor: '#25D366',
     
     // Other
     link: '#027EB5',
@@ -102,6 +104,8 @@ const colorSchemes = {
     icon: '#8696A0',
     iconColor: '#8696A0',
     activeIconColor: '#00A884',
+    dangerColor: '#F44336',
+    successColor: '#00A884',
     
     // Other
     link: '#53BDEB',

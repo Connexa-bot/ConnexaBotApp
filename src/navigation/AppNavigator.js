@@ -8,6 +8,7 @@ import ChatViewScreen from '../screens/ChatViewScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import LinkDeviceScreen from '../screens/LinkDeviceScreen';
 import ContactsScreen from '../screens/ContactsScreen';
+import ContactProfileScreen from '../screens/ContactProfileScreen';
 import GroupCreateScreen from '../screens/GroupCreateScreen';
 import StarredMessagesScreen from '../screens/StarredMessagesScreen';
 import ChatSettingsScreen from '../screens/ChatSettingsScreen';
@@ -118,6 +119,11 @@ export default function AppNavigator() {
       <Stack.Screen
         name="Contacts"
         component={ContactsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ContactProfile"
+        component={ContactProfileScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
