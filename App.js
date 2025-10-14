@@ -21,9 +21,9 @@ export default function App() {
     async function prepare() {
       try {
         if (Platform.OS === 'android') {
-          // FIXED: Remove overlay behavior that causes tab bar issues
-          await NavigationBar.setBackgroundColorAsync('#FFFFFF');
-          await NavigationBar.setButtonStyleAsync('dark');
+          // Hide navigation bar and set behavior to show on swipe, pushing content
+          await NavigationBar.setVisibilityAsync('hidden');
+          await NavigationBar.setBehaviorAsync('inset-swipe');
         }
 
         if (Platform.OS !== 'web') {
