@@ -32,7 +32,7 @@ export default function AppNavigator() {
         headerStyle: {
           backgroundColor: colors.header,
         },
-        headerTintColor: colors.text,
+        headerTintColor: colors.headerText,
         headerShadowVisible: false,
         animation: 'slide_from_right',
         contentStyle: { backgroundColor: colors.background },

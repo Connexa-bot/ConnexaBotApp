@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -12,14 +13,12 @@ import {
 } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useWallpaper } from '../contexts/WallpaperContext';
 import { useAI } from '../contexts/AIContext';
 import { callAPI, API_ENDPOINTS } from '../services/api';
 import ChatHeader from '../components/ChatHeader';
 import MessageBubble from '../components/MessageBubble';
 import ChatInput from '../components/ChatInput';
 import SmartReplyBar from '../components/SmartReplyBar';
-import * as FileSystem from 'expo-file-system';
 
 export default function ChatViewScreen({ route, navigation }) {
   const { chat } = route.params;
@@ -27,17 +26,20 @@ export default function ChatViewScreen({ route, navigation }) {
   const [loading, setLoading] = useState(false);
   const [smartSuggestions, setSmartSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { user } = useAuth();
-  const { getChatWallpaper } = useWallpaper();
   const { getChatSettings } = useAI();
   const flatListRef = useRef(null);
   const pollInterval = useRef(null);
   const lastProcessedMessageId = useRef(null);
   const isInitialLoad = useRef(true);
 
-  const wallpaper = getChatWallpaper(chat.id);
   const aiSettings = getChatSettings(chat.id);
+
+  // Official WhatsApp background
+  const bgImage = isDark 
+    ? require('../../assets/images/whatsapp-bg-dark.png')
+    : null;
 
   useEffect(() => {
     lastProcessedMessageId.current = null;
@@ -243,7 +245,7 @@ export default function ChatViewScreen({ route, navigation }) {
   };
 
   const handleReply = (message) => {
-    Alert.alert('Reply', 'Reply feature coming soon. Use ChatInput with quoted message.');
+    Alert.alert('Reply', 'Reply feature coming soon.');
   };
 
   const handleEdit = async (message) => {
@@ -267,7 +269,7 @@ export default function ChatViewScreen({ route, navigation }) {
         message.text
       );
     } else {
-      Alert.alert('Edit Message', 'Message editing is available on iOS. On Android/Web, delete and resend the message.');
+      Alert.alert('Edit Message', 'Message editing is available on iOS.');
     }
   };
 
@@ -350,27 +352,15 @@ export default function ChatViewScreen({ route, navigation }) {
   };
 
   const handleVideoCall = () => {
-    Alert.alert(
-      'Video Call',
-      'Video calling is not supported by the WhatsApp library. Only call history viewing is available.',
-      [{ text: 'OK' }]
-    );
+    Alert.alert('Video Call', 'Video calling is not supported.');
   };
 
   const handleVoiceCall = () => {
-    Alert.alert(
-      'Voice Call',
-      'Voice calling is not supported by the WhatsApp library. Only call history viewing is available.',
-      [{ text: 'OK' }]
-    );
+    Alert.alert('Voice Call', 'Voice calling is not supported.');
   };
 
   const handleMore = () => {
     navigation.navigate('ChatSettings', { chat });
-  };
-
-  const handleSearch = () => {
-    Alert.alert('Search', 'Message search feature coming soon');
   };
 
   if (loading) {
@@ -388,7 +378,6 @@ export default function ChatViewScreen({ route, navigation }) {
         onVideoCall={handleVideoCall}
         onVoiceCall={handleVoiceCall}
         onMore={handleMore}
-        onSearch={handleSearch}
       />
 
       <KeyboardAvoidingView
@@ -397,8 +386,11 @@ export default function ChatViewScreen({ route, navigation }) {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <ImageBackground
-          source={wallpaper.uri ? { uri: wallpaper.uri } : null}
-          style={[styles.messagesContainer, { backgroundColor: wallpaper.color || colors.chatBackground }]}
+          source={bgImage}
+          style={[styles.messagesContainer, { 
+            backgroundColor: isDark ? '#0B141A' : '#EFEAE2' 
+          }]}
+          resizeMode="repeat"
         >
           <FlatList
             ref={flatListRef}

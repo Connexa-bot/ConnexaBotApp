@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -6,24 +6,19 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Switch,
-  Modal,
-  FlatList,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { useAI } from '../contexts/AIContext';
-import { useWallpaper } from '../contexts/WallpaperContext';
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
-  const { colors, isDark, themePreference, setTheme } = useTheme();
-  const { settings, updateSettings } = useAI();
-  const { wallpapers, defaultWallpaper, setGlobalWallpaper, addCustomWallpaper } = useWallpaper();
-  const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
-  const [showThemePicker, setShowThemePicker] = useState(false);
+  const { colors, isDark } = useTheme();
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   const handleLogout = () => {
     Alert.alert(
@@ -40,55 +35,15 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleWallpaperSelect = async (wallpaper) => {
-    await setGlobalWallpaper(wallpaper);
-    setShowWallpaperPicker(false);
-    Alert.alert('Success', 'Wallpaper updated successfully');
-  };
-
-  const handleCustomWallpaper = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
-      });
-
-      if (!result.canceled) {
-        const newWallpaper = await addCustomWallpaper(result.assets[0].uri);
-        await setGlobalWallpaper(newWallpaper);
-        setShowWallpaperPicker(false);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to set custom wallpaper');
-    }
-  };
-
-  const personalities = [
-    { value: 'friendly and helpful', label: 'Friendly & Helpful' },
-    { value: 'professional and courteous', label: 'Professional' },
-    { value: 'casual and fun', label: 'Casual & Fun' },
-    { value: 'empathetic and understanding', label: 'Empathetic' },
-  ];
-
-  const handlePersonalityChange = () => {
-    Alert.alert(
-      'AI Personality',
-      'Choose how the AI should respond',
-      personalities.map(p => ({
-        text: p.label,
-        onPress: () => updateSettings({ personality: p.value }),
-      })).concat([{ text: 'Cancel', style: 'cancel' }])
-    );
-  };
-
-  const SettingItem = ({ icon, title, subtitle, onPress, rightElement }) => (
+  const SettingItem = ({ icon, title, subtitle, onPress }) => (
     <TouchableOpacity
-      style={[styles.settingItem, { borderBottomColor: colors.border }]}
+      style={[styles.settingItem, { backgroundColor: colors.background }]}
       onPress={onPress}
-      disabled={!onPress}
+      activeOpacity={0.7}
     >
-      <Ionicons name={icon} size={24} color={colors.icon} style={styles.settingIcon} />
+      <View style={[styles.iconContainer, { backgroundColor: colors.secondaryBackground }]}>
+        <Ionicons name={icon} size={24} color={colors.icon} />
+      </View>
       <View style={styles.settingContent}>
         <Text style={[styles.settingTitle, { color: colors.text }]}>{title}</Text>
         {subtitle && (
@@ -97,249 +52,135 @@ export default function SettingsScreen() {
           </Text>
         )}
       </View>
-      {rightElement || (
-        <Ionicons name="chevron-forward" size={20} color={colors.secondaryText} />
-      )}
-    </TouchableOpacity>
-  );
-
-  const renderWallpaperItem = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.wallpaperItem,
-        { 
-          backgroundColor: item.color || '#ccc',
-          borderColor: item.id === defaultWallpaper.id ? colors.primary : 'transparent',
-        }
-      ]}
-      onPress={() => handleWallpaperSelect(item)}
-    >
-      {item.id === defaultWallpaper.id && (
-        <View style={styles.selectedBadge}>
-          <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
-        </View>
-      )}
-      <Text style={styles.wallpaperName}>{item.name}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <View style={{flex: 1}}>
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.profileSection, { borderBottomColor: colors.border }]}>
-        <View style={[styles.profileAvatar, { backgroundColor: colors.primary }]}>
-          <Text style={styles.profileAvatarText}>
-            {user?.phone?.charAt(0) || 'U'}
-          </Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header */}
+      <View style={[styles.header, { 
+        backgroundColor: colors.header,
+        paddingTop: insets.top,
+      }]}>
+        <View style={styles.headerContent}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.headerText} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.headerText }]}>Settings</Text>
+          <TouchableOpacity style={styles.searchButton}>
+            <Ionicons name="search-outline" size={24} color={colors.headerText} />
+          </TouchableOpacity>
         </View>
-        <View style={styles.profileInfo}>
-          <Text style={[styles.profileName, { color: colors.text }]}>
-            {user?.phone || 'User'}
-          </Text>
-          <Text style={[styles.profileStatus, { color: colors.secondaryText }]}>
-            Hey there! I am using WhatsApp
-          </Text>
-        </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionHeader, { color: colors.primary }]}>Appearance</Text>
-        <SettingItem
-          icon="moon-outline"
-          title="Theme"
-          subtitle={themePreference === 'system' ? 'System default' : themePreference === 'dark' ? 'Dark' : 'Light'}
-          onPress={() => setShowThemePicker(true)}
-        />
-        <SettingItem
-          icon="image-outline"
-          title="Chat Wallpaper"
-          subtitle={defaultWallpaper.name}
-          onPress={() => setShowWallpaperPicker(true)}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.sectionHeader, { color: colors.primary }]}>AI Automation</Text>
-        <SettingItem
-          icon="flash-outline"
-          title="Auto-Reply"
-          subtitle={settings.autoReplyEnabled ? "Enabled" : "Disabled"}
-          onPress={() => updateSettings({ autoReplyEnabled: !settings.autoReplyEnabled })}
-          rightElement={
-            <Switch
-              value={settings.autoReplyEnabled}
-              onValueChange={(val) => updateSettings({ autoReplyEnabled: val })}
-              trackColor={{ false: colors.border, true: colors.primary }}
-            />
-          }
-        />
-        <SettingItem
-          icon="chatbubbles-outline"
-          title="Smart Replies"
-          subtitle={settings.smartRepliesEnabled ? "Enabled" : "Disabled"}
-          onPress={() => updateSettings({ smartRepliesEnabled: !settings.smartRepliesEnabled })}
-          rightElement={
-            <Switch
-              value={settings.smartRepliesEnabled}
-              onValueChange={(val) => updateSettings({ smartRepliesEnabled: val })}
-              trackColor={{ false: colors.border, true: colors.primary }}
-            />
-          }
-        />
-        <SettingItem
-          icon="image-outline"
-          title="Image Analysis"
-          subtitle={settings.imageAnalysisEnabled ? "Enabled" : "Disabled"}
-          onPress={() => updateSettings({ imageAnalysisEnabled: !settings.imageAnalysisEnabled })}
-          rightElement={
-            <Switch
-              value={settings.imageAnalysisEnabled}
-              onValueChange={(val) => updateSettings({ imageAnalysisEnabled: val })}
-              trackColor={{ false: colors.border, true: colors.primary }}
-            />
-          }
-        />
-        <SettingItem
-          icon="mic-outline"
-          title="Voice Transcription"
-          subtitle={settings.voiceTranscriptionEnabled ? "Enabled" : "Disabled"}
-          onPress={() => updateSettings({ voiceTranscriptionEnabled: !settings.voiceTranscriptionEnabled })}
-          rightElement={
-            <Switch
-              value={settings.voiceTranscriptionEnabled}
-              onValueChange={(val) => updateSettings({ voiceTranscriptionEnabled: val })}
-              trackColor={{ false: colors.border, true: colors.primary }}
-            />
-          }
-        />
-        <SettingItem
-          icon="person-circle-outline"
-          title="AI Personality"
-          subtitle={personalities.find(p => p.value === settings.personality)?.label || 'Friendly'}
-          onPress={handlePersonalityChange}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <TouchableOpacity
-          style={[styles.logoutButton, { borderColor: '#F44336' }]}
-          onPress={handleLogout}
+      <ScrollView style={styles.scrollView}>
+        {/* Profile Section */}
+        <TouchableOpacity 
+          style={[styles.profileSection, { backgroundColor: colors.background }]}
+          activeOpacity={0.7}
         >
-          <Ionicons name="log-out-outline" size={24} color="#F44336" />
-          <Text style={styles.logoutText}>Logout</Text>
+          <View style={[styles.profileAvatar, { backgroundColor: colors.primary }]}>
+            <Text style={styles.profileAvatarText}>
+              {user?.phone?.charAt(0) || 'U'}
+            </Text>
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={[styles.profileName, { color: colors.text }]}>
+              {user?.phone || 'User'}
+            </Text>
+            <Text style={[styles.profileStatus, { color: colors.secondaryText }]}>
+              Testing API
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.qrButton}>
+            <Ionicons name="qr-code-outline" size={24} color={colors.primary} />
+          </TouchableOpacity>
         </TouchableOpacity>
-      </View>
 
-      <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.secondaryText }]}>
-          ConnexaBot v1.0.0
-        </Text>
-      </View>
-    </ScrollView>
+        <View style={styles.divider} />
 
-    <Modal
-      visible={showWallpaperPicker}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={() => setShowWallpaperPicker(false)}
-    >
-      <View style={styles.modalContainer}>
-        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
-              Choose Wallpaper
-            </Text>
-            <TouchableOpacity onPress={() => setShowWallpaperPicker(false)}>
-              <Ionicons name="close" size={28} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          <FlatList
-            data={wallpapers}
-            renderItem={renderWallpaperItem}
-            keyExtractor={item => item.id}
-            numColumns={2}
-            contentContainerStyle={styles.wallpaperList}
+        {/* Settings List */}
+        <View style={styles.settingsList}>
+          <SettingItem
+            icon="key-outline"
+            title="Account"
+            subtitle="Security notifications, change number"
+            onPress={() => Alert.alert('Account', 'Account settings coming soon')}
           />
-
-          <TouchableOpacity
-            style={[styles.customWallpaperButton, { backgroundColor: colors.primary }]}
-            onPress={handleCustomWallpaper}
-          >
-            <Ionicons name="add" size={24} color="#fff" />
-            <Text style={styles.customWallpaperText}>Add Custom</Text>
-          </TouchableOpacity>
+          <SettingItem
+            icon="lock-closed-outline"
+            title="Privacy"
+            subtitle="Block contacts, disappearing messages"
+            onPress={() => Alert.alert('Privacy', 'Privacy settings coming soon')}
+          />
+          <SettingItem
+            icon="happy-outline"
+            title="Avatar"
+            subtitle="Create, edit, profile photo"
+            onPress={() => Alert.alert('Avatar', 'Avatar settings coming soon')}
+          />
+          <SettingItem
+            icon="heart-outline"
+            title="Favorites"
+            subtitle="Add, reorder, remove"
+            onPress={() => Alert.alert('Favorites', 'Favorites coming soon')}
+          />
+          <SettingItem
+            icon="chatbubbles-outline"
+            title="Chats"
+            subtitle="Theme, wallpapers, chat history"
+            onPress={() => Alert.alert('Chats', 'Chat settings coming soon')}
+          />
+          <SettingItem
+            icon="notifications-outline"
+            title="Notifications"
+            subtitle="Message, group & call tones"
+            onPress={() => Alert.alert('Notifications', 'Notification settings coming soon')}
+          />
+          <SettingItem
+            icon="server-outline"
+            title="Storage and data"
+            subtitle="Network usage, auto-download"
+            onPress={() => Alert.alert('Storage', 'Storage settings coming soon')}
+          />
+          <SettingItem
+            icon="accessibility-outline"
+            title="Accessibility"
+            subtitle="Increase contrast, animation"
+            onPress={() => Alert.alert('Accessibility', 'Accessibility settings coming soon')}
+          />
+          <SettingItem
+            icon="globe-outline"
+            title="App language"
+            subtitle="English (device's language)"
+            onPress={() => Alert.alert('Language', 'Language settings coming soon')}
+          />
+          <SettingItem
+            icon="help-circle-outline"
+            title="Help"
+            subtitle="Help center, contact us, privacy policy"
+            onPress={() => Alert.alert('Help', 'Help center coming soon')}
+          />
+          <SettingItem
+            icon="people-outline"
+            title="Invite a contact"
+            subtitle=""
+            onPress={() => Alert.alert('Invite', 'Invite feature coming soon')}
+          />
         </View>
-      </View>
-    </Modal>
 
-    <Modal
-      visible={showThemePicker}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={() => setShowThemePicker(false)}
-    >
-      <View style={styles.modalContainer}>
-        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
-              Choose Theme
-            </Text>
-            <TouchableOpacity onPress={() => setShowThemePicker(false)}>
-              <Ionicons name="close" size={28} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.themeOption, { borderBottomColor: colors.border }]}
-            onPress={() => {
-              setTheme('light');
-              setShowThemePicker(false);
-            }}
-          >
-            <View style={styles.themeOptionContent}>
-              <Ionicons name="sunny-outline" size={24} color={colors.icon} style={{ marginRight: 16 }} />
-              <Text style={[styles.themeOptionText, { color: colors.text }]}>Light</Text>
-            </View>
-            {themePreference === 'light' && (
-              <Ionicons name="checkmark" size={24} color={colors.primary} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.themeOption, { borderBottomColor: colors.border }]}
-            onPress={() => {
-              setTheme('dark');
-              setShowThemePicker(false);
-            }}
-          >
-            <View style={styles.themeOptionContent}>
-              <Ionicons name="moon-outline" size={24} color={colors.icon} style={{ marginRight: 16 }} />
-              <Text style={[styles.themeOptionText, { color: colors.text }]}>Dark</Text>
-            </View>
-            {themePreference === 'dark' && (
-              <Ionicons name="checkmark" size={24} color={colors.primary} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.themeOption, { borderBottomWidth: 0 }]}
-            onPress={() => {
-              setTheme('system');
-              setShowThemePicker(false);
-            }}
-          >
-            <View style={styles.themeOptionContent}>
-              <Ionicons name="phone-portrait-outline" size={24} color={colors.icon} style={{ marginRight: 16 }} />
-              <Text style={[styles.themeOptionText, { color: colors.text }]}>System default</Text>
-            </View>
-            {themePreference === 'system' && (
-              <Ionicons name="checkmark" size={24} color={colors.primary} />
-            )}
-          </TouchableOpacity>
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, { color: colors.secondaryText }]}>
+            from
+          </Text>
+          <Text style={[styles.brandText, { color: colors.text }]}>
+            CONNEXA
+          </Text>
         </View>
-      </View>
-    </Modal>
+      </ScrollView>
     </View>
   );
 }
@@ -348,52 +189,87 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    height: 56,
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '500',
+    flex: 1,
+    marginLeft: 8,
+  },
+  searchButton: {
+    padding: 8,
+  },
+  scrollView: {
+    flex: 1,
+  },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
   },
   profileAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
   },
   profileAvatarText: {
     color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: 28,
+    fontWeight: '400',
   },
   profileInfo: {
     flex: 1,
   },
   profileName: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '500',
     marginBottom: 4,
   },
   profileStatus: {
     fontSize: 14,
   },
-  section: {
-    marginTop: 16,
+  qrButton: {
+    padding: 8,
   },
-  sectionHeader: {
-    fontSize: 14,
-    fontWeight: '600',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
+  divider: {
+    height: 8,
+    backgroundColor: '#0B1014',
+  },
+  settingsList: {
+    paddingVertical: 8,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
-  settingIcon: {
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
   },
   settingContent: {
@@ -401,111 +277,22 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '400',
   },
   settingSubtitle: {
     fontSize: 14,
     marginTop: 2,
   },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    margin: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  logoutText: {
-    color: '#F44336',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
   footer: {
     alignItems: 'center',
-    padding: 20,
+    padding: 32,
   },
   footerText: {
-    fontSize: 12,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 32,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  wallpaperList: {
-    padding: 16,
-  },
-  wallpaperItem: {
-    flex: 1,
-    height: 120,
-    margin: 8,
-    borderRadius: 12,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    padding: 12,
-    borderWidth: 3,
-  },
-  wallpaperName: {
-    color: '#fff',
     fontSize: 14,
-    fontWeight: '600',
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    marginBottom: 4,
   },
-  selectedBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderRadius: 12,
-  },
-  customWallpaperButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: 16,
-    padding: 16,
-    borderRadius: 12,
-  },
-  customWallpaperText: {
-    color: '#fff',
+  brandText: {
     fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  themeOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-  },
-  themeOptionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  themeOptionText: {
-    fontSize: 16,
+    fontWeight: '500',
   },
 });

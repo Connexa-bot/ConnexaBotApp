@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useMemo, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { storage } from '../utils/storage';
@@ -15,7 +16,7 @@ const colorSchemes = {
     secondaryBackground: '#F0F2F5',
     header: '#008069',
     chatBackground: '#EFEAE2',
-    inputBackground: '#F0F2F5',
+    inputBackground: '#FFFFFF',
     attachmentBg: '#F0F2F5',
     
     // Text Colors
@@ -33,8 +34,6 @@ const colorSchemes = {
     tabBar: '#FFFFFF',
     tabIconSelected: '#00A884',
     tabIconDefault: '#8696A0',
-    tabLabelSelected: '#00A884',
-    tabLabelDefault: '#667781',
     
     // Message Bubbles
     messageBubbleSent: '#D9FDD3',
@@ -48,6 +47,7 @@ const colorSchemes = {
     onlineIndicator: '#25D366',
     
     // Icons
+    icon: '#8696A0',
     iconColor: '#667781',
     activeIconColor: '#00A884',
     
@@ -65,10 +65,10 @@ const colorSchemes = {
     
     // Backgrounds
     background: '#111B21',
-    secondaryBackground: '#1E2A30',
+    secondaryBackground: '#1F2C34',
     header: '#202C33',
     chatBackground: '#0B141A',
-    inputBackground: '#2A3942',
+    inputBackground: '#1F2C34',
     attachmentBg: '#2A3942',
     
     // Text Colors
@@ -78,16 +78,14 @@ const colorSchemes = {
     tertiaryText: '#667781',
     
     // Borders & Dividers
-    border: '#2A3942',
-    divider: '#2A3942',
+    border: '#1F2C34',
+    divider: '#1F2C34',
     inputBorder: '#2A3942',
     
     // Tab Bar
     tabBar: '#1F2C34',
     tabIconSelected: '#00A884',
     tabIconDefault: '#8696A0',
-    tabLabelSelected: '#00A884',
-    tabLabelDefault: '#8696A0',
     
     // Message Bubbles
     messageBubbleSent: '#005C4B',
@@ -101,6 +99,7 @@ const colorSchemes = {
     onlineIndicator: '#00A884',
     
     // Icons
+    icon: '#8696A0',
     iconColor: '#8696A0',
     activeIconColor: '#00A884',
     
@@ -148,7 +147,7 @@ export const ThemeProvider = ({ children }) => {
   };
 
   const actualTheme = themePreference === 'system'
-    ? (systemColorScheme || 'light')
+    ? (systemColorScheme || 'dark')
     : themePreference;
 
   const value = useMemo(

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -45,8 +46,8 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
               <Image source={{ uri: chat.profilePic }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarTextContainer}>
-                {chat.isGroup && <Ionicons name="people" size={24} color="#fff" />}
-                {chat.isChannel && <Ionicons name="megaphone" size={24} color="#fff" />}
+                {chat.isGroup && <Ionicons name="people" size={20} color="#fff" />}
+                {chat.isChannel && <Ionicons name="megaphone" size={20} color="#fff" />}
                 {!chat.isGroup && !chat.isChannel && (
                   <Text style={styles.avatarText}>
                     {chat.name?.charAt(0).toUpperCase() || '?'}
@@ -60,14 +61,12 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
             <Text style={[styles.name, { color: colors.headerText }]} numberOfLines={1}>
               {chat.name || chat.id}
             </Text>
-            <Text style={styles.status} numberOfLines={1}>
+            <Text style={[styles.status, { color: colors.headerText, opacity: 0.7 }]} numberOfLines={1}>
               {chat.isGroup
                 ? `${chat.participantCount || 0} participants`
                 : chat.isChannel
                   ? `${chat.subscriberCount || 0} subscribers`
-                  : chat.isOnline
-                    ? 'online'
-                    : chat.lastSeen || 'tap here for contact info'}
+                  : 'tap here for contact info'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -79,7 +78,7 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
               onPress={onVideoCall}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Ionicons name="videocam" size={26} color={colors.headerText} />
+              <Ionicons name="videocam" size={24} color={colors.headerText} />
             </TouchableOpacity>
           )}
 
@@ -117,13 +116,13 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     height: 60,
   },
   backButton: {
     padding: 8,
-    marginRight: 4,
+    marginRight: 8,
   },
   chatInfo: {
     flex: 1,
@@ -132,28 +131,28 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   avatarImage: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   avatarTextContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '500',
   },
   details: {
@@ -161,22 +160,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   name: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '500',
-    lineHeight: 22,
+    lineHeight: 20,
   },
   status: {
-    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 13,
-    lineHeight: 18,
-    marginTop: 1,
+    lineHeight: 16,
+    marginTop: 2,
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 20,
   },
   actionButton: {
-    padding: 8,
-    marginLeft: 4,
+    padding: 4,
   },
 });
