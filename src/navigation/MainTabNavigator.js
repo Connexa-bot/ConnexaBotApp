@@ -2,7 +2,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform, View, Text, TouchableOpacity } from 'react-native';
+import { Platform, View, Text, TouchableOpacity, StatusBar } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import ChatsScreen from '../screens/ChatsScreen';
@@ -12,19 +13,25 @@ import CallsScreen from '../screens/CallsScreen';
 const Tab = createBottomTabNavigator();
 
 function CustomHeader({ title }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={{
-      backgroundColor: colors.header,
-      paddingTop: Platform.OS === 'ios' ? 50 : 10,
-      paddingBottom: 10,
-      paddingHorizontal: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    }}>
+    <>
+      <StatusBar 
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.header}
+      />
+      <View style={{
+        backgroundColor: colors.header,
+        paddingTop: insets.top,
+        paddingBottom: 10,
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
       <Text style={{
         color: colors.headerText,
         fontSize: 20,
@@ -59,6 +66,7 @@ function CustomHeader({ title }) {
         </TouchableOpacity>
       </View>
     </View>
+    </>
   );
 }
 

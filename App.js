@@ -22,8 +22,9 @@ export default function App() {
       try {
         if (Platform.OS === 'android') {
           const setupNavigationBar = async () => {
-            await NavigationBar.setBehaviorAsync('inset-swipe');
-            await NavigationBar.setVisibilityAsync('hidden');
+            await NavigationBar.setBehaviorAsync('overlay-swipe');
+            await NavigationBar.setPositionAsync('absolute');
+            await NavigationBar.setBackgroundColorAsync('#00000000');
           };
           await setupNavigationBar();
         }
