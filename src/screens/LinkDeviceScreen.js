@@ -102,8 +102,7 @@ export default function LinkDeviceScreen() {
             
             setUser({ phone: cleanPhone, ...data?.user });
             console.log('👤 Set user in AuthContext:', { phone: cleanPhone });
-            
-            Alert.alert('Success', 'WhatsApp connected successfully!');
+            console.log('🎉 Connection successful, navigation will happen automatically');
           } else if (pollCount >= MAX_POLLS) {
             console.log('⏱️ Polling timeout reached');
             setIsCheckingConnection(false);
