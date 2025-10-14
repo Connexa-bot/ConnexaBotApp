@@ -48,7 +48,11 @@ export default function RootNavigator() {
           <Stack.Screen name="Main" component={AppNavigator} />
         ) : (
           <>
-            <Stack.Screen name="TermsPrivacy" component={TermsPrivacyScreen} />
+            <Stack.Screen name="TermsPrivacy">
+              {({ navigation }) => (
+                <TermsPrivacyScreen onContinue={() => navigation.navigate('LinkDevice')} />
+              )}
+            </Stack.Screen>
             <Stack.Screen name="LinkDevice" component={LinkDeviceScreen} />
           </>
         )}
