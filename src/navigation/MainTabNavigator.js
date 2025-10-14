@@ -153,7 +153,7 @@ export default function MainTabNavigator() {
     <Tab.Navigator
       initialRouteName="Chats"
       screenOptions={({ route }) => ({
-        header: route.name === 'Chats' ? undefined : () => <CustomHeader title={route.name} />,
+        header: () => <CustomHeader title={route.name} />,
         headerShown: route.name !== 'Chats',
         tabBarStyle: {
           backgroundColor: colors.background,

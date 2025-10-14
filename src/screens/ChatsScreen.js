@@ -33,6 +33,23 @@ export default function ChatsScreen() {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
+  const handleCameraPress = async () => {
+    const { status } = await require('expo-image-picker').requestCameraPermissionsAsync();
+    if (status === 'granted') {
+      const result = await require('expo-image-picker').launchCameraAsync({
+        mediaTypes: require('expo-image-picker').MediaTypeOptions.All,
+        allowsEditing: true,
+        quality: 1,
+      });
+      if (!result.canceled) {
+        navigation.navigate('StatusPost', {
+          mediaUri: result.assets[0].uri,
+          mediaType: result.assets[0].type || 'image',
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     loadChats();
   }, []);
@@ -181,11 +198,11 @@ export default function ChatsScreen() {
   ];
 
   const menuOptions = [
-    { id: 'new_group', label: 'New group', icon: 'people-outline' },
-    { id: 'new_broadcast', label: 'New broadcast', icon: 'megaphone-outline' },
-    { id: 'linked_devices', label: 'Linked devices', icon: 'laptop-outline' },
-    { id: 'starred', label: 'Starred', icon: 'star-outline' },
-    { id: 'settings', label: 'Settings', icon: 'settings-outline' },
+    { id: 'new_group', label: 'New group' },
+    { id: 'new_broadcast', label: 'New broadcast' },
+    { id: 'linked_devices', label: 'Linked devices' },
+    { id: 'starred', label: 'Starred messages' },
+    { id: 'settings', label: 'Settings' },
   ];
 
   const handleMenuPress = () => {
@@ -201,6 +218,10 @@ export default function ChatsScreen() {
             const option = menuOptions[buttonIndex];
             if (option.id === 'settings') {
               navigation.navigate('Settings');
+            } else if (option.id === 'linked_devices') {
+              navigation.navigate('LinkDevice');
+            } else if (option.id === 'starred') {
+              navigation.navigate('StarredMessages');
             }
           }
         }
@@ -214,6 +235,10 @@ export default function ChatsScreen() {
     setMenuVisible(false);
     if (optionId === 'settings') {
       navigation.navigate('Settings');
+    } else if (optionId === 'linked_devices') {
+      navigation.navigate('LinkDevice');
+    } else if (optionId === 'starred') {
+      navigation.navigate('StarredMessages');
     }
   };
 
@@ -233,6 +258,19 @@ export default function ChatsScreen() {
         barStyle={isDark ? 'light-content' : 'dark-content'}
         translucent={false}
       />
+
+      {/* Custom Header */}
+      <View style={[styles.header, { backgroundColor: colors.header, paddingTop: insets.top }]}>
+        <Text style={[styles.headerTitle, { color: colors.headerText }]}>WhatsApp</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleCameraPress} style={styles.headerIcon}>
+            <Ionicons name="camera-outline" size={24} color={colors.headerText} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleMenuPress} style={styles.headerIcon}>
+            <Ionicons name="ellipsis-vertical" size={24} color={colors.headerText} />
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* Menu Dropdown (Android) */}
       {menuVisible && Platform.OS === 'android' && (
@@ -530,6 +568,25 @@ export default function ChatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '500',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  headerIcon: {
+    padding: 4,
   },
   menuOverlay: {
     position: 'absolute',
