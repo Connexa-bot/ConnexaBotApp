@@ -247,23 +247,28 @@ export default function ChatViewScreen({ route, navigation }) {
   };
 
   const handleEdit = async (message) => {
-    Alert.prompt(
-      'Edit Message',
-      'Enter new text',
-      async (text) => {
-        if (text && text.trim()) {
-          try {
-            await callAPI(API_ENDPOINTS.EDIT_MESSAGE(user.phone, chat.id, message.key, text));
-            loadMessages();
-          } catch (error) {
-            console.error('Error editing message:', error);
-            Alert.alert('Error', 'Failed to edit message');
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        'Edit Message',
+        'Enter new text',
+        async (text) => {
+          if (text && text.trim()) {
+            try {
+              const messageKey = message.key || message.id;
+              await callAPI(API_ENDPOINTS.EDIT_MESSAGE(user.phone, chat.id, messageKey, text));
+              loadMessages();
+            } catch (error) {
+              console.error('Error editing message:', error);
+              Alert.alert('Error', 'Failed to edit message');
+            }
           }
-        }
-      },
-      'plain-text',
-      message.text
-    );
+        },
+        'plain-text',
+        message.text
+      );
+    } else {
+      Alert.alert('Edit Message', 'Message editing is available on iOS. On Android/Web, delete and resend the message.');
+    }
   };
 
   const handleForward = (message) => {
@@ -272,7 +277,8 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleStar = async (message) => {
     try {
-      await callAPI(API_ENDPOINTS.STAR_MESSAGE(user.phone, chat.id, message.key, true));
+      const messageKey = message.key || message.id;
+      await callAPI(API_ENDPOINTS.STAR_MESSAGE(user.phone, chat.id, messageKey, true));
       Alert.alert('Success', 'Message starred');
       loadMessages();
     } catch (error) {
@@ -291,7 +297,8 @@ export default function ChatViewScreen({ route, navigation }) {
           text: 'Delete for Me',
           onPress: async () => {
             try {
-              await callAPI(API_ENDPOINTS.DELETE_MESSAGE(user.phone, chat.id, message.key));
+              const messageKey = message.key || message.id;
+              await callAPI(API_ENDPOINTS.DELETE_MESSAGE(user.phone, chat.id, messageKey));
               loadMessages();
             } catch (error) {
               console.error('Error deleting message:', error);
@@ -303,7 +310,8 @@ export default function ChatViewScreen({ route, navigation }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              await callAPI(API_ENDPOINTS.DELETE_MESSAGE(user.phone, chat.id, message.key));
+              const messageKey = message.key || message.id;
+              await callAPI(API_ENDPOINTS.DELETE_MESSAGE(user.phone, chat.id, messageKey));
               loadMessages();
             } catch (error) {
               console.error('Error deleting message:', error);
@@ -324,7 +332,8 @@ export default function ChatViewScreen({ route, navigation }) {
         text: emoji,
         onPress: async () => {
           try {
-            await callAPI(API_ENDPOINTS.REACT_MESSAGE(user.phone, chat.id, message.key, emoji));
+            const messageKey = message.key || message.id;
+            await callAPI(API_ENDPOINTS.REACT_MESSAGE(user.phone, chat.id, messageKey, emoji));
             loadMessages();
           } catch (error) {
             console.error('Error reacting to message:', error);

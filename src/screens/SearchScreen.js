@@ -34,12 +34,26 @@ export default function SearchScreen({ navigation }) {
   const loadData = async () => {
     try {
       if (user?.phone) {
-        const [chatsRes, contactsRes] = await Promise.all([
-          callAPI(API_ENDPOINTS.GET_CHATS(user.phone)),
-          callAPI(API_ENDPOINTS.GET_CONTACTS(user.phone)),
-        ]);
+        const chatsRes = await callAPI(API_ENDPOINTS.GET_CHATS(user.phone));
+        const contactsRes = await callAPI(API_ENDPOINTS.GET_CONTACTS(user.phone));
+        
         setChats(chatsRes.chats || []);
         setContacts(contactsRes.contacts || []);
+        
+        const allMessages = [];
+        for (const chat of (chatsRes.chats || [])) {
+          try {
+            const msgRes = await callAPI(API_ENDPOINTS.GET_MESSAGES(user.phone, chat.id, 20));
+            if (msgRes.data?.messages) {
+              msgRes.data.messages.forEach(msg => {
+                allMessages.push({ ...msg, chatId: chat.id, chatName: chat.name });
+              });
+            }
+          } catch (err) {
+            console.log('Error loading messages for', chat.id);
+          }
+        }
+        setMessages(allMessages);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -67,19 +81,29 @@ export default function SearchScreen({ navigation }) {
       }
     });
 
+    messages.forEach(message => {
+      if (message.text?.toLowerCase().includes(query)) {
+        results.push({ type: 'message', data: message });
+      }
+    });
+
     setFilteredResults(results);
   };
 
   const renderResult = ({ item }) => {
-    const isChat = item.type === 'chat';
-    const data = item.data;
+    const { type, data } = item;
 
     return (
       <TouchableOpacity
         style={[styles.resultItem, { borderBottomColor: colors.divider }]}
         onPress={() => {
-          if (isChat) {
+          if (type === 'chat') {
             navigation.navigate('ChatView', { chat: data });
+          } else if (type === 'message') {
+            const chat = chats.find(c => c.id === data.chatId);
+            navigation.navigate('ChatView', { 
+              chat: chat || { id: data.chatId, name: data.chatName } 
+            });
           } else {
             navigation.navigate('ChatView', { 
               chat: { id: data.id, name: data.name, profilePicUrl: data.profilePicUrl } 
@@ -92,25 +116,32 @@ export default function SearchScreen({ navigation }) {
             <Image source={{ uri: data.profilePicUrl }} style={styles.avatarImage} />
           ) : (
             <Text style={styles.avatarText}>
-              {data.name?.charAt(0).toUpperCase() || '?'}
+              {(data.name || data.chatName)?.charAt(0).toUpperCase() || '?'}
             </Text>
           )}
         </View>
         <View style={styles.resultContent}>
-          <Text style={[styles.resultName, { color: colors.text }]}>{data.name}</Text>
-          {isChat && data.lastMessage && (
+          <Text style={[styles.resultName, { color: colors.text }]}>
+            {type === 'message' ? data.chatName : data.name}
+          </Text>
+          {type === 'chat' && data.lastMessage && (
             <Text style={[styles.resultMessage, { color: colors.secondaryText }]} numberOfLines={1}>
               {data.lastMessage}
             </Text>
           )}
-          {!isChat && (
+          {type === 'message' && (
+            <Text style={[styles.resultMessage, { color: colors.secondaryText }]} numberOfLines={1}>
+              {data.text}
+            </Text>
+          )}
+          {type === 'contact' && (
             <Text style={[styles.resultMessage, { color: colors.secondaryText }]}>
               {data.about || 'Contact'}
             </Text>
           )}
         </View>
         <Ionicons 
-          name={isChat ? 'chatbubble-outline' : 'person-outline'} 
+          name={type === 'chat' ? 'chatbubble-outline' : type === 'message' ? 'text-outline' : 'person-outline'} 
           size={20} 
           color={colors.secondaryText} 
         />
