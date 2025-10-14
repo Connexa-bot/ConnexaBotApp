@@ -26,6 +26,7 @@ export default function ChatsScreen() {
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [menuVisible, setMenuVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const navigation = useNavigation();
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
@@ -251,39 +252,55 @@ export default function ChatsScreen() {
 
       {/* Meta AI Search Bar */}
       <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
-        <TouchableOpacity 
-          style={[styles.metaAISearchBar, { backgroundColor: colors.secondaryBackground }]}
-          onPress={() => navigation.navigate('Search')}
-          activeOpacity={0.7}
-        >
+        <View style={[styles.metaAISearchBar, { backgroundColor: colors.secondaryBackground }]}>
           <Ionicons name="search" size={20} color={colors.tertiaryText} style={styles.searchIcon} />
-          <Text style={[styles.metaAIPlaceholder, { color: colors.tertiaryText }]}>
-            Ask Connexa AI or Search
-          </Text>
-        </TouchableOpacity>
+          <TextInput
+            style={[styles.metaAIInput, { color: colors.text }]}
+            placeholder="Ask Connexa AI or Search"
+            placeholderTextColor={colors.tertiaryText}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => {
+              if (!searchQuery.trim()) {
+                setIsSearchFocused(false);
+              }
+            }}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => {
+              setSearchQuery('');
+              setIsSearchFocused(false);
+            }}>
+              <Ionicons name="close-circle" size={20} color={colors.tertiaryText} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
-      {/* AI Suggestion Chips */}
-      <View style={styles.aiSuggestionsContainer}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.aiSuggestionsContent}
-        >
-          {aiSuggestions.map((suggestion, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.aiSuggestionChip, { backgroundColor: colors.secondaryBackground }]}
-              onPress={() => navigation.navigate('Search')}
-            >
-              <Text style={styles.aiSuggestionEmoji}>{suggestion.emoji}</Text>
-              <Text style={[styles.aiSuggestionText, { color: colors.text }]} numberOfLines={1}>
-                {suggestion.text}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+      {/* AI Suggestion Chips - Only show when search is focused and no query */}
+      {isSearchFocused && !searchQuery.trim() && (
+        <View style={styles.aiSuggestionsContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.aiSuggestionsContent}
+          >
+            {aiSuggestions.map((suggestion, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.aiSuggestionChip, { backgroundColor: colors.secondaryBackground }]}
+                onPress={() => setSearchQuery(suggestion.text)}
+              >
+                <Text style={styles.aiSuggestionEmoji}>{suggestion.emoji}</Text>
+                <Text style={[styles.aiSuggestionText, { color: colors.text }]} numberOfLines={1}>
+                  {suggestion.text}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Filter Chips */}
       <View style={styles.filtersContainer}>
@@ -437,6 +454,11 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     marginRight: 12,
+  },
+  metaAIInput: {
+    fontSize: 16,
+    flex: 1,
+    padding: 0,
   },
   metaAIPlaceholder: {
     fontSize: 16,
