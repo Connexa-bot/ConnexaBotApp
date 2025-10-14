@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 
-export default function MessageBubble({ message, onLongPress, onReact }) {
-  const { colors } = useTheme();
+export default function MessageBubble({ message, onLongPress, onReact, isGroupChat = false, isChannel = false }) {
+  const { colors, isDark } = useTheme();
   const isFromMe = message.fromMe;
 
   const formatTime = (timestamp) => {
@@ -53,8 +53,35 @@ export default function MessageBubble({ message, onLongPress, onReact }) {
     return null;
   };
 
+  const renderQuotedMessage = () => {
+    if (!message.quotedMsg) return null;
+    
+    return (
+      <View style={[styles.quotedContainer, { 
+        backgroundColor: isFromMe 
+          ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')
+          : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
+        borderLeftColor: isFromMe ? '#25D366' : colors.primary 
+      }]}>
+        <Text style={[styles.quotedSender, { color: isFromMe ? '#25D366' : colors.primary }]}>
+          {message.quotedMsg.sender || 'Unknown'}
+        </Text>
+        <Text style={[styles.quotedText, { color: isFromMe ? colors.messageBubbleSentText : colors.messageBubbleReceivedText }]} numberOfLines={2}>
+          {message.quotedMsg.text || 'Media'}
+        </Text>
+      </View>
+    );
+  };
+
   return (
     <View style={[styles.container, isFromMe ? styles.sentContainer : styles.receivedContainer]}>
+      {/* WhatsApp-style message tail */}
+      {!isFromMe && (
+        <View style={[styles.tailLeft, { 
+          borderRightColor: colors.messageBubbleReceived,
+        }]} />
+      )}
+      
       <TouchableOpacity
         style={[
           styles.bubble,
@@ -66,11 +93,25 @@ export default function MessageBubble({ message, onLongPress, onReact }) {
         onLongPress={() => onLongPress?.(message)}
         activeOpacity={0.95}
       >
-        {!isFromMe && message.senderName && (
-          <Text style={[styles.senderName, { color: colors.primary }]}>
+        {/* Group/Channel sender name */}
+        {!isFromMe && (isGroupChat || isChannel) && message.senderName && (
+          <Text style={[styles.senderName, { color: getSenderColor(message.senderId || message.senderName) }]}>
             {message.senderName}
           </Text>
         )}
+        
+        {/* Channel badge for forwarded channel messages */}
+        {isChannel && message.channelBadge && (
+          <View style={styles.channelBadge}>
+            <Ionicons name="megaphone" size={14} color={colors.primary} />
+            <Text style={[styles.channelBadgeText, { color: colors.primary }]}>
+              {message.channelName || 'Channel'}
+            </Text>
+          </View>
+        )}
+        
+        {/* Quoted/Reply message */}
+        {renderQuotedMessage()}
         
         {renderMedia()}
         
@@ -120,18 +161,26 @@ export default function MessageBubble({ message, onLongPress, onReact }) {
           </View>
         )}
       </TouchableOpacity>
-
+      
+      {/* WhatsApp-style message tail for sent messages */}
       {isFromMe && (
-        <TouchableOpacity 
-          style={styles.reactButton}
-          onPress={() => onReact?.(message)}
-        >
-          <Ionicons name="heart-outline" size={16} color={colors.secondaryText} />
-        </TouchableOpacity>
+        <View style={[styles.tailRight, { 
+          borderLeftColor: colors.messageBubbleSent,
+        }]} />
       )}
     </View>
   );
 }
+
+// Generate consistent color for group/channel senders
+const getSenderColor = (senderId) => {
+  const colors = ['#00A884', '#667781', '#027EB5', '#D3396D', '#CB5C0D', '#7C4DFF', '#00897B', '#D84315'];
+  let hash = 0;
+  for (let i = 0; i < senderId.length; i++) {
+    hash = senderId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -156,6 +205,31 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0.5 },
     shadowOpacity: 0.1,
     shadowRadius: 1,
+    position: 'relative',
+  },
+  tailLeft: {
+    position: 'absolute',
+    left: -8,
+    bottom: 3,
+    width: 0,
+    height: 0,
+    borderTopWidth: 6,
+    borderTopColor: 'transparent',
+    borderBottomWidth: 6,
+    borderBottomColor: 'transparent',
+    borderRightWidth: 10,
+  },
+  tailRight: {
+    position: 'absolute',
+    right: -8,
+    bottom: 3,
+    width: 0,
+    height: 0,
+    borderTopWidth: 6,
+    borderTopColor: 'transparent',
+    borderBottomWidth: 6,
+    borderBottomColor: 'transparent',
+    borderLeftWidth: 10,
   },
   mediaBubble: {
     padding: 3,
@@ -257,5 +331,32 @@ const styles = StyleSheet.create({
   documentText: {
     marginLeft: 12,
     fontSize: 14,
+  },
+  quotedContainer: {
+    borderLeftWidth: 3,
+    borderRadius: 5,
+    paddingLeft: 8,
+    paddingRight: 8,
+    paddingVertical: 6,
+    marginBottom: 6,
+  },
+  quotedSender: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  quotedText: {
+    fontSize: 13,
+    opacity: 0.8,
+  },
+  channelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  channelBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });

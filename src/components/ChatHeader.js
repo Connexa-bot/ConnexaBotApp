@@ -33,9 +33,15 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
           {chat.profilePic ? (
             <Image source={{ uri: chat.profilePic }} style={styles.avatarImage} />
           ) : (
-            <Text style={styles.avatarText}>
-              {chat.name?.charAt(0).toUpperCase() || '?'}
-            </Text>
+            <View style={styles.avatarTextContainer}>
+              {chat.isGroup && <Ionicons name="people" size={24} color="#fff" />}
+              {chat.isChannel && <Ionicons name="megaphone" size={24} color="#fff" />}
+              {!chat.isGroup && !chat.isChannel && (
+                <Text style={styles.avatarText}>
+                  {chat.name?.charAt(0).toUpperCase() || '?'}
+                </Text>
+              )}
+            </View>
           )}
         </View>
 
@@ -44,7 +50,13 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
             {chat.name || chat.id}
           </Text>
           <Text style={styles.status} numberOfLines={1}>
-            {chat.isOnline ? 'online' : chat.lastSeen || 'offline'}
+            {chat.isGroup 
+              ? `${chat.participantCount || 0} participants` 
+              : chat.isChannel 
+                ? `${chat.subscriberCount || 0} subscribers`
+                : chat.isOnline 
+                  ? 'online' 
+                  : chat.lastSeen || 'offline'}
           </Text>
         </View>
       </TouchableOpacity>
@@ -111,6 +123,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+  },
+  avatarTextContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   avatarText: {
     color: '#FFFFFF',

@@ -408,6 +408,8 @@ export default function ChatViewScreen({ route, navigation }) {
                 message={item}
                 onLongPress={handleMessageLongPress}
                 onReact={handleReact}
+                isGroupChat={chat.isGroup || false}
+                isChannel={chat.isChannel || false}
               />
             )}
             keyExtractor={(item, index) => item.id || index.toString()}
