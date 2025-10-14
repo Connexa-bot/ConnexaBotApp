@@ -46,7 +46,9 @@ export default function ChatViewScreen({ route, navigation }) {
     if (wallpaper.isPattern) {
       // For WhatsApp pattern wallpapers, adapt to theme
       if (wallpaper.uri === 'whatsapp-auto' || wallpaper.theme === 'auto') {
-        return require('../../assets/images/whatsapp-bg-light.png');
+        return isDark 
+          ? require('../../assets/images/whatsapp-bg-dark.png')
+          : require('../../assets/images/whatsapp-bg-light-official.png');
       }
       return wallpaper.uri;
     }
@@ -59,18 +61,21 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const getBackgroundColor = () => {
     if (wallpaper.isPattern) {
-      // Adapt pattern background color to theme
+      // Auto pattern: follow app theme
       if (wallpaper.theme === 'auto' || wallpaper.uri === 'whatsapp-auto') {
         return isDark ? '#0B141A' : '#EFEAE2';
       }
-      if (wallpaper.theme === 'dark') {
-        return '#0B141A';
-      }
-      if (wallpaper.theme === 'light') {
-        return '#EFEAE2';
-      }
+      // Theme-specific patterns: use their designated color (wallpaper selection overrides app theme)
+      return wallpaper.color;
     }
-    return wallpaper.color || (isDark ? '#0B141A' : '#EFEAE2');
+    
+    // For non-pattern wallpapers (solid colors), use the wallpaper's color
+    if (wallpaper.color) {
+      return wallpaper.color;
+    }
+    
+    // Fallback: use app theme colors
+    return isDark ? '#0B141A' : '#EFEAE2';
   };
 
   const bgImage = getBackgroundImage();
