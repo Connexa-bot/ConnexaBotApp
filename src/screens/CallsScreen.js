@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, StatusBar, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { callAPI, API_ENDPOINTS } from '../services/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 export default function CallsScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { user } = useAuth();
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [calls, setCalls] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -33,6 +37,25 @@ export default function CallsScreen() {
     loadCalls();
   };
 
+  const handleMenuPress = () => {
+    if (Platform.OS === 'ios') {
+      const { ActionSheetIOS } = require('react-native');
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Clear call log', 'Settings', 'Cancel'],
+          cancelButtonIndex: 2,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            navigation.navigate('Settings');
+          }
+        }
+      );
+    } else {
+      navigation.navigate('Settings');
+    }
+  };
+
   const renderCall = ({ item }) => (
     <TouchableOpacity
       style={[styles.callItem, { backgroundColor: colors.background, borderBottomColor: colors.border }]}
@@ -40,7 +63,7 @@ export default function CallsScreen() {
       <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
         <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
       </View>
-      
+
       <View style={styles.callContent}>
         <Text style={[styles.callName, { color: colors.text }]}>{item.name}</Text>
         <View style={styles.callInfo}>
@@ -54,7 +77,7 @@ export default function CallsScreen() {
           </Text>
         </View>
       </View>
-      
+
       <TouchableOpacity style={styles.callButton}>
         <Ionicons
           name={item.video ? 'videocam' : 'call'}
@@ -67,6 +90,22 @@ export default function CallsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar
+        backgroundColor={colors.header}
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        translucent={false}
+      />
+
+      {/* Custom Header */}
+      <View style={[styles.header, { backgroundColor: colors.header, paddingTop: insets.top }]}>
+        <Text style={[styles.headerTitle, { color: colors.headerText }]}>Calls</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleMenuPress} style={styles.headerIcon}>
+            <Ionicons name="ellipsis-vertical" size={24} color={colors.headerText} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <FlatList
         data={calls}
         renderItem={renderCall}
@@ -99,6 +138,32 @@ export default function CallsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '500',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIcon: {
+    padding: 4,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 18,
   },
   emptyContainer: {
     flex: 1,

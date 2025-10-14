@@ -5,15 +5,57 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity,
+  StatusBar,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 export default function CommunitiesScreen({ navigation }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+  const nav = useNavigation();
+
+
+  const handleMenuPress = () => {
+    if (Platform.OS === 'ios') {
+      const { ActionSheetIOS } = require('react-native');
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Settings', 'Cancel'],
+          cancelButtonIndex: 1,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 0) {
+            nav.navigate('Settings');
+          }
+        }
+      );
+    } else {
+      nav.navigate('Settings');
+    }
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar 
+        backgroundColor={colors.header} 
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        translucent={false}
+      />
+
+      {/* Custom Header */}
+      <View style={[styles.header, { backgroundColor: colors.header, paddingTop: insets.top }]}>
+        <Text style={[styles.headerTitle, { color: colors.headerText }]}>Communities</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleMenuPress} style={styles.headerIcon}>
+            <Ionicons name="ellipsis-vertical" size={24} color={colors.headerText} />
+          </TouchableOpacity>
+        </View>
+      </View>
+      
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.iconContainer}>
           <View style={[styles.iconCircle, { backgroundColor: colors.secondaryBackground }]}>
@@ -40,7 +82,7 @@ export default function CommunitiesScreen({ navigation }) {
           <Text style={[styles.exampleTitle, { color: colors.text }]}>
             Example communities
           </Text>
-          
+
           <TouchableOpacity style={[styles.communityItem, { borderBottomColor: colors.divider }]}>
             <View style={[styles.communityIcon, { backgroundColor: '#E3F2FD' }]}>
               <Ionicons name="school" size={28} color="#2196F3" />
@@ -85,6 +127,24 @@ export default function CommunitiesScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '500',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIcon: {
+    padding: 4,
   },
   content: {
     padding: 24,

@@ -9,20 +9,26 @@ import {
   Platform,
   Alert,
   Animated,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { callAPI, API_ENDPOINTS } from '../services/api';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function UpdatesScreen({ navigation }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { user } = useAuth();
   const [statuses, setStatuses] = useState([]);
   const [channels, setChannels] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [fabAnimation] = useState(new Animated.Value(1));
+  const nav = useNavigation();
+  const insets = useSafeAreaInsets();
+
 
   useEffect(() => {
     loadStatuses();
@@ -107,7 +113,7 @@ export default function UpdatesScreen({ navigation }) {
     const diff = now - (timestamp * 1000);
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor(diff / (1000 * 60));
-    
+
     if (hours < 1) return `${minutes} minutes ago`;
     if (hours < 24) return `${hours} hours ago`;
     return 'Yesterday';
@@ -138,8 +144,44 @@ export default function UpdatesScreen({ navigation }) {
     </View>
   );
 
+  const handleMenuPress = () => {
+    if (Platform.OS === 'ios') {
+      const { ActionSheetIOS } = require('react-native');
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Status privacy', 'Settings', 'Cancel'],
+          cancelButtonIndex: 2,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            nav.navigate('Settings');
+          }
+        }
+      );
+    } else {
+      nav.navigate('Settings');
+    }
+  };
+
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <StatusBar 
+        backgroundColor={colors.header} 
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        translucent={false}
+      />
+
+      {/* Custom Header */}
+      <View style={[styles.header, { backgroundColor: colors.header, paddingTop: insets.top }]}>
+        <Text style={[styles.headerTitle, { color: colors.headerText }]}>Updates</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleMenuPress} style={styles.headerIcon}>
+            <Ionicons name="ellipsis-vertical" size={24} color={colors.headerText} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView 
         style={styles.container}
         refreshControl={
@@ -257,6 +299,32 @@ export default function UpdatesScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '500',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIcon: {
+    padding: 4,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 18,
   },
   section: {
     paddingVertical: 8,
