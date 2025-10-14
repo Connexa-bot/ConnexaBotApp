@@ -21,9 +21,11 @@ import { callAPI, API_ENDPOINTS } from '../services/api';
 
 export default function ChatsScreen() {
   const [chats, setChats] = useState([]);
+  const [filteredChats, setFilteredChats] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [menuVisible, setMenuVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation();
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
@@ -33,11 +35,26 @@ export default function ChatsScreen() {
     loadChats();
   }, []);
 
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredChats(chats);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = chats.filter(chat => 
+        chat.name?.toLowerCase().includes(query) || 
+        chat.lastMessage?.toLowerCase().includes(query)
+      );
+      setFilteredChats(filtered);
+    }
+  }, [searchQuery, chats]);
+
   const loadChats = async () => {
     try {
       if (user?.phone) {
         const response = await callAPI(API_ENDPOINTS.GET_CHATS(user.phone));
-        setChats(response.chats || []);
+        const chatsList = response.chats || [];
+        setChats(chatsList);
+        setFilteredChats(chatsList);
       }
     } catch (error) {
       console.error('Error loading chats:', error);
@@ -149,7 +166,7 @@ export default function ChatsScreen() {
 
   const filters = [
     { id: 'All', label: 'All' },
-    { id: 'Unread', label: 'Unread', count: Array.isArray(chats) ? chats.filter(c => c.unreadCount > 0).length : 0 },
+    { id: 'Unread', label: 'Unread', count: Array.isArray(filteredChats) ? filteredChats.filter(c => c.unreadCount > 0).length : 0 },
     { id: 'Favorites', label: 'Favorites' },
     { id: 'Groups', label: 'Groups' },
   ];
@@ -225,19 +242,25 @@ export default function ChatsScreen() {
 
       {/* Search Bar */}
       <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
-        <TouchableOpacity 
-          style={[styles.searchBar, { backgroundColor: colors.secondaryBackground }]}
-          onPress={() => navigation.navigate('Search')}
-          activeOpacity={0.7}
-        >
+        <View style={[styles.searchBar, { backgroundColor: colors.secondaryBackground }]}>
           <Ionicons name="search" size={20} color={colors.tertiaryText} style={styles.searchIcon} />
-          <Text style={[styles.searchPlaceholder, { color: colors.tertiaryText }]}>
-            Ask Connexa
-          </Text>
-          <View style={styles.aiIconContainer}>
-            <Ionicons name="sparkles" size={18} color={colors.primary} />
-          </View>
-        </TouchableOpacity>
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Ask Connexa"
+            placeholderTextColor={colors.tertiaryText}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 ? (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color={colors.tertiaryText} />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.aiIconContainer}>
+              <Ionicons name="sparkles" size={18} color={colors.primary} />
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Filter Chips */}
@@ -283,29 +306,37 @@ export default function ChatsScreen() {
 
       {/* Chat List */}
       <FlatList
-        data={chats}
+        data={filteredChats}
         renderItem={renderChat}
         keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
         contentContainerStyle={[
-          chats.length === 0 ? styles.emptyListContainer : { paddingBottom: Platform.OS === 'ios' ? 100 : 80 }
+          filteredChats.length === 0 ? styles.emptyListContainer : { paddingBottom: Platform.OS === 'ios' ? 120 : 100 }
         ]}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconContainer}>
-              <Ionicons name="chatbubbles" size={64} color={colors.primary} />
+              <Ionicons 
+                name={searchQuery.trim() ? "search-outline" : "chatbubbles"} 
+                size={64} 
+                color={colors.primary} 
+              />
             </View>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              Start messaging
+              {searchQuery.trim() ? 'No chats found' : 'Start messaging'}
             </Text>
             <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-              Send messages to your contacts and start conversations
+              {searchQuery.trim() 
+                ? 'Try searching with a different keyword' 
+                : 'Send messages to your contacts and start conversations'}
             </Text>
-            <TouchableOpacity 
-              style={[styles.emptyButton, { backgroundColor: colors.primary }]}
-              onPress={() => navigation.navigate('Contacts')}
-            >
-              <Text style={styles.emptyButtonText}>Start a chat</Text>
-            </TouchableOpacity>
+            {!searchQuery.trim() && (
+              <TouchableOpacity 
+                style={[styles.emptyButton, { backgroundColor: colors.primary }]}
+                onPress={() => navigation.navigate('Contacts')}
+              >
+                <Text style={styles.emptyButtonText}>Start a chat</Text>
+              </TouchableOpacity>
+            )}
           </View>
         }
         refreshControl={
@@ -378,9 +409,10 @@ const styles = StyleSheet.create({
   searchIcon: {
     marginRight: 10,
   },
-  searchPlaceholder: {
+  searchInput: {
     flex: 1,
     fontSize: 16,
+    paddingVertical: 4,
   },
   aiIconContainer: {
     marginLeft: 8,
