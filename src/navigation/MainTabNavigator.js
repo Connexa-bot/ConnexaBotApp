@@ -154,7 +154,7 @@ export default function MainTabNavigator() {
       initialRouteName="Chats"
       screenOptions={({ route }) => ({
         header: () => <CustomHeader title={route.name} />,
-        headerShown: route.name !== 'Chats', // Hide header for Chats screen
+        headerShown: false, // Let each screen handle its own header
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopWidth: 0.5,
@@ -208,6 +208,7 @@ export default function MainTabNavigator() {
         component={UpdatesScreen}
         options={{
           tabBarLabel: 'Updates',
+          headerShown: true,
         }}
       />
       <Tab.Screen 
@@ -215,6 +216,7 @@ export default function MainTabNavigator() {
         component={CommunitiesScreen}
         options={{
           tabBarLabel: 'Communities',
+          headerShown: true,
         }}
       />
       <Tab.Screen 
@@ -222,6 +224,7 @@ export default function MainTabNavigator() {
         component={CallsScreen}
         options={{
           tabBarLabel: 'Calls',
+          headerShown: true,
         }}
       />
     </Tab.Navigator>

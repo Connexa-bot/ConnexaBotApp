@@ -272,19 +272,19 @@ export default function ChatsScreen() {
         </View>
       </View>
 
-      {/* Menu Dropdown (Android) */}
-      {menuVisible && Platform.OS === 'android' && (
+      {/* Menu Dropdown */}
+      {menuVisible && (
         <>
           <TouchableOpacity 
             style={styles.menuOverlay} 
             activeOpacity={1}
             onPress={() => setMenuVisible(false)}
           />
-          <View style={[styles.menuDropdown, { backgroundColor: colors.secondaryBackground }]}>
+          <View style={[styles.menuDropdown, { backgroundColor: colors.secondaryBackground, top: insets.top + 60 }]}>
             {menuOptions.map((option) => (
               <TouchableOpacity
                 key={option.id}
-                style={styles.menuItem}
+                style={[styles.menuItem, { borderBottomColor: colors.border }]}
                 onPress={() => handleMenuOptionPress(option.id)}
               >
                 <Text style={[styles.menuItemText, { color: colors.text }]}>
@@ -594,26 +594,26 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 999,
+    backgroundColor: 'transparent',
+    zIndex: 998,
   },
   menuDropdown: {
     position: 'absolute',
-    top: Platform.OS === 'android' ? 60 : 90,
-    right: 8,
+    right: 16,
     width: 200,
-    borderRadius: 4,
+    borderRadius: 8,
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    zIndex: 1000,
+    zIndex: 999,
     overflow: 'hidden',
   },
   menuItem: {
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderBottomWidth: 0,
+    borderBottomWidth: 0.5,
   },
   menuItemText: {
     fontSize: 16,
