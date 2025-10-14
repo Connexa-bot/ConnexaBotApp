@@ -6,12 +6,15 @@ const WallpaperContext = createContext();
 const DEFAULT_WALLPAPERS = [
   { id: '1', name: 'Default Light', uri: null, color: '#ECE5DD' },
   { id: '2', name: 'Default Dark', uri: null, color: '#0B141A' },
-  { id: '3', name: 'WhatsApp Green', uri: null, color: '#075E54' },
-  { id: '4', name: 'Ocean Blue', uri: null, color: '#1A5F7A' },
-  { id: '5', name: 'Sunset Orange', uri: null, color: '#FF6B35' },
-  { id: '6', name: 'Forest Green', uri: null, color: '#2D4A2B' },
-  { id: '7', name: 'Royal Purple', uri: null, color: '#4A148C' },
-  { id: '8', name: 'Midnight Black', uri: null, color: '#000000' },
+  { id: '3', name: 'WhatsApp Pattern (Auto)', uri: 'whatsapp-auto', color: '#EFEAE2', isPattern: true, theme: 'auto' },
+  { id: '4', name: 'WhatsApp Pattern (Light)', uri: require('../../assets/images/whatsapp-bg-light.png'), color: '#EFEAE2', isPattern: true, theme: 'light' },
+  { id: '5', name: 'WhatsApp Pattern (Dark)', uri: require('../../assets/images/whatsapp-bg-dark.png'), color: '#0B141A', isPattern: true, theme: 'dark' },
+  { id: '6', name: 'WhatsApp Green', uri: null, color: '#075E54' },
+  { id: '7', name: 'Ocean Blue', uri: null, color: '#1A5F7A' },
+  { id: '8', name: 'Sunset Orange', uri: null, color: '#FF6B35' },
+  { id: '9', name: 'Forest Green', uri: null, color: '#2D4A2B' },
+  { id: '10', name: 'Royal Purple', uri: null, color: '#4A148C' },
+  { id: '11', name: 'Midnight Black', uri: null, color: '#000000' },
 ];
 
 export const WallpaperProvider = ({ children }) => {

@@ -14,6 +14,7 @@ import {
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useAI } from '../contexts/AIContext';
+import { useWallpaper } from '../contexts/WallpaperContext';
 import { callAPI, API_ENDPOINTS } from '../services/api';
 import ChatHeader from '../components/ChatHeader';
 import MessageBubble from '../components/MessageBubble';
@@ -29,6 +30,7 @@ export default function ChatViewScreen({ route, navigation }) {
   const { colors, isDark } = useTheme();
   const { user } = useAuth();
   const { getChatSettings } = useAI();
+  const { getChatWallpaper } = useWallpaper();
   const flatListRef = useRef(null);
   const pollInterval = useRef(null);
   const lastProcessedMessageId = useRef(null);
@@ -36,10 +38,45 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const aiSettings = getChatSettings(chat.id);
 
-  // Official WhatsApp background
-  const bgImage = isDark 
-    ? require('../../assets/images/whatsapp-bg-dark.png')
-    : null;
+  // Get wallpaper for this chat
+  const wallpaper = getChatWallpaper(chat.id);
+  
+  // Determine background based on wallpaper settings
+  const getBackgroundImage = () => {
+    if (wallpaper.isPattern) {
+      // For WhatsApp pattern wallpapers, adapt to theme
+      if (wallpaper.uri === 'whatsapp-auto' || wallpaper.theme === 'auto') {
+        return isDark 
+          ? require('../../assets/images/whatsapp-bg-dark.png')
+          : require('../../assets/images/whatsapp-bg-light.png');
+      }
+      return wallpaper.uri;
+    }
+    // For image-based wallpapers
+    if (typeof wallpaper.uri === 'string' && wallpaper.uri.startsWith('file://')) {
+      return { uri: wallpaper.uri };
+    }
+    return wallpaper.uri;
+  };
+
+  const getBackgroundColor = () => {
+    if (wallpaper.isPattern) {
+      // Adapt pattern background color to theme
+      if (wallpaper.theme === 'auto' || wallpaper.uri === 'whatsapp-auto') {
+        return isDark ? '#0B141A' : '#EFEAE2';
+      }
+      if (wallpaper.theme === 'dark') {
+        return '#0B141A';
+      }
+      if (wallpaper.theme === 'light') {
+        return '#EFEAE2';
+      }
+    }
+    return wallpaper.color || (isDark ? '#0B141A' : '#EFEAE2');
+  };
+
+  const bgImage = getBackgroundImage();
+  const bgColor = getBackgroundColor();
 
   useEffect(() => {
     lastProcessedMessageId.current = null;
@@ -388,7 +425,7 @@ export default function ChatViewScreen({ route, navigation }) {
         <ImageBackground
           source={bgImage}
           style={[styles.messagesContainer, { 
-            backgroundColor: isDark ? '#0B141A' : '#EFEAE2' 
+            backgroundColor: bgColor
           }]}
           resizeMode="repeat"
         >
