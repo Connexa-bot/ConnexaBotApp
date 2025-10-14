@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "react-native-gesture-handler";
 import { Platform, View, ActivityIndicator } from "react-native";
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from "./src/contexts/ThemeContext";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { WallpaperProvider } from "./src/contexts/WallpaperContext";
@@ -26,7 +27,7 @@ export default function App() {
           };
           await setupNavigationBar();
         }
-        
+
         if (Platform.OS !== 'web') {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
@@ -57,14 +58,16 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <WallpaperProvider>
-          <AIProvider>
-            <RootNavigator />
-          </AIProvider>
-        </WallpaperProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <WallpaperProvider>
+            <AIProvider>
+              <RootNavigator />
+            </AIProvider>
+          </WallpaperProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

@@ -1,12 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onSearch }) {
   const navigation = useNavigation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const handleMorePress = () => {
     if (onMore) {
@@ -17,78 +19,88 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.header || '#202C33' }]}>
-      <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Ionicons name="arrow-back" size={24} color="#fff" />
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={styles.chatInfo}
-        onPress={handleMorePress}
-      >
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-          {chat.profilePic ? (
-            <Image source={{ uri: chat.profilePic }} style={styles.avatarImage} />
-          ) : (
-            <View style={styles.avatarTextContainer}>
-              {chat.isGroup && <Ionicons name="people" size={24} color="#fff" />}
-              {chat.isChannel && <Ionicons name="megaphone" size={24} color="#fff" />}
-              {!chat.isGroup && !chat.isChannel && (
-                <Text style={styles.avatarText}>
-                  {chat.name?.charAt(0).toUpperCase() || '?'}
-                </Text>
-              )}
-            </View>
-          )}
-        </View>
-
-        <View style={styles.details}>
-          <Text style={styles.name} numberOfLines={1}>
-            {chat.name || chat.id}
-          </Text>
-          <Text style={styles.status} numberOfLines={1}>
-            {chat.isGroup 
-              ? `${chat.participantCount || 0} participants` 
-              : chat.isChannel 
-                ? `${chat.subscriberCount || 0} subscribers`
-                : chat.isOnline 
-                  ? 'online' 
-                  : chat.lastSeen || 'offline'}
-          </Text>
-        </View>
-      </TouchableOpacity>
-
-      <View style={styles.actions}>
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={onSearch}
+    <View style={[
+      styles.container, 
+      { 
+        backgroundColor: colors.header,
+        paddingTop: insets.top,
+      }
+    ]}>
+      <View style={styles.content}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="search-outline" size={22} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color={colors.headerText} />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={onVideoCall}
-        >
-          <Ionicons name="videocam" size={24} color="#fff" />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={onVoiceCall}
-        >
-          <Ionicons name="call" size={22} color="#fff" />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.actionButton}
+        <TouchableOpacity
+          style={styles.chatInfo}
           onPress={handleMorePress}
+          activeOpacity={0.7}
         >
-          <Ionicons name="ellipsis-vertical" size={22} color="#fff" />
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+            {chat.profilePic ? (
+              <Image source={{ uri: chat.profilePic }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatarTextContainer}>
+                {chat.isGroup && <Ionicons name="people" size={24} color="#fff" />}
+                {chat.isChannel && <Ionicons name="megaphone" size={24} color="#fff" />}
+                {!chat.isGroup && !chat.isChannel && (
+                  <Text style={styles.avatarText}>
+                    {chat.name?.charAt(0).toUpperCase() || '?'}
+                  </Text>
+                )}
+              </View>
+            )}
+          </View>
+
+          <View style={styles.details}>
+            <Text style={[styles.name, { color: colors.headerText }]} numberOfLines={1}>
+              {chat.name || chat.id}
+            </Text>
+            <Text style={styles.status} numberOfLines={1}>
+              {chat.isGroup
+                ? `${chat.participantCount || 0} participants`
+                : chat.isChannel
+                  ? `${chat.subscriberCount || 0} subscribers`
+                  : chat.isOnline
+                    ? 'online'
+                    : chat.lastSeen || 'tap here for contact info'}
+            </Text>
+          </View>
         </TouchableOpacity>
+
+        <View style={styles.actions}>
+          {onVideoCall && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={onVideoCall}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="videocam" size={26} color={colors.headerText} />
+            </TouchableOpacity>
+          )}
+
+          {onVoiceCall && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={onVoiceCall}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="call" size={24} color={colors.headerText} />
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleMorePress}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="ellipsis-vertical" size={24} color={colors.headerText} />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -96,10 +108,17 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
 
 const styles = StyleSheet.create({
   container: {
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  content: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
     height: 60,
   },
   backButton: {
@@ -110,50 +129,54 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    paddingRight: 8,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   avatarImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
   },
   avatarTextContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   details: {
     flex: 1,
+    justifyContent: 'center',
   },
   name: {
-    color: '#FFFFFF',
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: '500',
+    lineHeight: 22,
   },
   status: {
-    color: '#8696A0',
+    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 13,
-    marginTop: 2,
+    lineHeight: 18,
+    marginTop: 1,
   },
   actions: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   actionButton: {
     padding: 8,
-    marginLeft: 8,
+    marginLeft: 4,
   },
 });

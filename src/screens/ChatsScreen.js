@@ -47,11 +47,17 @@ export default function ChatsScreen() {
     if (!timestamp) return '';
     const date = new Date(timestamp * 1000);
     const today = new Date();
-
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
     if (date.toDateString() === today.toDateString()) {
-      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else if (today - date < 7 * 24 * 60 * 60 * 1000) {
+      return date.toLocaleDateString('en-US', { weekday: 'short' });
     }
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
   };
 
   const renderChat = ({ item }) => {
@@ -60,67 +66,68 @@ export default function ChatsScreen() {
 
     return (
       <TouchableOpacity
-        style={[styles.chatItem, { backgroundColor: colors.background, borderBottomColor: colors.divider }]}
+        style={[styles.chatItem, { backgroundColor: colors.background }]}
         onPress={() => navigation.navigate('ChatView', { chat: item })}
-        activeOpacity={0.8}
+        activeOpacity={0.7}
       >
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+        <View style={styles.avatarContainer}>
           {item.profilePicUrl ? (
             <Image source={{ uri: item.profilePicUrl }} style={styles.avatarImage} />
           ) : (
-            <Text style={styles.avatarText}>
-              {item.name?.charAt(0).toUpperCase() || '?'}
-            </Text>
+            <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
+              <Text style={styles.avatarText}>
+                {item.name?.charAt(0).toUpperCase() || '?'}
+              </Text>
+            </View>
           )}
         </View>
 
         <View style={styles.chatContent}>
-          <View style={styles.chatHeader}>
-            <View style={styles.chatNameRow}>
+          <View style={styles.topRow}>
+            <View style={styles.nameContainer}>
               <Text style={[styles.chatName, { color: colors.text }]} numberOfLines={1}>
                 {item.name || item.id}
               </Text>
               {isPinned && (
-                <Ionicons name="pin" size={12} color={colors.tertiaryText} style={styles.pinIcon} />
+                <Ionicons name="pin" size={14} color={colors.tertiaryText} style={styles.pinIcon} />
               )}
             </View>
-            <View style={styles.timeContainer}>
-              <Text style={[styles.chatTime, { color: item.unreadCount > 0 ? colors.primary : colors.tertiaryText }]}>
-                {formatTime(item.lastMessageTime)}
-              </Text>
-            </View>
+            <Text style={[styles.chatTime, { color: item.unreadCount > 0 ? colors.primary : colors.tertiaryText }]}>
+              {formatTime(item.lastMessageTime)}
+            </Text>
           </View>
 
-          <View style={styles.chatFooter}>
-            <View style={styles.messageRow}>
+          <View style={styles.bottomRow}>
+            <View style={styles.messageContainer}>
               {item.lastMessageFromMe && (
-                <Ionicons 
-                  name={item.lastMessageStatus === 'read' ? 'checkmark-done' : 'checkmark'} 
-                  size={16} 
+                <Ionicons
+                  name={item.lastMessageStatus === 'read' ? 'checkmark-done' : 'checkmark'}
+                  size={16}
                   color={item.lastMessageStatus === 'read' ? '#53BDEB' : colors.tertiaryText}
                   style={styles.statusIcon}
                 />
               )}
-              <Text 
+              <Text
                 style={[
-                  styles.chatMessage, 
-                  { 
+                  styles.chatMessage,
+                  {
                     color: item.unreadCount > 0 ? colors.text : colors.tertiaryText,
                     fontWeight: item.unreadCount > 0 ? '500' : '400'
                   }
-                ]} 
+                ]}
                 numberOfLines={1}
               >
                 {item.lastMessage || 'Tap to chat'}
               </Text>
             </View>
-            <View style={styles.badgesRow}>
+            
+            <View style={styles.badges}>
               {isMuted && (
-                <Ionicons name="volume-mute" size={16} color={colors.tertiaryText} style={styles.muteIcon} />
+                <Ionicons name="volume-mute" size={18} color={colors.tertiaryText} style={styles.muteIcon} />
               )}
               {item.unreadCount > 0 && (
-                <View style={[styles.unreadBadge, { backgroundColor: colors.unreadBadge }]}>
-                  <Text style={[styles.unreadText, { color: colors.unreadBadgeText }]}>
+                <View style={[styles.unreadBadge, { backgroundColor: colors.primary }]}>
+                  <Text style={styles.unreadText}>
                     {item.unreadCount > 999 ? '999+' : item.unreadCount}
                   </Text>
                 </View>
@@ -137,16 +144,25 @@ export default function ChatsScreen() {
       <FlatList
         data={chats}
         renderItem={renderChat}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+        contentContainerStyle={chats.length === 0 ? styles.emptyListContainer : null}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="chatbubbles-outline" size={80} color={colors.secondaryText} />
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="chatbubbles" size={64} color={colors.primary} />
+            </View>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              Start a conversation
+              Start messaging
             </Text>
             <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-              Tap the new chat button to message someone
+              Send messages to your contacts and start conversations
             </Text>
+            <TouchableOpacity 
+              style={[styles.emptyButton, { backgroundColor: colors.primary }]}
+              onPress={() => navigation.navigate('Contacts')}
+            >
+              <Text style={styles.emptyButtonText}>Start a chat</Text>
+            </TouchableOpacity>
           </View>
         }
         refreshControl={
@@ -154,15 +170,19 @@ export default function ChatsScreen() {
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
       />
+
+      {/* Floating Action Button */}
       <View style={styles.fabContainer}>
         <TouchableOpacity
           style={[styles.fab, { backgroundColor: colors.primary }]}
           onPress={() => navigation.navigate('Contacts')}
+          activeOpacity={0.8}
         >
-          <Ionicons name="chatbubble-ellipses-sharp" size={24} color="#FFFFFF" />
+          <Ionicons name="chatbubble-ellipses" size={26} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>
@@ -173,137 +193,163 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  emptyListContainer: {
+    flexGrow: 1,
+  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 100,
     paddingHorizontal: 40,
+    paddingVertical: 60,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F0F2F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '500',
-    marginTop: 24,
-    marginBottom: 8,
+    fontSize: 22,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center',
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: 15,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  emptyButton: {
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 24,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  emptyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   chatItem: {
     flexDirection: 'row',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: 0.2,
   },
-  avatar: {
-    width: 49,
-    height: 49,
-    borderRadius: 24.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
+  avatarContainer: {
+    marginRight: 12,
   },
   avatarImage: {
-    width: 49,
-    height: 49,
-    borderRadius: 24.5,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  avatarPlaceholder: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   avatarText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '400',
+    fontSize: 20,
+    fontWeight: '500',
   },
   chatContent: {
     flex: 1,
     justifyContent: 'center',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#E5E5EA',
+    paddingBottom: 12,
   },
-  chatHeader: {
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 3,
+    alignItems: 'center',
+    marginBottom: 4,
   },
-  chatNameRow: {
+  nameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: 8,
   },
   chatName: {
-    fontSize: 16.5,
-    fontWeight: '400',
-    lineHeight: 21,
+    fontSize: 17,
+    fontWeight: '500',
+    lineHeight: 22,
   },
   pinIcon: {
-    marginLeft: 4,
-    marginTop: 2,
-  },
-  timeContainer: {
-    marginLeft: 8,
+    marginLeft: 6,
   },
   chatTime: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 18,
   },
-  chatFooter: {
+  bottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  messageRow: {
+  messageContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: 8,
   },
   statusIcon: {
     marginRight: 4,
   },
   chatMessage: {
-    fontSize: 14,
-    lineHeight: 19,
+    fontSize: 15,
+    lineHeight: 20,
     flex: 1,
   },
-  badgesRow: {
+  badges: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 8,
+    gap: 6,
   },
   muteIcon: {
-    marginRight: 6,
+    marginRight: 4,
   },
   unreadBadge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 6,
   },
   unreadText: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   fabContainer: {
     position: 'absolute',
     bottom: 16,
     right: 16,
-    alignItems: 'flex-end',
   },
   fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
     shadowRadius: 4,
-  },
-  fabSecondary: {
-    marginBottom: 12,
   },
 });

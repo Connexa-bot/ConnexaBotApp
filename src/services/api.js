@@ -1,12 +1,11 @@
+import Constants from "expo-constants";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 
-                     process.env.VITE_API_URL ||
-                     process.env.SERVER_URL || 
-                     (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null) ||
-                     'http://localhost:5000';
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  Constants.expoConfig?.extra?.apiUrl ||
+  'https://widespread-chicky-connexa-hub-afd02d40.koyeb.app';
 
 export const API_ENDPOINTS = {
-  
   HEALTH: () => ({
     url: `${API_BASE_URL}/health`,
     method: 'GET',
@@ -16,20 +15,21 @@ export const API_ENDPOINTS = {
   API_HEALTH: () => ({
     url: `${API_BASE_URL}/api/health`,
     method: 'GET',
-    description: 'Check API health and active sessions count'
+    description: 'Check API health'
   }),
-  
-  CONNECT: (phone) => ({
+
+CONNECT: (phone) => ({
     url: `${API_BASE_URL}/api/connect`,
     method: 'POST',
     body: { phone },
-    description: 'Connect WhatsApp session and generate QR/link code'
+    description: 'Connect WhatsApp session for this phone number'
   }),
-  
+
+  // ✅ Add this:
   GET_STATUS: (phone) => ({
     url: `${API_BASE_URL}/api/status/${phone}`,
     method: 'GET',
-    description: 'Check WhatsApp connection status'
+    description: 'Check WhatsApp connection status for the given phone'
   }),
   
   LOGOUT: (phone) => ({

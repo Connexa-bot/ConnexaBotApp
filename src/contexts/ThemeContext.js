@@ -6,61 +6,109 @@ const ThemeContext = createContext();
 
 const colorSchemes = {
   light: {
+    // Primary Colors
     primary: '#00A884',
     secondary: '#008069',
+    
+    // Backgrounds
     background: '#FFFFFF',
+    secondaryBackground: '#F0F2F5',
     header: '#008069',
+    chatBackground: '#EFEAE2',
+    inputBackground: '#F0F2F5',
+    attachmentBg: '#F0F2F5',
+    
+    // Text Colors
     headerText: '#FFFFFF',
     text: '#111B21',
     secondaryText: '#667781',
     tertiaryText: '#8696A0',
+    
+    // Borders & Dividers
     border: '#E9EDEF',
     divider: '#E9EDEF',
-    tabIconSelected: '#FFFFFF',
-    tabIconDefault: 'rgba(255, 255, 255, 0.6)',
-    chatBackground: '#EFEAE2',
+    inputBorder: '#E9EDEF',
+    
+    // Tab Bar
+    tabBar: '#FFFFFF',
+    tabIconSelected: '#00A884',
+    tabIconDefault: '#8696A0',
+    tabLabelSelected: '#00A884',
+    tabLabelDefault: '#667781',
+    
+    // Message Bubbles
     messageBubbleSent: '#D9FDD3',
     messageBubbleReceived: '#FFFFFF',
     messageBubbleSentText: '#111B21',
     messageBubbleReceivedText: '#111B21',
-    inputBackground: '#F0F2F5',
-    inputBorder: '#E9EDEF',
+    
+    // Badges & Indicators
     unreadBadge: '#25D366',
     unreadBadgeText: '#FFFFFF',
+    onlineIndicator: '#25D366',
+    
+    // Icons
     iconColor: '#667781',
     activeIconColor: '#00A884',
-    onlineIndicator: '#25D366',
+    
+    // Other
     link: '#027EB5',
-    attachmentBg: '#F0F2F5',
+    statusBar: 'light-content',
+    cardBackground: '#FFFFFF',
+    shadowColor: '#000000',
   },
 
   dark: {
+    // Primary Colors
     primary: '#00A884',
     secondary: '#008069',
+    
+    // Backgrounds
     background: '#111B21',
+    secondaryBackground: '#1E2A30',
     header: '#202C33',
+    chatBackground: '#0B141A',
+    inputBackground: '#2A3942',
+    attachmentBg: '#2A3942',
+    
+    // Text Colors
     headerText: '#E9EDEF',
     text: '#E9EDEF',
     secondaryText: '#8696A0',
     tertiaryText: '#667781',
+    
+    // Borders & Dividers
     border: '#2A3942',
     divider: '#2A3942',
+    inputBorder: '#2A3942',
+    
+    // Tab Bar
+    tabBar: '#1F2C34',
     tabIconSelected: '#00A884',
-    tabIconDefault: 'rgba(255, 255, 255, 0.6)',
-    chatBackground: '#0B141A',
+    tabIconDefault: '#8696A0',
+    tabLabelSelected: '#00A884',
+    tabLabelDefault: '#8696A0',
+    
+    // Message Bubbles
     messageBubbleSent: '#005C4B',
     messageBubbleReceived: '#202C33',
     messageBubbleSentText: '#E9EDEF',
     messageBubbleReceivedText: '#E9EDEF',
-    inputBackground: '#2A3942',
-    inputBorder: '#2A3942',
+    
+    // Badges & Indicators
     unreadBadge: '#00A884',
     unreadBadgeText: '#111B21',
+    onlineIndicator: '#00A884',
+    
+    // Icons
     iconColor: '#8696A0',
     activeIconColor: '#00A884',
-    onlineIndicator: '#00A884',
+    
+    // Other
     link: '#53BDEB',
-    attachmentBg: '#2A3942',
+    statusBar: 'light-content',
+    cardBackground: '#1F2C34',
+    shadowColor: '#000000',
   },
 };
 
@@ -99,7 +147,7 @@ export const ThemeProvider = ({ children }) => {
     await saveThemePreference(preference);
   };
 
-  const actualTheme = themePreference === 'system' 
+  const actualTheme = themePreference === 'system'
     ? (systemColorScheme || 'light')
     : themePreference;
 
@@ -110,8 +158,9 @@ export const ThemeProvider = ({ children }) => {
       colors: colorSchemes[actualTheme],
       setTheme,
       isDark: actualTheme === 'dark',
+      isLoading,
     }),
-    [themePreference, actualTheme]
+    [themePreference, actualTheme, isLoading]
   );
 
   return (
