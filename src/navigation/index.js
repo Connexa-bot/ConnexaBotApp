@@ -8,15 +8,12 @@ import LinkDeviceScreen from '../screens/LinkDeviceScreen';
 import WelcomeSplashScreen from '../screens/WelcomeSplashScreen';
 import TermsPrivacyScreen from '../screens/TermsPrivacyScreen';
 import AppSplashScreen from '../screens/AppSplashScreen';
-import { View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { storage } from '../utils/storage';
 
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
-  const { user, loading, connectionStatus } = useAuth();
-  const { colors, isDark } = useTheme();
+  const { user, loading } = useAuth();
+  const { colors } = useTheme();
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [appSplashComplete, setAppSplashComplete] = useState(false);
@@ -24,19 +21,16 @@ export default function RootNavigator() {
   useEffect(() => {
     if (!loading && !initialCheckDone) {
       setInitialCheckDone(true);
-      // Only show welcome splash if no user session exists
       if (!user) {
         setShowWelcomeSplash(true);
       }
     }
   }, [loading, user, initialCheckDone]);
 
-  // Show app splash while checking session AND until splash animation completes
   if (loading || !initialCheckDone || !appSplashComplete) {
     return <AppSplashScreen onComplete={() => setAppSplashComplete(true)} />;
   }
 
-  // Show welcome splash only for new users (no session)
   if (!user && showWelcomeSplash) {
     return <WelcomeSplashScreen onComplete={() => setShowWelcomeSplash(false)} />;
   }

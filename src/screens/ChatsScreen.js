@@ -59,8 +59,8 @@ export default function ChatsScreen() {
       setFilteredChats(chats);
     } else {
       const query = searchQuery.toLowerCase();
-      const filtered = chats.filter(chat => 
-        chat.name?.toLowerCase().includes(query) || 
+      const filtered = chats.filter(chat =>
+        chat.name?.toLowerCase().includes(query) ||
         chat.lastMessage?.toLowerCase().includes(query)
       );
       setFilteredChats(filtered);
@@ -93,7 +93,7 @@ export default function ChatsScreen() {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     if (date.toDateString() === today.toDateString()) {
       return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
     } else if (date.toDateString() === yesterday.toDateString()) {
@@ -164,7 +164,7 @@ export default function ChatsScreen() {
                 {item.lastMessage || 'Tap to chat'}
               </Text>
             </View>
-            
+
             <View style={styles.badges}>
               {isMuted && (
                 <Ionicons name="volume-mute" size={18} color={colors.tertiaryText} style={styles.muteIcon} />
@@ -251,10 +251,13 @@ export default function ChatsScreen() {
     { emoji: '📚', text: 'I want to answer questions' },
   ];
 
+  // Mock contacts for empty state (replace with actual contacts if available)
+  const mockContacts = [];
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar 
-        backgroundColor={colors.header} 
+      <StatusBar
+        backgroundColor={colors.header}
         barStyle={isDark ? 'light-content' : 'dark-content'}
         translucent={false}
       />
@@ -275,8 +278,8 @@ export default function ChatsScreen() {
       {/* Menu Dropdown */}
       {menuVisible && (
         <>
-          <TouchableOpacity 
-            style={styles.menuOverlay} 
+          <TouchableOpacity
+            style={styles.menuOverlay}
             activeOpacity={1}
             onPress={() => setMenuVisible(false)}
           />
@@ -328,8 +331,8 @@ export default function ChatsScreen() {
           {/* AI Suggestions when no query */}
           {!searchQuery.trim() && (
             <View style={styles.aiSuggestionsContainer}>
-              <ScrollView 
-                horizontal 
+              <ScrollView
+                horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.aiSuggestionsContent}
               >
@@ -352,8 +355,8 @@ export default function ChatsScreen() {
           {/* Search Filter Chips */}
           {!searchQuery.trim() && (
             <View style={styles.filtersContainer}>
-              <ScrollView 
-                horizontal 
+              <ScrollView
+                horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.filtersContent}
               >
@@ -373,7 +376,7 @@ export default function ChatsScreen() {
       ) : (
         /* Normal Meta AI Search Bar */
         <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.metaAISearchBar, { backgroundColor: colors.secondaryBackground }]}
             onPress={() => {
               setIsSearchExpanded(true);
@@ -392,46 +395,46 @@ export default function ChatsScreen() {
       {/* Filter Chips - Only show when search is not expanded */}
       {!isSearchExpanded && (
         <View style={styles.filtersContainer}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filtersContent}
-        >
-          {filters.map((filter) => (
-            <TouchableOpacity
-              key={filter.id}
-              style={[
-                styles.filterChip,
-                selectedFilter === filter.id && { backgroundColor: colors.primary + '20' },
-                selectedFilter !== filter.id && { backgroundColor: colors.secondaryBackground },
-              ]}
-              onPress={() => setSelectedFilter(filter.id)}
-            >
-              <Ionicons 
-                name={
-                  filter.id === 'Unread' ? 'mail-unread-outline' : 
-                  filter.id === 'Favorites' ? 'star-outline' : 
-                  filter.id === 'Groups' ? 'people-outline' : 
-                  filter.id === 'All' ? 'apps-outline' : 'apps-outline'
-                } 
-                size={18} 
-                color={selectedFilter === filter.id ? colors.primary : colors.text}
-                style={{ marginRight: 6 }}
-              />
-              <Text
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filtersContent}
+          >
+            {filters.map((filter) => (
+              <TouchableOpacity
+                key={filter.id}
                 style={[
-                  styles.filterText,
-                  selectedFilter === filter.id && { color: colors.primary },
-                  selectedFilter !== filter.id && { color: colors.text },
+                  styles.filterChip,
+                  selectedFilter === filter.id && { backgroundColor: colors.primary + '20' },
+                  selectedFilter !== filter.id && { backgroundColor: colors.secondaryBackground },
                 ]}
+                onPress={() => setSelectedFilter(filter.id)}
               >
-                {filter.label}
-                {filter.count > 0 && ` ${filter.count}`}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+                <Ionicons
+                  name={
+                    filter.id === 'Unread' ? 'mail-unread-outline' :
+                    filter.id === 'Favorites' ? 'star-outline' :
+                    filter.id === 'Groups' ? 'people-outline' :
+                    filter.id === 'All' ? 'apps-outline' : 'apps-outline'
+                  }
+                  size={18}
+                  color={selectedFilter === filter.id ? colors.primary : colors.text}
+                  style={{ marginRight: 6 }}
+                />
+                <Text
+                  style={[
+                    styles.filterText,
+                    selectedFilter === filter.id && { color: colors.primary },
+                    selectedFilter !== filter.id && { color: colors.text },
+                  ]}
+                >
+                  {filter.label}
+                  {filter.count > 0 && ` ${filter.count}`}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       )}
 
       {/* Archived Section - Show when not typing */}
@@ -504,62 +507,77 @@ export default function ChatsScreen() {
             ))}
           </View>
         </ScrollView>
+      ) : filteredChats.length === 0 ? (
+        /* Empty State - Non-scrollable with contacts row */
+        <View style={styles.emptyStateContainer}>
+          <View style={styles.emptyContent}>
+            <Ionicons name="chatbubbles" size={64} color={colors.tertiaryText} />
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              Start messaging
+            </Text>
+            <Text style={[styles.emptySubtitle, { color: colors.secondaryText }]}>
+              Tap the chat icon below to message a friend
+            </Text>
+          </View>
+
+          {/* Contacts Row - Only shown when there are contacts */}
+          {mockContacts.length > 0 && (
+            <View style={styles.contactsRow}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.contactsContent}
+              >
+                {mockContacts.map((contact, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.contactItem}
+                    onPress={() => navigation.navigate('ChatView', { chat: contact })}
+                  >
+                    <View style={[styles.contactAvatar, { backgroundColor: colors.primary }]}>
+                      <Text style={styles.contactAvatarText}>
+                        {contact.name?.charAt(0).toUpperCase() || '?'}
+                      </Text>
+                    </View>
+                    <Text style={[styles.contactName, { color: colors.text }]} numberOfLines={1}>
+                      {contact.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+        </View>
       ) : (
         /* Chat List */
         <FlatList
-        data={filteredChats}
-        renderItem={renderChat}
-        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
-        contentContainerStyle={[
-          filteredChats.length === 0 ? styles.emptyListContainer : { paddingBottom: Platform.OS === 'ios' ? 120 : 100 }
-        ]}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconContainer}>
-              <Ionicons 
-                name={searchQuery.trim() ? "search-outline" : "chatbubbles"} 
-                size={64} 
-                color={colors.primary} 
-              />
-            </View>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              {searchQuery.trim() ? 'No chats found' : 'Start messaging'}
-            </Text>
-            <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-              {searchQuery.trim() 
-                ? 'Try searching with a different keyword' 
-                : 'Send messages to your contacts and start conversations'}
-            </Text>
-            {!searchQuery.trim() && (
-              <TouchableOpacity 
-                style={[styles.emptyButton, { backgroundColor: colors.primary }]}
-                onPress={() => navigation.navigate('Contacts')}
-              >
-                <Text style={styles.emptyButtonText}>Start a chat</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        }
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-          />
-        }
-      />
+          data={filteredChats}
+          renderItem={renderChat}
+          keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+          contentContainerStyle={{
+            paddingBottom: Platform.OS === 'ios' ? 100 : 85,
+            flexGrow: 1,
+          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
+        />
       )}
 
       {/* Floating Action Button - Hide when search is expanded */}
       {!isSearchExpanded && (
-      <TouchableOpacity
-        style={[styles.fab, { backgroundColor: colors.primary }]}
-        onPress={() => navigation.navigate('Contacts')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="add" size={28} color="#FFFFFF" />
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: colors.primary }]}
+          onPress={() => navigation.navigate('Contacts')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="add" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -718,51 +736,56 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  emptyListContainer: {
-    flexGrow: 1,
-  },
-  emptyContainer: {
+  emptyStateContainer: {
     flex: 1,
     justifyContent: 'center',
+  },
+  emptyContent: {
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 40,
     paddingVertical: 60,
   },
-  emptyIconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#F0F2F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
   emptyTitle: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: 12,
-    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: '500',
+    marginTop: 20,
+    marginBottom: 8,
   },
-  emptyText: {
-    fontSize: 15,
+  emptySubtitle: {
+    fontSize: 16,
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 32,
   },
-  emptyButton: {
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 24,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+  contactsRow: {
+    paddingVertical: 20,
+    borderTopWidth: 0.5,
+    borderTopColor: '#E5E5EA',
   },
-  emptyButtonText: {
+  contactsContent: {
+    paddingHorizontal: 16,
+    gap: 16,
+  },
+  contactItem: {
+    alignItems: 'center',
+    width: 70,
+  },
+  contactAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  contactAvatarText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '500',
+  },
+  contactName: {
+    fontSize: 13,
+    textAlign: 'center',
   },
   chatItem: {
     flexDirection: 'row',
@@ -874,5 +897,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+    zIndex: 100,
   },
 });

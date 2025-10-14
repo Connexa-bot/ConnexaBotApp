@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +17,7 @@ export default function MainTabNavigator() {
     <Tab.Navigator
       initialRouteName="Chats"
       screenOptions={({ route }) => ({
-        headerShown: false, // Let each screen handle its own header
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopWidth: 0.5,
@@ -26,15 +25,6 @@ export default function MainTabNavigator() {
           height: Platform.OS === 'ios' ? 84 : 65,
           paddingBottom: Platform.OS === 'ios' ? 34 : 12,
           paddingTop: 8,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.tabIconDefault,
@@ -43,7 +33,7 @@ export default function MainTabNavigator() {
           fontWeight: '500',
         },
         tabBarHideOnKeyboard: Platform.OS === 'android',
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused, color }) => {
           let iconName;
 
           if (route.name === 'Chats') {
@@ -60,29 +50,29 @@ export default function MainTabNavigator() {
         },
       })}
     >
-      <Tab.Screen 
-        name="Chats" 
+      <Tab.Screen
+        name="Chats"
         component={ChatsScreen}
         options={{
           tabBarLabel: 'Chats',
         }}
       />
-      <Tab.Screen 
-        name="Updates" 
+      <Tab.Screen
+        name="Updates"
         component={UpdatesScreen}
         options={{
           tabBarLabel: 'Updates',
         }}
       />
-      <Tab.Screen 
-        name="Communities" 
+      <Tab.Screen
+        name="Communities"
         component={CommunitiesScreen}
         options={{
           tabBarLabel: 'Communities',
         }}
       />
-      <Tab.Screen 
-        name="Calls" 
+      <Tab.Screen
+        name="Calls"
         component={CallsScreen}
         options={{
           tabBarLabel: 'Calls',

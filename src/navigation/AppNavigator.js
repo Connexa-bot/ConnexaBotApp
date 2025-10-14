@@ -1,7 +1,5 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { TouchableOpacity, View, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import MainTabNavigator from './MainTabNavigator';
 import ChatViewScreen from '../screens/ChatViewScreen';
@@ -18,23 +16,13 @@ import SearchScreen from '../screens/SearchScreen';
 
 const Stack = createNativeStackNavigator();
 
-const HEADER_HEIGHT = Platform.select({
-  ios: 100,
-  android: 80,
-  web: 60
-});
-
 export default function AppNavigator() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: {
-          backgroundColor: colors.header,
-        },
-        headerTintColor: colors.headerText,
-        headerShadowVisible: false,
+        headerShown: false,
         animation: 'slide_from_right',
         contentStyle: { backgroundColor: colors.background },
       }}
@@ -42,68 +30,24 @@ export default function AppNavigator() {
       <Stack.Screen
         name="MainTabs"
         component={MainTabNavigator}
-        options={({ navigation }) => ({
-          title: 'WhatsApp',
-          headerStyle: {
-            backgroundColor: colors.header,
-            height: HEADER_HEIGHT,
-          },
-          headerTintColor: colors.headerText,
-          headerRight: () => (
-            <View style={{ flexDirection: 'row', marginRight: 8 }}>
-              <TouchableOpacity
-                style={{ padding: 8 }}
-                onPress={async () => {
-                  const { status } = await require('expo-image-picker').requestCameraPermissionsAsync();
-                  if (status === 'granted') {
-                    const result = await require('expo-image-picker').launchCameraAsync({
-                      mediaTypes: require('expo-image-picker').MediaTypeOptions.All,
-                      allowsEditing: true,
-                      quality: 1,
-                    });
-                    if (!result.canceled) {
-                      navigation.navigate('StatusPost', {
-                        mediaUri: result.assets[0].uri,
-                        mediaType: result.assets[0].type || 'image',
-                      });
-                    }
-                  }
-                }}
-              >
-                <Ionicons name="camera-outline" size={24} color={colors.headerText} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ padding: 8, marginLeft: 8 }}
-                onPress={() => navigation.navigate('Search')}
-              >
-                <Ionicons name="search-outline" size={24} color={colors.headerText} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ padding: 8, marginLeft: 8 }}
-                onPress={() => navigation.navigate('Settings')}
-              >
-                <Ionicons name="ellipsis-vertical" size={24} color={colors.headerText} />
-              </TouchableOpacity>
-            </View>
-          ),
-        })}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="ChatView"
         component={ChatViewScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
+          headerShown: true,
           title: 'Settings',
           headerStyle: {
             backgroundColor: colors.header,
           },
           headerTintColor: colors.headerText,
+          headerShadowVisible: false,
         }}
       />
       <Stack.Screen
@@ -144,7 +88,7 @@ export default function AppNavigator() {
       <Stack.Screen
         name="StatusPost"
         component={StatusPostScreen}
-        options={{ 
+        options={{
           headerShown: false,
           animation: 'slide_from_bottom',
           presentation: 'modal',
@@ -153,7 +97,7 @@ export default function AppNavigator() {
       <Stack.Screen
         name="Search"
         component={SearchScreen}
-        options={{ 
+        options={{
           headerShown: false,
           animation: 'fade',
         }}
