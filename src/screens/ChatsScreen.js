@@ -27,6 +27,7 @@ export default function ChatsScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const navigation = useNavigation();
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
@@ -165,6 +166,13 @@ export default function ChatsScreen() {
     );
   };
 
+  const searchFilters = [
+    { id: 'Unread', label: 'Unread', icon: 'mail-unread-outline' },
+    { id: 'Photos', label: 'Photos', icon: 'image-outline' },
+    { id: 'Videos', label: 'Videos', icon: 'videocam-outline' },
+    { id: 'Links', label: 'Links', icon: 'link-outline' },
+  ];
+
   const filters = [
     { id: 'All', label: 'All' },
     { id: 'Unread', label: 'Unread', count: Array.isArray(filteredChats) ? filteredChats.filter(c => c.unreadCount > 0).length : 0 },
@@ -250,60 +258,102 @@ export default function ChatsScreen() {
         </>
       )}
 
-      {/* Meta AI Search Bar */}
-      <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
-        <View style={[styles.metaAISearchBar, { backgroundColor: colors.secondaryBackground }]}>
-          <Ionicons name="search" size={20} color={colors.tertiaryText} style={styles.searchIcon} />
-          <TextInput
-            style={[styles.metaAIInput, { color: colors.text }]}
-            placeholder="Ask Connexa AI or Search"
-            placeholderTextColor={colors.tertiaryText}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => {
-              if (!searchQuery.trim()) {
-                setIsSearchFocused(false);
-              }
-            }}
-          />
-          {searchQuery.length > 0 && (
+      {/* Expanded Search Header - Shows when search is focused */}
+      {isSearchExpanded ? (
+        <View style={[styles.expandedSearchHeader, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+          <View style={[styles.expandedSearchBar, { backgroundColor: colors.background }]}>
             <TouchableOpacity onPress={() => {
-              setSearchQuery('');
+              setIsSearchExpanded(false);
               setIsSearchFocused(false);
+              setSearchQuery('');
             }}>
-              <Ionicons name="close-circle" size={20} color={colors.tertiaryText} />
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
+            <TextInput
+              style={[styles.expandedSearchInput, { color: colors.text }]}
+              placeholder="Ask Connexa AI or Search"
+              placeholderTextColor={colors.tertiaryText}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color={colors.tertiaryText} />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={{ marginLeft: 16 }}>
+              <Ionicons name="ellipsis-vertical" size={20} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+
+          {/* AI Suggestions when no query */}
+          {!searchQuery.trim() && (
+            <View style={styles.aiSuggestionsContainer}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.aiSuggestionsContent}
+              >
+                {aiSuggestions.map((suggestion, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[styles.aiSuggestionChip, { backgroundColor: colors.secondaryBackground }]}
+                    onPress={() => setSearchQuery(suggestion.text)}
+                  >
+                    <Text style={styles.aiSuggestionEmoji}>{suggestion.emoji}</Text>
+                    <Text style={[styles.aiSuggestionText, { color: colors.text }]} numberOfLines={1}>
+                      {suggestion.text}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Search Filter Chips */}
+          {!searchQuery.trim() && (
+            <View style={styles.filtersContainer}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filtersContent}
+              >
+                {searchFilters.map((filter) => (
+                  <TouchableOpacity
+                    key={filter.id}
+                    style={[styles.filterChip, { backgroundColor: colors.secondaryBackground }]}
+                  >
+                    <Ionicons name={filter.icon} size={18} color={colors.text} style={{ marginRight: 6 }} />
+                    <Text style={[styles.filterText, { color: colors.text }]}>{filter.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
           )}
         </View>
-      </View>
-
-      {/* AI Suggestion Chips - Only show when search is focused and no query */}
-      {isSearchFocused && !searchQuery.trim() && (
-        <View style={styles.aiSuggestionsContainer}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.aiSuggestionsContent}
+      ) : (
+        /* Normal Meta AI Search Bar */
+        <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
+          <TouchableOpacity 
+            style={[styles.metaAISearchBar, { backgroundColor: colors.secondaryBackground }]}
+            onPress={() => {
+              setIsSearchExpanded(true);
+              setIsSearchFocused(true);
+            }}
+            activeOpacity={0.7}
           >
-            {aiSuggestions.map((suggestion, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[styles.aiSuggestionChip, { backgroundColor: colors.secondaryBackground }]}
-                onPress={() => setSearchQuery(suggestion.text)}
-              >
-                <Text style={styles.aiSuggestionEmoji}>{suggestion.emoji}</Text>
-                <Text style={[styles.aiSuggestionText, { color: colors.text }]} numberOfLines={1}>
-                  {suggestion.text}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+            <Ionicons name="search" size={20} color={colors.tertiaryText} style={styles.searchIcon} />
+            <Text style={[styles.metaAIPlaceholder, { color: colors.tertiaryText }]}>
+              Ask Connexa AI or Search
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
 
-      {/* Filter Chips */}
-      <View style={styles.filtersContainer}>
+      {/* Filter Chips - Only show when search is not expanded */}
+      {!isSearchExpanded && (
+        <View style={styles.filtersContainer}>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
@@ -344,15 +394,81 @@ export default function ChatsScreen() {
           ))}
         </ScrollView>
       </View>
+      )}
 
-      {/* Archived Section */}
-      <TouchableOpacity style={[styles.archivedSection, { backgroundColor: colors.background }]}>
-        <Ionicons name="archive-outline" size={24} color={colors.tertiaryText} />
-        <Text style={[styles.archivedText, { color: colors.text }]}>Archived</Text>
-      </TouchableOpacity>
+      {/* Archived Section - Show when not typing */}
+      {!searchQuery.trim() && (
+        <TouchableOpacity style={[styles.archivedSection, { backgroundColor: colors.background }]}>
+          <Ionicons name="archive-outline" size={24} color={colors.tertiaryText} />
+          <Text style={[styles.archivedText, { color: colors.text }]}>Archived</Text>
+        </TouchableOpacity>
+      )}
 
-      {/* Chat List */}
-      <FlatList
+      {/* Search Results when typing */}
+      {isSearchExpanded && searchQuery.trim() ? (
+        <ScrollView style={{ flex: 1 }}>
+          {/* Chats Section */}
+          {filteredChats.length > 0 && (
+            <View>
+              <Text style={[styles.searchSectionTitle, { color: colors.secondaryText }]}>Chats</Text>
+              {filteredChats.slice(0, 3).map((chat) => renderChat({ item: chat }))}
+            </View>
+          )}
+
+          {/* Other Contacts Section */}
+          <View>
+            <Text style={[styles.searchSectionTitle, { color: colors.secondaryText }]}>Other contacts</Text>
+            <TouchableOpacity style={[styles.chatItem, { backgroundColor: colors.background }]}>
+              <View style={styles.avatarContainer}>
+                <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
+                  <Text style={styles.avatarText}>Y</Text>
+                </View>
+              </View>
+              <View style={styles.chatContent}>
+                <Text style={[styles.chatName, { color: colors.text }]}>Yellow</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Ask Meta AI Section */}
+          <View>
+            <Text style={[styles.searchSectionTitle, { color: colors.secondaryText }]}>Ask Connexa AI</Text>
+            <TouchableOpacity style={[styles.chatItem, { backgroundColor: colors.background }]}>
+              <Ionicons name="search-circle-outline" size={40} color={colors.primary} style={{ marginRight: 12 }} />
+              <Text style={[styles.chatMessage, { color: colors.text }]}>{searchQuery}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Messages Section */}
+          <View>
+            <Text style={[styles.searchSectionTitle, { color: colors.secondaryText }]}>Messages</Text>
+            {filteredChats.slice(0, 2).map((chat) => (
+              <TouchableOpacity key={chat.id} style={[styles.chatItem, { backgroundColor: colors.background }]}>
+                <View style={styles.avatarContainer}>
+                  {chat.profilePicUrl ? (
+                    <Image source={{ uri: chat.profilePicUrl }} style={styles.avatarImage} />
+                  ) : (
+                    <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
+                      <Text style={styles.avatarText}>{chat.name?.charAt(0).toUpperCase() || '?'}</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.chatContent}>
+                  <Text style={[styles.chatName, { color: colors.text }]}>{chat.name || chat.id}</Text>
+                  <Text style={[styles.chatMessage, { color: colors.tertiaryText }]} numberOfLines={1}>
+                    {chat.lastMessage || 'Tap to chat'}
+                  </Text>
+                </View>
+                <Text style={[styles.chatTime, { color: colors.tertiaryText }]}>
+                  {formatTime(chat.lastMessageTime)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      ) : (
+        /* Chat List */
+        <FlatList
         data={filteredChats}
         renderItem={renderChat}
         keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
@@ -395,8 +511,10 @@ export default function ChatsScreen() {
           />
         }
       />
+      )}
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button - Hide when search is expanded */}
+      {!isSearchExpanded && (
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: colors.primary }]}
         onPress={() => navigation.navigate('Contacts')}
@@ -404,6 +522,7 @@ export default function ChatsScreen() {
       >
         <Ionicons name="add" size={28} color="#FFFFFF" />
       </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -463,6 +582,28 @@ const styles = StyleSheet.create({
   metaAIPlaceholder: {
     fontSize: 16,
     flex: 1,
+  },
+  expandedSearchHeader: {
+    paddingBottom: 8,
+  },
+  expandedSearchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  expandedSearchInput: {
+    fontSize: 16,
+    flex: 1,
+    padding: 0,
+  },
+  searchSectionTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginTop: 8,
   },
   aiSuggestionsContainer: {
     paddingVertical: 8,
