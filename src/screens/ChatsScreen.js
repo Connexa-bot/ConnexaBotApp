@@ -149,7 +149,7 @@ export default function ChatsScreen() {
 
   const filters = [
     { id: 'All', label: 'All' },
-    { id: 'Unread', label: 'Unread', count: chats?.filter(c => c.unreadCount > 0).length || 0 },
+    { id: 'Unread', label: 'Unread', count: Array.isArray(chats) ? chats.filter(c => c.unreadCount > 0).length : 0 },
     { id: 'Favorites', label: 'Favorites' },
     { id: 'Groups', label: 'Groups' },
   ];

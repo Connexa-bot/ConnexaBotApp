@@ -29,33 +29,34 @@ export const AuthProvider = ({ children }) => {
       console.log('📱 Checking stored phone:', storedPhone);
       
       if (storedPhone) {
-        console.log('🔹 [AUTH] Verifying connection for stored user...');
+        console.log('✅ Session found, setting user immediately');
+        setUser({ phone: storedPhone });
+        setConnectionStatus('connected');
         
-        const statusResponse = await Promise.race([
-          callAPI(API_ENDPOINTS.GET_STATUS(storedPhone)),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('API timeout')), 5000))
-        ]).catch(err => {
-          console.warn('⚠️ API check failed:', err.message);
-          return null;
-        });
+        // Verify connection in background (don't block UI)
+        setTimeout(async () => {
+          try {
+            const statusResponse = await Promise.race([
+              callAPI(API_ENDPOINTS.GET_STATUS(storedPhone)),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('API timeout')), 3000))
+            ]);
 
-        if (statusResponse?.connected) {
-          console.log('✅ Connection verified, setting user state');
-          setUser({ phone: storedPhone });
-          setConnectionStatus('connected');
-        } else {
-          console.log('⚠️ Connection not active, logging out');
-          await storage.deleteItem('userPhone');
-          setUser(null);
-          setConnectionStatus('disconnected');
-        }
+            if (!statusResponse?.connected) {
+              console.log('⚠️ Background verification failed - session expired');
+              await storage.deleteItem('userPhone');
+              setUser(null);
+              setConnectionStatus('disconnected');
+            }
+          } catch (err) {
+            console.warn('⚠️ Background verification error:', err.message);
+          }
+        }, 100);
       } else {
         console.log('ℹ️ No stored user found');
+        setConnectionStatus('disconnected');
       }
     } catch (error) {
       console.error('❌ Error checking stored user:', error);
-      await storage.deleteItem('userPhone');
-      setUser(null);
       setConnectionStatus('disconnected');
     } finally {
       setLoading(false);
