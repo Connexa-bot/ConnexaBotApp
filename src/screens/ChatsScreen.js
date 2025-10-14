@@ -26,7 +26,7 @@ export default function ChatsScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const navigation = useNavigation();
   const { user } = useAuth();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -194,8 +194,8 @@ export default function ChatsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar 
-        backgroundColor={colors.background} 
-        barStyle={colors.isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.header} 
+        barStyle={isDark ? 'light-content' : 'dark-content'}
         translucent={false}
       />
 
@@ -286,7 +286,9 @@ export default function ChatsScreen() {
         data={chats}
         renderItem={renderChat}
         keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
-        contentContainerStyle={chats.length === 0 ? styles.emptyListContainer : null}
+        contentContainerStyle={[
+          chats.length === 0 ? styles.emptyListContainer : { paddingBottom: Platform.OS === 'ios' ? 100 : 80 }
+        ]}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconContainer}>
@@ -555,7 +557,7 @@ const styles = StyleSheet.create({
   },
   fabContainer: {
     position: 'absolute',
-    bottom: 16,
+    bottom: Platform.OS === 'ios' ? 100 : 76,
     right: 16,
   },
   fab: {

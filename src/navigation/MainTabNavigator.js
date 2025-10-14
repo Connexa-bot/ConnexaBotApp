@@ -110,6 +110,7 @@ function CustomHeader({ title }) {
       <StatusBar 
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.header}
+        translucent={false}
       />
       <View style={{
         backgroundColor: colors.header,
@@ -161,10 +162,14 @@ export default function MainTabNavigator() {
           backgroundColor: colors.background,
           borderTopWidth: 0.5,
           borderTopColor: colors.border || '#E5E5EA',
-          height: Platform.OS === 'ios' ? 50 : 60,
-          paddingBottom: Platform.OS === 'ios' ? 0 : 8,
+          height: Platform.OS === 'ios' ? 50 + 34 : 60,
+          paddingBottom: Platform.OS === 'ios' ? 34 : 8,
           paddingTop: 6,
           elevation: 0,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.tabIconDefault,

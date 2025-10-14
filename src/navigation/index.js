@@ -19,6 +19,7 @@ export default function RootNavigator() {
   const { colors, isDark } = useTheme();
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [appSplashComplete, setAppSplashComplete] = useState(false);
 
   useEffect(() => {
     if (!loading && !initialCheckDone) {
@@ -30,9 +31,9 @@ export default function RootNavigator() {
     }
   }, [loading, user, initialCheckDone]);
 
-  // Show app splash while checking session
-  if (loading || !initialCheckDone) {
-    return <AppSplashScreen />;
+  // Show app splash while checking session AND until splash animation completes
+  if (loading || !initialCheckDone || !appSplashComplete) {
+    return <AppSplashScreen onComplete={() => setAppSplashComplete(true)} />;
   }
 
   // Show welcome splash only for new users (no session)
