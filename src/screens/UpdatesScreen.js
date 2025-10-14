@@ -6,9 +6,9 @@ import {
   ScrollView, 
   TouchableOpacity, 
   RefreshControl,
+  Platform,
   Alert,
-  Modal,
-  TextInput,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -20,13 +20,13 @@ export default function UpdatesScreen({ navigation }) {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [statuses, setStatuses] = useState([]);
+  const [channels, setChannels] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [showPostModal, setShowPostModal] = useState(false);
-  const [statusText, setStatusText] = useState('');
-  const [posting, setPosting] = useState(false);
+  const [fabAnimation] = useState(new Animated.Value(1));
 
   useEffect(() => {
     loadStatuses();
+    loadChannels();
   }, []);
 
   const loadStatuses = async () => {
@@ -42,100 +42,86 @@ export default function UpdatesScreen({ navigation }) {
     }
   };
 
+  const loadChannels = async () => {
+    try {
+      if (user?.phone) {
+        const response = await callAPI(API_ENDPOINTS.GET_CHANNELS(user.phone));
+        setChannels(response.channels || []);
+      }
+    } catch (error) {
+      console.error('Error loading channels:', error);
+    }
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
     loadStatuses();
+    loadChannels();
   };
 
-  const handlePostTextStatus = async () => {
-    if (!statusText.trim()) {
-      Alert.alert('Error', 'Please enter some text');
+  const handleCameraPress = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Camera permission is required to post status');
       return;
     }
 
-    setPosting(true);
-    try {
-      await callAPI(API_ENDPOINTS.POST_STATUS(user.phone, 'text', statusText));
-      setStatusText('');
-      setShowPostModal(false);
-      Alert.alert('Success', 'Status posted successfully');
-      loadStatuses();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to post status');
-    } finally {
-      setPosting(false);
-    }
-  };
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      quality: 1,
+    });
 
-  const handlePostImageStatus = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
+    if (!result.canceled) {
+      const mediaType = result.assets[0].type || 'image';
+      navigation.navigate('StatusPost', {
+        mediaUri: result.assets[0].uri,
+        mediaType: mediaType,
       });
-
-      if (!result.canceled) {
-        setPosting(true);
-        await callAPI(API_ENDPOINTS.POST_STATUS(user.phone, 'image', result.assets[0].uri));
-        Alert.alert('Success', 'Image status posted successfully');
-        loadStatuses();
-        setPosting(false);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to post image status');
-      setPosting(false);
     }
   };
 
-  const handlePostVideoStatus = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-        quality: 1,
+  const handleGalleryPress = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const mediaType = result.assets[0].type || 'image';
+      navigation.navigate('StatusPost', {
+        mediaUri: result.assets[0].uri,
+        mediaType: mediaType,
       });
-
-      if (!result.canceled) {
-        setPosting(true);
-        await callAPI(API_ENDPOINTS.POST_STATUS(user.phone, 'video', result.assets[0].uri));
-        Alert.alert('Success', 'Video status posted successfully');
-        loadStatuses();
-        setPosting(false);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to post video status');
-      setPosting(false);
     }
   };
 
-  const showStatusOptions = () => {
-    Alert.alert(
-      'Post Status',
-      'Choose status type',
-      [
-        { text: 'Text', onPress: () => setShowPostModal(true) },
-        { text: 'Image', onPress: handlePostImageStatus },
-        { text: 'Video', onPress: handlePostVideoStatus },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+  const handleTextStatusPress = () => {
+    navigation.navigate('StatusPost', {});
   };
 
-  const EmptyStatusView = () => (
-    <View style={styles.emptyContainer}>
-      <View style={[styles.emptyIconContainer, { backgroundColor: colors.secondaryBackground }]}>
-        <Ionicons name="sync-circle-outline" size={56} color={colors.icon} />
-      </View>
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>
-        No recent updates
-      </Text>
-      <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-        View updates from your contacts here
-      </Text>
-    </View>
-  );
+  const formatTime = (timestamp) => {
+    if (!timestamp) return '';
+    const now = Date.now();
+    const diff = now - (timestamp * 1000);
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor(diff / (1000 * 60));
+    
+    if (hours < 1) return `${minutes} minutes ago`;
+    if (hours < 24) return `${hours} hours ago`;
+    return 'Yesterday';
+  };
 
-  const ChannelsEmptyView = () => (
+  const viewStatus = async (status) => {
+    try {
+      await callAPI(API_ENDPOINTS.VIEW_STATUS(user.phone, status.jid, [status.key]));
+    } catch (error) {
+      console.error('Error viewing status:', error);
+    }
+  };
+
+  const EmptyChannelsView = () => (
     <View style={styles.channelsEmpty}>
       <View style={[styles.channelIconContainer, { backgroundColor: colors.secondaryBackground }]}>
         <Ionicons name="megaphone-outline" size={40} color={colors.icon} />
@@ -152,161 +138,118 @@ export default function UpdatesScreen({ navigation }) {
     </View>
   );
 
-  const renderStatusUpdate = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.statusItem}
-      onPress={() => viewStatus(item)}
-      onLongPress={() => handleStatusAction(item)}
-    >
-      <View style={[styles.statusRing, { borderColor: item.viewed ? colors.divider : colors.primary }]}>
-        <View style={[styles.statusAvatar, { backgroundColor: colors.primary }]}>
-          <Text style={styles.statusAvatarText}>
-            {item.name?.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-      </View>
-      <View style={styles.statusInfo}>
-        <Text style={[styles.statusName, { color: colors.text }]}>
-          {item.name}
-        </Text>
-        <Text style={[styles.statusTime, { color: colors.secondaryText }]}>
-          {item.time}
-        </Text>
-      </View>
-      {item.viewCount > 0 && (
-        <View style={styles.viewCountContainer}>
-          <Ionicons name="eye-outline" size={14} color={colors.secondaryText} />
-          <Text style={[styles.viewCount, { color: colors.secondaryText }]}>
-            {item.viewCount}
-          </Text>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
-
-  const viewStatus = async (status) => {
-    try {
-      await callAPI(API_ENDPOINTS.VIEW_STATUS(user.phone, status.jid, [status.key]));
-      Alert.alert('Status Viewed', `Viewing ${status.name}'s status`);
-    } catch (error) {
-      console.error('Error viewing status:', error);
-    }
-  };
-
-  const handleStatusAction = (status) => {
-    Alert.alert(
-      'Status Actions',
-      'Choose an action',
-      [
-        { text: 'Reply to Status', onPress: () => replyToStatus(status) },
-        { text: 'View Profile', onPress: () => {} },
-        { text: 'Cancel', style: 'cancel' }
-      ]
-    );
-  };
-
-  const replyToStatus = (status) => {
-    navigation.navigate('ChatView', { 
-      chat: { id: status.jid, name: status.name },
-      replyToStatus: true 
-    });
-  };
-
   return (
-    <View style={{flex: 1}}>
-    <ScrollView 
-      style={[styles.container, { backgroundColor: colors.background }]}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.primary}
-        />
-      }
-    >
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>Status</Text>
-
-        <TouchableOpacity
-          style={[styles.myStatus, { borderBottomColor: colors.border }]}
-          onPress={showStatusOptions}
-        >
-          <View style={[styles.statusAvatar, { backgroundColor: colors.secondaryBackground }]}>
-            <Ionicons name="add" size={24} color={colors.primary} />
-          </View>
-          <View style={styles.statusContent}>
-            <Text style={[styles.statusName, { color: colors.text }]}>My status</Text>
-            <Text style={[styles.statusText, { color: colors.secondaryText }]}>
-              Tap to add status update
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        {statuses.length === 0 ? (
-          <EmptyStatusView />
-        ) : (
-          statuses.map((status) => (
-            <TouchableOpacity
-              key={status.id}
-              style={[styles.statusItem, { borderBottomColor: colors.border }]}
-            >
-              <View style={[styles.statusAvatar, { borderColor: colors.primary, borderWidth: 2, backgroundColor: colors.secondaryBackground }]}>
-                <Text style={[styles.avatarText, { color: colors.text }]}>
-                  {status.name?.charAt(0) || '?'}
-                </Text>
-              </View>
-              <View style={styles.statusContent}>
-                <Text style={[styles.statusName, { color: colors.text }]}>{status.name}</Text>
-                <Text style={[styles.statusTime, { color: colors.secondaryText }]}>
-                  {status.time}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))
-        )}
-      </View>
-
-      <View style={[styles.section, { marginTop: 24 }]}>
-        <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>Channels</Text>
-        <ChannelsEmptyView />
-      </View>
-    </ScrollView>
-
-    <Modal
-      visible={showPostModal}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={() => setShowPostModal(false)}
-    >
-      <View style={styles.modalContainer}>
-        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Post Text Status</Text>
-            <TouchableOpacity onPress={() => setShowPostModal(false)}>
-              <Ionicons name="close" size={28} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          <TextInput
-            style={[styles.textInput, { backgroundColor: colors.secondaryBackground, color: colors.text }]}
-            placeholder="What's on your mind?"
-            placeholderTextColor={colors.secondaryText}
-            value={statusText}
-            onChangeText={setStatusText}
-            multiline
-            maxLength={700}
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView 
+        style={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
           />
+        }
+      >
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>Status</Text>
 
           <TouchableOpacity
-            style={[styles.postButton, { backgroundColor: colors.primary }]}
-            onPress={handlePostTextStatus}
-            disabled={posting}
+            style={[styles.myStatus, { borderBottomColor: colors.divider }]}
+            onPress={handleTextStatusPress}
           >
-            <Text style={styles.postButtonText}>Post Status</Text>
+            <View style={styles.statusAvatarContainer}>
+              <View style={[styles.statusAvatar, { backgroundColor: colors.secondaryBackground }]}>
+                <Ionicons name="person" size={28} color={colors.primary} />
+              </View>
+              <View style={[styles.addBadge, { backgroundColor: colors.primary }]}>
+                <Ionicons name="add" size={16} color="#FFFFFF" />
+              </View>
+            </View>
+            <View style={styles.statusContent}>
+              <Text style={[styles.statusName, { color: colors.text }]}>My status</Text>
+              <Text style={[styles.statusText, { color: colors.secondaryText }]}>
+                Tap to add status update
+              </Text>
+            </View>
           </TouchableOpacity>
+
+          {statuses.length > 0 && (
+            <View style={styles.recentUpdates}>
+              <Text style={[styles.subsectionTitle, { color: colors.secondaryText }]}>
+                Recent updates
+              </Text>
+              {statuses.map((status, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[styles.statusItem, { borderBottomColor: colors.divider }]}
+                  onPress={() => viewStatus(status)}
+                >
+                  <View style={[
+                    styles.statusRing,
+                    { borderColor: status.viewed ? colors.divider : colors.primary }
+                  ]}>
+                    <View style={[styles.statusAvatar, { backgroundColor: colors.secondaryBackground }]}>
+                      <Text style={[styles.avatarText, { color: colors.text }]}>
+                        {status.name?.charAt(0) || '?'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.statusContent}>
+                    <Text style={[styles.statusName, { color: colors.text }]}>{status.name}</Text>
+                    <Text style={[styles.statusTime, { color: colors.secondaryText }]}>
+                      {formatTime(status.timestamp)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
+
+        <View style={[styles.section, styles.channelsSection]}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>Channels</Text>
+            <TouchableOpacity>
+              <Ionicons name="add-outline" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+          {channels.length === 0 ? (
+            <EmptyChannelsView />
+          ) : (
+            channels.map((channel, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.channelItem, { borderBottomColor: colors.divider }]}
+              >
+                <View style={[styles.channelAvatar, { backgroundColor: colors.secondaryBackground }]}>
+                  <Ionicons name="megaphone" size={24} color={colors.primary} />
+                </View>
+                <View style={styles.channelInfo}>
+                  <Text style={[styles.channelName, { color: colors.text }]}>{channel.name}</Text>
+                  <Text style={[styles.channelFollowers, { color: colors.secondaryText }]}>
+                    {channel.followers || 0} followers
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
+      </ScrollView>
+
+      <View style={styles.fabContainer}>
+        <TouchableOpacity
+          style={[styles.fabSecondary, { backgroundColor: colors.secondaryBackground }]}
+          onPress={handleTextStatusPress}
+        >
+          <Ionicons name="pencil" size={20} color={colors.text} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.fabPrimary, { backgroundColor: colors.primary }]}
+          onPress={handleCameraPress}
+        >
+          <Ionicons name="camera" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
-    </Modal>
     </View>
   );
 }
@@ -318,6 +261,9 @@ const styles = StyleSheet.create({
   section: {
     paddingVertical: 8,
   },
+  channelsSection: {
+    marginTop: 16,
+  },
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600',
@@ -326,6 +272,20 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  subsectionTitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    textTransform: 'capitalize',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
   myStatus: {
     flexDirection: 'row',
     padding: 12,
@@ -333,12 +293,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: 0.5,
   },
-  statusItem: {
-    flexDirection: 'row',
-    padding: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    borderBottomWidth: 0.5,
+  statusAvatarContainer: {
+    position: 'relative',
+    marginRight: 12,
   },
   statusAvatar: {
     width: 52,
@@ -346,11 +303,35 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  addBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  statusRing: {
+    padding: 2,
+    borderRadius: 28,
+    borderWidth: 2,
     marginRight: 12,
   },
   avatarText: {
     fontSize: 20,
     fontWeight: '500',
+  },
+  statusItem: {
+    flexDirection: 'row',
+    padding: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    borderBottomWidth: 0.5,
   },
   statusContent: {
     flex: 1,
@@ -367,36 +348,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 2,
   },
-  viewCountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 'auto',
-  },
-  viewCount: {
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 32,
-  },
-  emptyIconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    textAlign: 'center',
+  recentUpdates: {
+    marginTop: 8,
   },
   channelsEmpty: {
     alignItems: 'center',
@@ -432,42 +385,60 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 20,
-  },
-  modalContent: {
-    borderRadius: 20,
-    padding: 20,
-  },
-  modalHeader: {
+  channelItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    padding: 12,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    marginBottom: 20,
+    borderBottomWidth: 0.5,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  textInput: {
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    minHeight: 150,
-    textAlignVertical: 'top',
-    marginBottom: 20,
-  },
-  postButton: {
-    padding: 16,
-    borderRadius: 12,
+  channelAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
   },
-  postButtonText: {
-    color: '#fff',
+  channelInfo: {
+    flex: 1,
+  },
+  channelName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  channelFollowers: {
+    fontSize: 13,
+  },
+  fabContainer: {
+    position: 'absolute',
+    right: 16,
+    bottom: Platform.OS === 'ios' ? 100 : 76,
+    gap: 12,
+  },
+  fabPrimary: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  fabSecondary: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
 });

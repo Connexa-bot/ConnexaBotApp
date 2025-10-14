@@ -12,6 +12,7 @@ import GroupCreateScreen from '../screens/GroupCreateScreen';
 import StarredMessagesScreen from '../screens/StarredMessagesScreen';
 import ChatSettingsScreen from '../screens/ChatSettingsScreen';
 import TermsPrivacyScreen from '../screens/TermsPrivacyScreen';
+import StatusPostScreen from '../screens/StatusPostScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,6 +33,8 @@ export default function AppNavigator() {
         },
         headerTintColor: colors.text,
         headerShadowVisible: false,
+        animation: 'slide_from_right',
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
       <Stack.Screen
@@ -115,6 +118,15 @@ export default function AppNavigator() {
         name="ChatSettings"
         component={ChatSettingsScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="StatusPost"
+        component={StatusPostScreen}
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_bottom',
+          presentation: 'modal',
+        }}
       />
     </Stack.Navigator>
   );

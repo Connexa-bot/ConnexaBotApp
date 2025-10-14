@@ -160,7 +160,7 @@ export default function ChatsScreen() {
       <View style={styles.fabContainer}>
         <TouchableOpacity
           style={[styles.fab, { backgroundColor: colors.primary }]}
-          onPress={() => navigation.navigate('NewChat')}
+          onPress={() => navigation.navigate('Contacts')}
         >
           <Ionicons name="chatbubble-ellipses-sharp" size={24} color="#FFFFFF" />
         </TouchableOpacity>

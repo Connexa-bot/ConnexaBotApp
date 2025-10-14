@@ -1,20 +1,12 @@
 
-/**
- * CONNEXA-BOT API ENDPOINTS
- * 
- * Base URL (Development): http://localhost:5000
- * Base URL (Production/Replit): Auto-detected from environment
- */
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 
-                     process.env.REACT_APP_API_URL || 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+                     process.env.VITE_API_URL ||
                      process.env.SERVER_URL || 
                      (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null) ||
-                     'https://7291a9b7-7686-42b0-ba38-4b0639ea71ed-00-22vcaa5x8ip3y.kirk.replit.dev';
+                     'http://localhost:5000';
 
 export const API_ENDPOINTS = {
   
-  // ========== HEALTH & CONNECTION ==========
   HEALTH: () => ({
     url: `${API_BASE_URL}/health`,
     method: 'GET',
@@ -53,11 +45,11 @@ export const API_ENDPOINTS = {
     description: 'Clear session state (partial or full reset)'
   }),
   
-  // ========== CHATS ==========
   GET_CHATS: (phone) => ({
     url: `${API_BASE_URL}/api/chats/${phone}`,
     method: 'GET',
-    description: 'Get all chats with metadata'
+    description: 'Get all chats with profile pictures, names, and last messages (sorted by recent)',
+    responseFormat: '{ success, chats: [{ id, name, profilePicUrl, lastMessage: { text, timestamp }, unreadCount, isGroup, isChannel, isArchived, isPinned, isMuted }], count }'
   }),
 
   ARCHIVE_CHAT: (phone, chatId, archive = true) => ({
@@ -129,11 +121,11 @@ export const API_ENDPOINTS = {
     description: 'Remove label from chat'
   }),
   
-  // ========== MESSAGES ==========
   GET_MESSAGES: (phone, chatId, limit = 50) => ({
     url: `${API_BASE_URL}/api/messages/${phone}/${chatId}?limit=${limit}`,
     method: 'GET',
-    description: 'Get messages from a specific chat'
+    description: 'Get messages from a specific chat',
+    responseFormat: '{ success, data: { messages: [...] } }'
   }),
 
   SEND_MESSAGE: (phone, to, text, mentions = []) => ({
@@ -227,18 +219,11 @@ export const API_ENDPOINTS = {
     description: 'Delete message for everyone'
   }),
 
-  FORWARD_MESSAGE: (phone, to, messageKey) => ({
+  FORWARD_MESSAGE: (phone, to, message) => ({
     url: `${API_BASE_URL}/api/messages/forward`,
     method: 'POST',
-    body: { phone, to, messageKey },
+    body: { phone, to, message },
     description: 'Forward message to another chat'
-  }),
-
-  SEARCH_MESSAGES: (phone, chatId, query) => ({
-    url: `${API_BASE_URL}/api/messages/search`,
-    method: 'POST',
-    body: { phone, chatId, query },
-    description: 'Search messages in chat'
   }),
 
   REACT_MESSAGE: (phone, chatId, messageKey, emoji) => ({
@@ -269,7 +254,6 @@ export const API_ENDPOINTS = {
     description: 'Mark specific message as read'
   }),
 
-  // ========== STATUS/STORY ==========
   GET_STATUS_UPDATES: (phone) => ({
     url: `${API_BASE_URL}/api/status-updates/${phone}`,
     method: 'GET',
@@ -324,7 +308,6 @@ export const API_ENDPOINTS = {
     description: 'Get status privacy settings'
   }),
   
-  // ========== GROUPS ==========
   GET_GROUPS: (phone) => ({
     url: `${API_BASE_URL}/api/groups/${phone}`,
     method: 'GET',
@@ -338,7 +321,6 @@ export const API_ENDPOINTS = {
     description: 'Perform group action (create, add, remove, promote, etc.)'
   }),
 
-  // ========== CONTACTS ==========
   GET_CONTACTS: (phone) => ({
     url: `${API_BASE_URL}/api/contacts/${phone}`,
     method: 'GET',
@@ -352,7 +334,6 @@ export const API_ENDPOINTS = {
     description: 'Perform contact action (block, unblock, etc.)'
   }),
 
-  // ========== PRESENCE ==========
   PRESENCE_ACTION: (phone, action, data = {}) => ({
     url: `${API_BASE_URL}/api/presence/action`,
     method: 'POST',
@@ -360,7 +341,6 @@ export const API_ENDPOINTS = {
     description: 'Update presence (typing, recording, online, etc.)'
   }),
 
-  // ========== PROFILE ==========
   GET_PROFILE: (phone) => ({
     url: `${API_BASE_URL}/api/profile/${phone}`,
     method: 'GET',
@@ -374,7 +354,6 @@ export const API_ENDPOINTS = {
     description: 'Update profile (name, status, picture, etc.)'
   }),
 
-  // ========== AI AUTOMATION ==========
   AI_SMART_REPLY: (phone, chatId, lastMessage, senderName = 'User', relationship = 'friend') => ({
     url: `${API_BASE_URL}/api/ai/smart-reply`,
     method: 'POST',
@@ -472,7 +451,6 @@ export const API_ENDPOINTS = {
     description: 'Clear AI chat history'
   }),
 
-  // ========== CHANNELS ==========
   GET_CHANNELS: (phone) => ({
     url: `${API_BASE_URL}/api/channels/${phone}`,
     method: 'GET',
@@ -512,7 +490,6 @@ export const API_ENDPOINTS = {
     description: 'Get all communities'
   }),
 
-  // ========== CALLS ==========
   GET_CALLS: (phone) => ({
     url: `${API_BASE_URL}/api/calls/${phone}`,
     method: 'GET',
@@ -526,7 +503,6 @@ export const API_ENDPOINTS = {
     description: 'Initiate call (not supported by Baileys)'
   }),
 
-  // ========== PRIVACY & SECURITY ==========
   GET_PRIVACY_SETTINGS: (phone) => ({
     url: `${API_BASE_URL}/api/privacy/settings/${phone}`,
     method: 'GET',
@@ -574,11 +550,8 @@ export const API_ENDPOINTS = {
   }),
 };
 
-// Helper function to make API calls
 export const callAPI = async (endpoint) => {
   try {
-    console.log('📤 API Request:', endpoint.method, endpoint.url);
-    
     const response = await fetch(endpoint.url, {
       method: endpoint.method,
       headers: {
@@ -587,17 +560,10 @@ export const callAPI = async (endpoint) => {
       body: endpoint.body ? JSON.stringify(endpoint.body) : undefined
     });
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ API Error:', response.status, errorText);
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
     const data = await response.json();
-    console.log('✅ API Response:', endpoint.url, response.status);
     return data;
   } catch (error) {
-    console.error('❌ API call failed:', error);
+    console.error('API call failed:', error);
     throw error;
   }
 };
