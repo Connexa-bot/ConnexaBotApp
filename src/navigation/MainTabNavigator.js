@@ -154,7 +154,7 @@ export default function MainTabNavigator() {
       initialRouteName="Chats"
       screenOptions={({ route }) => ({
         header: () => <CustomHeader title={route.name} />,
-        headerShown: route.name !== 'Chats',
+        headerShown: route.name !== 'Chats', // Hide header for Chats screen
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopWidth: 0.5,
