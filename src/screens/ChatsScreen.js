@@ -194,42 +194,10 @@ export default function ChatsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar 
-        backgroundColor={colors.primary} 
-        barStyle="light-content" 
+        backgroundColor={colors.background} 
+        barStyle={colors.isDark ? 'light-content' : 'dark-content'}
         translucent={false}
       />
-      
-      {/* WhatsApp Header */}
-      <View style={[styles.header, { paddingTop: insets.top, backgroundColor: colors.primary }]}>
-        <Text style={styles.headerTitle}>WhatsApp</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity 
-            style={styles.headerButton}
-            onPress={async () => {
-              const { requestCameraPermissionsAsync, launchCameraAsync, MediaTypeOptions } = require('expo-image-picker');
-              const { status } = await requestCameraPermissionsAsync();
-              if (status === 'granted') {
-                const result = await launchCameraAsync({
-                  mediaTypes: MediaTypeOptions.All,
-                  allowsEditing: true,
-                  quality: 1,
-                });
-                if (!result.canceled) {
-                  console.log('Camera result:', result);
-                }
-              }
-            }}
-          >
-            <Ionicons name="camera-outline" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.headerButton}
-            onPress={handleMenuPress}
-          >
-            <Ionicons name="ellipsis-vertical" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      </View>
 
       {/* Menu Dropdown (Android) */}
       {menuVisible && Platform.OS === 'android' && (
@@ -257,15 +225,19 @@ export default function ChatsScreen() {
 
       {/* Search Bar */}
       <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
-        <View style={[styles.searchBar, { backgroundColor: colors.secondaryBackground }]}>
+        <TouchableOpacity 
+          style={[styles.searchBar, { backgroundColor: colors.secondaryBackground }]}
+          onPress={() => navigation.navigate('Search')}
+          activeOpacity={0.7}
+        >
           <Ionicons name="search" size={20} color={colors.tertiaryText} style={styles.searchIcon} />
-          <TextInput
-            style={[styles.searchInput, { color: colors.text }]}
-            placeholder="Ask Meta AI or Search"
-            placeholderTextColor={colors.tertiaryText}
-            onFocus={() => navigation.navigate('Search')}
-          />
-        </View>
+          <Text style={[styles.searchPlaceholder, { color: colors.tertiaryText }]}>
+            Ask Connexa
+          </Text>
+          <View style={styles.aiIconContainer}>
+            <Ionicons name="sparkles" size={18} color={colors.primary} />
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* Filter Chips */}
@@ -362,26 +334,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 24,
-  },
-  headerButton: {
-    padding: 4,
-  },
   menuOverlay: {
     position: 'absolute',
     top: 0,
@@ -419,15 +371,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 24,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
-  searchInput: {
+  searchPlaceholder: {
     flex: 1,
     fontSize: 16,
-    padding: 0,
+  },
+  aiIconContainer: {
+    marginLeft: 8,
   },
   filtersContainer: {
     paddingVertical: 8,
