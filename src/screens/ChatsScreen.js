@@ -193,10 +193,14 @@ export default function ChatsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar backgroundColor="#075E54" barStyle="light-content" />
+      <StatusBar 
+        backgroundColor={colors.primary} 
+        barStyle="light-content" 
+        translucent={false}
+      />
       
       {/* WhatsApp Header */}
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View style={[styles.header, { paddingTop: insets.top, backgroundColor: colors.primary }]}>
         <Text style={styles.headerTitle}>WhatsApp</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity 
@@ -276,7 +280,7 @@ export default function ChatsScreen() {
               key={filter.id}
               style={[
                 styles.filterChip,
-                selectedFilter === filter.id && { backgroundColor: '#E7F8EE' },
+                selectedFilter === filter.id && { backgroundColor: colors.primary + '20' },
                 selectedFilter !== filter.id && { backgroundColor: colors.secondaryBackground },
               ]}
               onPress={() => setSelectedFilter(filter.id)}
@@ -284,7 +288,7 @@ export default function ChatsScreen() {
               <Text
                 style={[
                   styles.filterText,
-                  selectedFilter === filter.id && { color: '#075E54' },
+                  selectedFilter === filter.id && { color: colors.primary },
                   selectedFilter !== filter.id && { color: colors.text },
                 ]}
               >
@@ -343,7 +347,7 @@ export default function ChatsScreen() {
       {/* Floating Action Button */}
       <View style={styles.fabContainer}>
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, { backgroundColor: colors.primary }]}
           onPress={() => navigation.navigate('Contacts')}
           activeOpacity={0.8}
         >
@@ -359,7 +363,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    backgroundColor: '#075E54',
     paddingHorizontal: 16,
     paddingBottom: 12,
     flexDirection: 'row',
@@ -403,8 +406,6 @@ const styles = StyleSheet.create({
   menuItem: {
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#E5E5E5',
   },
   menuItemText: {
     fontSize: 16,
@@ -607,7 +608,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#25D366',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,

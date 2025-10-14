@@ -8,6 +8,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import ChatsScreen from '../screens/ChatsScreen';
 import UpdatesScreen from '../screens/UpdatesScreen';
+import CommunitiesScreen from '../screens/CommunitiesScreen';
 import CallsScreen from '../screens/CallsScreen';
 import MenuModal from '../components/MenuModal';
 
@@ -72,6 +73,10 @@ function CustomHeader({ title }) {
     } else if (title === 'Updates') {
       return [
         { label: 'Status privacy', action: () => {} },
+        { label: 'Settings', action: () => navigation.navigate('Settings') },
+      ];
+    } else if (title === 'Communities') {
+      return [
         { label: 'Settings', action: () => navigation.navigate('Settings') },
       ];
     } else if (title === 'Calls') {
@@ -173,6 +178,8 @@ export default function MainTabNavigator() {
             iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           } else if (route.name === 'Updates') {
             iconName = focused ? 'radio-button-on' : 'radio-button-off';
+          } else if (route.name === 'Communities') {
+            iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'Calls') {
             iconName = focused ? 'call' : 'call-outline';
           }
@@ -186,6 +193,7 @@ export default function MainTabNavigator() {
         component={ChatsScreen}
         options={{
           tabBarLabel: 'Chats',
+          headerShown: false,
         }}
       />
       <Tab.Screen 
@@ -193,6 +201,13 @@ export default function MainTabNavigator() {
         component={UpdatesScreen}
         options={{
           tabBarLabel: 'Updates',
+        }}
+      />
+      <Tab.Screen 
+        name="Communities" 
+        component={CommunitiesScreen}
+        options={{
+          tabBarLabel: 'Communities',
         }}
       />
       <Tab.Screen 
