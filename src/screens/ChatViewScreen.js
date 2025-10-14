@@ -46,9 +46,7 @@ export default function ChatViewScreen({ route, navigation }) {
     if (wallpaper.isPattern) {
       // For WhatsApp pattern wallpapers, adapt to theme
       if (wallpaper.uri === 'whatsapp-auto' || wallpaper.theme === 'auto') {
-        return isDark 
-          ? require('../../assets/images/whatsapp-bg-dark.png')
-          : require('../../assets/images/whatsapp-bg-light.png');
+        return require('../../assets/images/whatsapp-bg-light.png');
       }
       return wallpaper.uri;
     }
