@@ -3751,9 +3751,9 @@ expo-modules-core@3.0.21:
   dependencies:
     invariant "^2.2.4"
 
-expo-navigation-bar@~5.0.8:
+expo-navigation-bar@^5.0.8:
   version "5.0.8"
-  resolved "https://registry.npmmirror.com/expo-navigation-bar/-/expo-navigation-bar-5.0.8.tgz#55520d92121e70b2d92dc9f8cbce3996be853e66"
+  resolved "https://registry.yarnpkg.com/expo-navigation-bar/-/expo-navigation-bar-5.0.8.tgz#55520d92121e70b2d92dc9f8cbce3996be853e66"
   integrity sha512-vaUkedxWscne24NIoADncgjP4WYKNdy69mSO9UWNRlOGdmzyswI4h16xuiNjlbTOxzHMVPotGWyMNxo5gxkxpg==
   dependencies:
     "@react-native/normalize-colors" "0.81.4"
