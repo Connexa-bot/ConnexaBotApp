@@ -127,9 +127,11 @@ function CustomHeader({ title }) {
         fontWeight: '500',
       }}>{title}</Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20 }}>
-        <TouchableOpacity onPress={handleCameraPress}>
-          <Ionicons name="camera-outline" size={24} color={colors.headerText} />
-        </TouchableOpacity>
+        {title === 'Chats' && (
+          <TouchableOpacity onPress={handleCameraPress}>
+            <Ionicons name="camera-outline" size={24} color={colors.headerText} />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity onPress={handleMorePress}>
           <Ionicons name="ellipsis-vertical" size={24} color={colors.headerText} />
         </TouchableOpacity>
