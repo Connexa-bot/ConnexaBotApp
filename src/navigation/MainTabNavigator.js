@@ -155,7 +155,8 @@ export default function MainTabNavigator() {
     <Tab.Navigator
       initialRouteName="Chats"
       screenOptions={({ route }) => ({
-        header: () => <CustomHeader title={route.name} />,
+        header: route.name === 'Chats' ? undefined : () => <CustomHeader title={route.name} />,
+        headerShown: route.name !== 'Chats',
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopWidth: 0,
@@ -193,7 +194,6 @@ export default function MainTabNavigator() {
         component={ChatsScreen}
         options={{
           tabBarLabel: 'Chats',
-          headerShown: false,
         }}
       />
       <Tab.Screen 

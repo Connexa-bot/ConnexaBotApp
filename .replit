@@ -15,23 +15,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Expo Web Server"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "Expo Server"
-
-[[workflows.workflow]]
-name = "Expo Web Server"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0 ./node_modules/.bin/expo start --web --port 5000"
-waitForPort = 5000
 
 [[workflows.workflow]]
 name = "Expo Server"
