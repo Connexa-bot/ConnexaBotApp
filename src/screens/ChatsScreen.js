@@ -350,15 +350,13 @@ export default function ChatsScreen() {
       />
 
       {/* Floating Action Button */}
-      <View style={styles.fabContainer}>
-        <TouchableOpacity
-          style={[styles.fab, { backgroundColor: colors.primary }]}
-          onPress={() => navigation.navigate('Contacts')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="add" size={28} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: colors.primary }]}
+        onPress={() => navigation.navigate('Contacts')}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={28} color="#FFFFFF" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -587,12 +585,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  fabContainer: {
+  fab: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 100 : 76,
     right: 16,
-  },
-  fab: {
     width: 56,
     height: 56,
     borderRadius: 28,
