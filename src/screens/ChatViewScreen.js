@@ -164,7 +164,15 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleSendMedia = async (media, type) => {
     try {
-      Alert.alert('Media Sending', 'Media sending feature coming soon. Use backend API directly for media messages.');
+      if (type === 'image') {
+        await callAPI(API_ENDPOINTS.SEND_IMAGE(user.phone, chat.id, media.uri, media.caption || ''));
+      } else if (type === 'video') {
+        await callAPI(API_ENDPOINTS.SEND_VIDEO(user.phone, chat.id, media.uri, media.caption || ''));
+      } else if (type === 'document') {
+        await callAPI(API_ENDPOINTS.SEND_DOCUMENT(user.phone, chat.id, media.uri, media.name, media.type));
+      }
+      loadMessages();
+      scrollToBottom();
     } catch (error) {
       console.error('Error sending media:', error);
       Alert.alert('Error', 'Failed to send media');
@@ -173,7 +181,9 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleVoiceRecord = async (audioUri) => {
     try {
-      Alert.alert('Voice Messages', 'Voice message feature coming soon. Use backend API directly for voice messages.');
+      await callAPI(API_ENDPOINTS.SEND_AUDIO(user.phone, chat.id, audioUri, true));
+      loadMessages();
+      scrollToBottom();
     } catch (error) {
       console.error('Error sending voice:', error);
       Alert.alert('Error', 'Failed to send voice message');
@@ -181,9 +191,11 @@ export default function ChatViewScreen({ route, navigation }) {
   };
 
   const handleMessageLongPress = (message) => {
-    const options = ['React', 'Forward', 'Star', 'Delete', 'Cancel'];
-    const destructiveButtonIndex = 3;
-    const cancelButtonIndex = 4;
+    const options = message.fromMe 
+      ? ['React', 'Reply', 'Forward', 'Star', 'Edit', 'Delete', 'Cancel']
+      : ['React', 'Reply', 'Forward', 'Star', 'Delete', 'Cancel'];
+    const destructiveButtonIndex = message.fromMe ? 5 : 4;
+    const cancelButtonIndex = options.length - 1;
 
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -210,20 +222,48 @@ export default function ChatViewScreen({ route, navigation }) {
   };
 
   const handleMessageAction = async (message, actionIndex) => {
-    switch (actionIndex) {
-      case 0: // React
-        handleReact(message);
-        break;
-      case 1: // Forward
-        handleForward(message);
-        break;
-      case 2: // Star
-        handleStar(message);
-        break;
-      case 3: // Delete
-        handleDelete(message);
-        break;
+    if (message.fromMe) {
+      switch (actionIndex) {
+        case 0: handleReact(message); break;
+        case 1: handleReply(message); break;
+        case 2: handleForward(message); break;
+        case 3: handleStar(message); break;
+        case 4: handleEdit(message); break;
+        case 5: handleDelete(message); break;
+      }
+    } else {
+      switch (actionIndex) {
+        case 0: handleReact(message); break;
+        case 1: handleReply(message); break;
+        case 2: handleForward(message); break;
+        case 3: handleStar(message); break;
+        case 4: handleDelete(message); break;
+      }
     }
+  };
+
+  const handleReply = (message) => {
+    Alert.alert('Reply', 'Reply feature coming soon. Use ChatInput with quoted message.');
+  };
+
+  const handleEdit = async (message) => {
+    Alert.prompt(
+      'Edit Message',
+      'Enter new text',
+      async (text) => {
+        if (text && text.trim()) {
+          try {
+            await callAPI(API_ENDPOINTS.EDIT_MESSAGE(user.phone, chat.id, message.key, text));
+            loadMessages();
+          } catch (error) {
+            console.error('Error editing message:', error);
+            Alert.alert('Error', 'Failed to edit message');
+          }
+        }
+      },
+      'plain-text',
+      message.text
+    );
   };
 
   const handleForward = (message) => {
@@ -284,7 +324,7 @@ export default function ChatViewScreen({ route, navigation }) {
         text: emoji,
         onPress: async () => {
           try {
-            await callAPI(API_ENDPOINTS.MESSAGE_ACTION(user.phone, 'react', message.key, { emoji }));
+            await callAPI(API_ENDPOINTS.REACT_MESSAGE(user.phone, chat.id, message.key, emoji));
             loadMessages();
           } catch (error) {
             console.error('Error reacting to message:', error);

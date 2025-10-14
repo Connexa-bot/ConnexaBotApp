@@ -13,6 +13,7 @@ import StarredMessagesScreen from '../screens/StarredMessagesScreen';
 import ChatSettingsScreen from '../screens/ChatSettingsScreen';
 import TermsPrivacyScreen from '../screens/TermsPrivacyScreen';
 import StatusPostScreen from '../screens/StatusPostScreen';
+import SearchScreen from '../screens/SearchScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -51,13 +52,28 @@ export default function AppNavigator() {
             <View style={{ flexDirection: 'row', marginRight: 8 }}>
               <TouchableOpacity
                 style={{ padding: 8 }}
-                onPress={() => {}}
+                onPress={async () => {
+                  const { status } = await require('expo-image-picker').requestCameraPermissionsAsync();
+                  if (status === 'granted') {
+                    const result = await require('expo-image-picker').launchCameraAsync({
+                      mediaTypes: require('expo-image-picker').MediaTypeOptions.All,
+                      allowsEditing: true,
+                      quality: 1,
+                    });
+                    if (!result.canceled) {
+                      navigation.navigate('StatusPost', {
+                        mediaUri: result.assets[0].uri,
+                        mediaType: result.assets[0].type || 'image',
+                      });
+                    }
+                  }
+                }}
               >
                 <Ionicons name="camera-outline" size={24} color={colors.headerText} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={{ padding: 8, marginLeft: 8 }}
-                onPress={() => {}}
+                onPress={() => navigation.navigate('Search')}
               >
                 <Ionicons name="search-outline" size={24} color={colors.headerText} />
               </TouchableOpacity>
@@ -126,6 +142,14 @@ export default function AppNavigator() {
           headerShown: false,
           animation: 'slide_from_bottom',
           presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="Search"
+        component={SearchScreen}
+        options={{ 
+          headerShown: false,
+          animation: 'fade',
         }}
       />
     </Stack.Navigator>
