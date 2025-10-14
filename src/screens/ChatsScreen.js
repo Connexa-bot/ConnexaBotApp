@@ -208,6 +208,15 @@ export default function ChatsScreen() {
     }
   };
 
+  const aiSuggestions = [
+    { emoji: '😂', text: 'I want to hear a joke' },
+    { emoji: '🎁', text: 'Help me with gift ideas' },
+    { emoji: '🔍', text: 'I want to find info about a topic' },
+    { emoji: '🎨', text: 'I want creative ideas' },
+    { emoji: '📺', text: 'I want a new show to watch' },
+    { emoji: '📚', text: 'I want to answer questions' },
+  ];
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar 
@@ -240,27 +249,40 @@ export default function ChatsScreen() {
         </>
       )}
 
-      {/* Search Bar */}
+      {/* Meta AI Search Bar */}
       <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
-        <View style={[styles.searchBar, { backgroundColor: colors.secondaryBackground }]}>
+        <TouchableOpacity 
+          style={[styles.metaAISearchBar, { backgroundColor: colors.secondaryBackground }]}
+          onPress={() => navigation.navigate('Search')}
+          activeOpacity={0.7}
+        >
           <Ionicons name="search" size={20} color={colors.tertiaryText} style={styles.searchIcon} />
-          <TextInput
-            style={[styles.searchInput, { color: colors.text }]}
-            placeholder="Ask Connexa"
-            placeholderTextColor={colors.tertiaryText}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 ? (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={20} color={colors.tertiaryText} />
+          <Text style={[styles.metaAIPlaceholder, { color: colors.tertiaryText }]}>
+            Ask Connexa AI or Search
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* AI Suggestion Chips */}
+      <View style={styles.aiSuggestionsContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.aiSuggestionsContent}
+        >
+          {aiSuggestions.map((suggestion, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.aiSuggestionChip, { backgroundColor: colors.secondaryBackground }]}
+              onPress={() => navigation.navigate('Search')}
+            >
+              <Text style={styles.aiSuggestionEmoji}>{suggestion.emoji}</Text>
+              <Text style={[styles.aiSuggestionText, { color: colors.text }]} numberOfLines={1}>
+                {suggestion.text}
+              </Text>
             </TouchableOpacity>
-          ) : (
-            <View style={styles.aiIconContainer}>
-              <Ionicons name="sparkles" size={18} color={colors.primary} />
-            </View>
-          )}
-        </View>
+          ))}
+        </ScrollView>
       </View>
 
       {/* Filter Chips */}
@@ -280,6 +302,17 @@ export default function ChatsScreen() {
               ]}
               onPress={() => setSelectedFilter(filter.id)}
             >
+              <Ionicons 
+                name={
+                  filter.id === 'Unread' ? 'mail-unread-outline' : 
+                  filter.id === 'Favorites' ? 'star-outline' : 
+                  filter.id === 'Groups' ? 'people-outline' : 
+                  filter.id === 'All' ? 'apps-outline' : 'apps-outline'
+                } 
+                size={18} 
+                color={selectedFilter === filter.id ? colors.primary : colors.text}
+                style={{ marginRight: 6 }}
+              />
               <Text
                 style={[
                   styles.filterText,
@@ -292,9 +325,6 @@ export default function ChatsScreen() {
               </Text>
             </TouchableOpacity>
           ))}
-          <TouchableOpacity style={[styles.filterChip, { backgroundColor: colors.secondaryBackground }]}>
-            <Ionicons name="add" size={20} color={colors.text} />
-          </TouchableOpacity>
         </ScrollView>
       </View>
 
@@ -395,35 +425,57 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
-  searchBar: {
+  metaAISearchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 24,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
-  searchInput: {
-    flex: 1,
+  metaAIPlaceholder: {
     fontSize: 16,
-    paddingVertical: 4,
+    flex: 1,
   },
-  aiIconContainer: {
-    marginLeft: 8,
+  aiSuggestionsContainer: {
+    paddingVertical: 8,
+  },
+  aiSuggestionsContent: {
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  aiSuggestionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginHorizontal: 4,
+    maxWidth: 240,
+  },
+  aiSuggestionEmoji: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  aiSuggestionText: {
+    fontSize: 14,
   },
   filtersContainer: {
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
   filtersContent: {
     paddingHorizontal: 16,
     gap: 8,
   },
   filterChip: {
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     marginRight: 8,
@@ -587,7 +639,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 100 : 76,
+    bottom: Platform.OS === 'ios' ? 100 : 85,
     right: 16,
     width: 56,
     height: 56,

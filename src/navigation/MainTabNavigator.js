@@ -132,9 +132,11 @@ function CustomHeader({ title }) {
             <Ionicons name="camera-outline" size={24} color={colors.headerText} />
           </TouchableOpacity>
         )}
-        <TouchableOpacity onPress={() => navigation.navigate('Search')}>
-          <Ionicons name="search-outline" size={24} color={colors.headerText} />
-        </TouchableOpacity>
+        {title !== 'Chats' && (
+          <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+            <Ionicons name="search-outline" size={24} color={colors.headerText} />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity onPress={handleMorePress}>
           <Ionicons name="ellipsis-vertical" size={24} color={colors.headerText} />
         </TouchableOpacity>
@@ -162,9 +164,9 @@ export default function MainTabNavigator() {
           backgroundColor: colors.background,
           borderTopWidth: 0.5,
           borderTopColor: colors.border || '#E5E5EA',
-          height: Platform.OS === 'ios' ? 84 : 60,
-          paddingBottom: Platform.OS === 'ios' ? 34 : 8,
-          paddingTop: 6,
+          height: Platform.OS === 'ios' ? 84 : 65,
+          paddingBottom: Platform.OS === 'ios' ? 34 : 12,
+          paddingTop: 8,
           elevation: 8,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
