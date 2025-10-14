@@ -8,7 +8,7 @@ const DEFAULT_WALLPAPERS = [
   { id: '2', name: 'Default Dark', uri: null, color: '#0B141A' },
   { id: '3', name: 'WhatsApp Pattern (Auto)', uri: 'whatsapp-auto', color: '#EFEAE2', isPattern: true, theme: 'auto' },
   { id: '4', name: 'WhatsApp Pattern (Light)', uri: require('../../assets/images/whatsapp-bg-light-official.png'), color: '#EFEAE2', isPattern: true, theme: 'light' },
-  { id: '5', name: 'WhatsApp Pattern (Dark)', uri: require('../../assets/images/whatsapp-bg-dark.png'), color: '#0B141A', isPattern: true, theme: 'dark' },
+  { id: '5', name: 'Dark (Solid)', uri: null, color: '#0B141A', isPattern: false, theme: 'dark' },
   { id: '6', name: 'WhatsApp Green', uri: null, color: '#075E54' },
   { id: '7', name: 'Ocean Blue', uri: null, color: '#1A5F7A' },
   { id: '8', name: 'Sunset Orange', uri: null, color: '#FF6B35' },

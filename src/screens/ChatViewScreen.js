@@ -44,11 +44,9 @@ export default function ChatViewScreen({ route, navigation }) {
   // Determine background based on wallpaper settings
   const getBackgroundImage = () => {
     if (wallpaper.isPattern) {
-      // For WhatsApp pattern wallpapers, adapt to theme
+      // For WhatsApp auto pattern, use light pattern (color adapts via getBackgroundColor)
       if (wallpaper.uri === 'whatsapp-auto' || wallpaper.theme === 'auto') {
-        return isDark 
-          ? require('../../assets/images/whatsapp-bg-dark.png')
-          : require('../../assets/images/whatsapp-bg-light-official.png');
+        return require('../../assets/images/whatsapp-bg-light-official.png');
       }
       return wallpaper.uri;
     }

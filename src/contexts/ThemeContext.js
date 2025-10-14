@@ -57,6 +57,7 @@ const colorSchemes = {
     link: '#027EB5',
     statusBar: 'light-content',
     cardBackground: '#FFFFFF',
+    modalBackground: '#FFFFFF',
     shadowColor: '#000000',
   },
 
@@ -111,6 +112,7 @@ const colorSchemes = {
     link: '#53BDEB',
     statusBar: 'light-content',
     cardBackground: '#1F2C34',
+    modalBackground: '#202C33',
     shadowColor: '#000000',
   },
 };
