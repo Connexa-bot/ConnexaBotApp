@@ -128,11 +128,11 @@ export default function BroadcastCreateScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.header }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.headerText} />
-        </TouchableOpacity>
         {!isSearchExpanded ? (
           <>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color={colors.headerText} />
+            </TouchableOpacity>
             <View style={styles.headerCenter}>
               <Text style={[styles.headerTitle, { color: colors.headerText }]}>New broadcast</Text>
               <Text style={[styles.headerSubtitle, { color: colors.headerText, opacity: 0.7 }]}>

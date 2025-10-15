@@ -33,68 +33,8 @@ export default function ChatsScreen() {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
-  const handleCameraPress = async () => {
-    const ImagePicker = require('expo-image-picker');
-
-    // Request permissions
-    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-    const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (cameraPermission.status !== 'granted' || mediaPermission.status !== 'granted') {
-      Alert.alert('Permission Required', 'Camera and media library access is needed');
-      return;
-    }
-
-    // Show action sheet to choose camera or gallery
-    if (Platform.OS === 'ios') {
-      const { ActionSheetIOS } = require('react-native');
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Take Photo', 'Choose from Gallery', 'Cancel'],
-          cancelButtonIndex: 2,
-        },
-        async (buttonIndex) => {
-          if (buttonIndex === 0) {
-            const result = await ImagePicker.launchCameraAsync({
-              mediaTypes: ImagePicker.MediaTypeOptions.All,
-              allowsEditing: true,
-              quality: 1,
-            });
-            if (!result.canceled) {
-              navigation.navigate('StatusPost', {
-                mediaUri: result.assets[0].uri,
-                mediaType: result.assets[0].type || 'image',
-              });
-            }
-          } else if (buttonIndex === 1) {
-            const result = await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: ImagePicker.MediaTypeOptions.All,
-              allowsEditing: true,
-              quality: 1,
-            });
-            if (!result.canceled) {
-              navigation.navigate('StatusPost', {
-                mediaUri: result.assets[0].uri,
-                mediaType: result.assets[0].type || 'image',
-              });
-            }
-          }
-        }
-      );
-    } else {
-      // Android - directly launch camera
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsEditing: true,
-        quality: 1,
-      });
-      if (!result.canceled) {
-        navigation.navigate('StatusPost', {
-          mediaUri: result.assets[0].uri,
-          mediaType: result.assets[0].type || 'image',
-        });
-      }
-    }
+  const handleCameraPress = () => {
+    navigation.navigate('Camera');
   };
 
   useEffect(() => {
@@ -208,7 +148,7 @@ export default function ChatsScreen() {
                 ]}
                 numberOfLines={1}
               >
-                {typeof item.lastMessage === 'object' ? item.lastMessage?.text || '' : item.lastMessage || ''}
+                {item.lastMessage ? (typeof item.lastMessage === 'object' ? (item.lastMessage.text || 'Tap to chat') : item.lastMessage) : 'Tap to chat'}
               </Text>
             </View>
 

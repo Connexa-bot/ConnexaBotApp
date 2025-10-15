@@ -14,6 +14,7 @@ import ChatSettingsScreen from '../screens/ChatSettingsScreen';
 import TermsPrivacyScreen from '../screens/TermsPrivacyScreen';
 import StatusPostScreen from '../screens/StatusPostScreen';
 import SearchScreen from '../screens/SearchScreen';
+import CameraScreen from '../screens/CameraScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -100,6 +101,7 @@ export default function AppNavigator() {
           presentation: 'modal',
         }}
       />
+      <Stack.Screen name="Camera" component={CameraScreen} />
       <Stack.Screen
         name="Search"
         component={SearchScreen}
