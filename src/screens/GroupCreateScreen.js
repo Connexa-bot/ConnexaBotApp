@@ -9,6 +9,7 @@ import {
   TextInput,
   Alert,
   Image,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -35,8 +36,8 @@ export default function GroupCreateScreen() {
       const response = await callAPI(API_ENDPOINTS.GET_CONTACTS(user.phone));
       const allContacts = response.contacts || [];
       setContacts(allContacts);
-      // Get first 3 as frequent contacts
-      setFrequentContacts(allContacts.slice(0, 3));
+      // Get first 3 as frequent contacts with unique IDs
+      setFrequentContacts(allContacts.slice(0, 3).map(c => ({...c, _frequent: true})));
     } catch (error) {
       console.error('Error loading contacts:', error);
     }
@@ -63,8 +64,33 @@ export default function GroupCreateScreen() {
     ? contacts.filter(c => c.name?.toLowerCase().includes(searchQuery.toLowerCase()))
     : contacts;
 
+  const removeSelectedContact = (contactToRemove) => {
+    setSelectedContacts(prev => prev.filter(c => c.id !== contactToRemove.id));
+  };
+
+  const renderSelectedContact = (contact) => (
+    <View key={contact.id} style={styles.selectedContactItem}>
+      <View style={[styles.selectedAvatar, { backgroundColor: colors.primary }]}>
+        {contact.profilePic ? (
+          <Image source={{ uri: contact.profilePic }} style={styles.selectedAvatarImage} />
+        ) : (
+          <Text style={styles.selectedAvatarText}>{contact.name?.charAt(0).toUpperCase()}</Text>
+        )}
+        <TouchableOpacity 
+          style={styles.removeButton}
+          onPress={() => removeSelectedContact(contact)}
+        >
+          <Ionicons name="close-circle" size={20} color="#8696A0" />
+        </TouchableOpacity>
+      </View>
+      <Text style={[styles.selectedContactName, { color: colors.text }]} numberOfLines={1}>
+        {contact.name}
+      </Text>
+    </View>
+  );
+
   const renderContact = ({ item }) => {
-    const isSelected = selectedContacts.find(c => c.id === item.id);
+    const isSelected = selectedContacts.some(c => c.id === item.id);
     return (
       <TouchableOpacity
         style={[styles.contactItem, { backgroundColor: colors.background }]}
@@ -93,24 +119,70 @@ export default function GroupCreateScreen() {
     );
   };
 
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.header }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.headerText} />
         </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={[styles.headerTitle, { color: colors.headerText }]}>Add members</Text>
-          <Text style={[styles.headerSubtitle, { color: colors.headerText, opacity: 0.7 }]}>
-            {selectedContacts.length} of {contacts.length} selected
-          </Text>
-        </View>
-        <TouchableOpacity style={styles.searchButton}>
-          <Ionicons name="search" size={24} color={colors.headerText} />
-        </TouchableOpacity>
+        {!isSearchExpanded ? (
+          <>
+            <View style={styles.headerCenter}>
+              <Text style={[styles.headerTitle, { color: colors.headerText }]}>Add members</Text>
+              <Text style={[styles.headerSubtitle, { color: colors.headerText, opacity: 0.7 }]}>
+                {selectedContacts.length} of {contacts.length} selected
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.searchButton}
+              onPress={() => setIsSearchExpanded(true)}
+            >
+              <Ionicons name="search" size={24} color={colors.headerText} />
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity 
+              onPress={() => {
+                setIsSearchExpanded(false);
+                setSearchQuery('');
+              }}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.headerText} />
+            </TouchableOpacity>
+            <TextInput
+              style={[styles.searchInput, { color: colors.headerText }]}
+              placeholder="Search..."
+              placeholderTextColor={`${colors.headerText}80`}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close" size={24} color={colors.headerText} />
+              </TouchableOpacity>
+            )}
+          </>
+        )}
       </View>
 
-      {frequentContacts.length > 0 && (
+      {selectedContacts.length > 0 && (
+        <View style={[styles.selectedContactsRow, { borderBottomColor: colors.border }]}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.selectedContactsContent}
+          >
+            {selectedContacts.map(renderSelectedContact)}
+          </ScrollView>
+        </View>
+      )}
+
+      {frequentContacts.length > 0 && !searchQuery && (
         <>
           <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>
             Frequently contacted
@@ -160,6 +232,52 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 20, fontWeight: '500' },
   headerSubtitle: { fontSize: 14, marginTop: 2 },
   searchButton: { padding: 8 },
+  searchInput: {
+    flex: 1,
+    fontSize: 18,
+    marginHorizontal: 8,
+  },
+  selectedContactsRow: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  selectedContactsContent: {
+    paddingHorizontal: 16,
+  },
+  selectedContactItem: {
+    alignItems: 'center',
+    marginRight: 16,
+    width: 70,
+  },
+  selectedAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  selectedAvatarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  selectedAvatarText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+  },
+  selectedContactName: {
+    fontSize: 12,
+    textAlign: 'center',
+  },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
