@@ -43,7 +43,7 @@ export default function MainTabNavigator() {
           if (route.name === 'Chats') {
             iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           } else if (route.name === 'Updates') {
-            iconName = focused ? 'radio-button-on' : 'radio-button-off';
+            iconName = focused ? 'radio' : 'ellipse-outline';
           } else if (route.name === 'Communities') {
             iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'Calls') {
