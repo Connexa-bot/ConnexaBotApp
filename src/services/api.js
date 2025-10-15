@@ -3,9 +3,9 @@
 // Complete API endpoints organized by sections
 // ================================================================
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 
+const API_BASE_URL = process.env.REACT_APP_API_URL ||
                      process.env.VITE_API_URL ||
-                     process.env.SERVER_URL || 
+                     process.env.SERVER_URL ||
                      (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null) ||
                      'http://localhost:3000';
 
@@ -753,137 +753,6 @@ export const callAPI = async (endpoint) => {
     console.error('API call failed:', error);
     throw error;
   }
-};
-
-// ================================================================
-// BACKWARDS COMPATIBILITY - Legacy API_ENDPOINTS mapping
-// ================================================================
-export const API_ENDPOINTS = {
-  // Health & Connection
-  HEALTH: HealthEndpoints.serverHealth,
-  API_HEALTH: HealthEndpoints.apiHealth,
-  OPENAI_STATUS: HealthEndpoints.openaiStatus,
-  CONNECT: HealthEndpoints.connect,
-  GET_STATUS: HealthEndpoints.status,
-  LOGOUT: HealthEndpoints.logout,
-  CLEAR_STATE: HealthEndpoints.clearState,
-  
-  // Chats
-  GET_CHATS: ChatEndpoints.getAll,
-  GET_CHAT_BY_ID: ChatEndpoints.getById,
-  GET_ARCHIVED_CHATS: ChatEndpoints.getArchived,
-  SEARCH_CHATS: ChatEndpoints.search,
-  ARCHIVE_CHAT: ChatEndpoints.archive,
-  PIN_CHAT: ChatEndpoints.pin,
-  MUTE_CHAT: ChatEndpoints.mute,
-  MARK_CHAT_READ: ChatEndpoints.markRead,
-  MARK_CHAT_UNREAD: ChatEndpoints.markUnread,
-  DELETE_CHAT: ChatEndpoints.delete,
-  CLEAR_CHAT: ChatEndpoints.clear,
-  
-  // Contacts
-  GET_CONTACTS: ContactEndpoints.getAll,
-  GET_CONTACT: ContactEndpoints.get,
-  GET_CONTACT_PICTURE: ContactEndpoints.getPicture,
-  GET_CONTACT_STATUS: ContactEndpoints.getStatus,
-  CHECK_CONTACT_EXISTS: ContactEndpoints.checkExists,
-  BLOCK_CONTACT: ContactEndpoints.block,
-  UNBLOCK_CONTACT: ContactEndpoints.unblock,
-  GET_BUSINESS_PROFILE: ContactEndpoints.getBusinessProfile,
-  
-  // Messages
-  GET_MESSAGES: MessageEndpoints.get,
-  SEND_MESSAGE: MessageEndpoints.send,
-  REPLY_MESSAGE: MessageEndpoints.reply,
-  SEND_IMAGE: MessageEndpoints.sendImage,
-  SEND_VIDEO: MessageEndpoints.sendVideo,
-  SEND_AUDIO: MessageEndpoints.sendAudio,
-  SEND_DOCUMENT: MessageEndpoints.sendDocument,
-  SEND_LOCATION: MessageEndpoints.sendLocation,
-  SEND_CONTACT: MessageEndpoints.sendContact,
-  SEND_POLL: MessageEndpoints.sendPoll,
-  SEND_LIST: MessageEndpoints.sendList,
-  SEND_BROADCAST: MessageEndpoints.sendBroadcast,
-  DOWNLOAD_MEDIA: MessageEndpoints.downloadMedia,
-  DELETE_MESSAGE: MessageEndpoints.delete,
-  FORWARD_MESSAGE: MessageEndpoints.forward,
-  REACT_MESSAGE: MessageEndpoints.react,
-  EDIT_MESSAGE: MessageEndpoints.edit,
-  STAR_MESSAGE: MessageEndpoints.star,
-  GET_STARRED_MESSAGES: MessageEndpoints.getStarred,
-  
-  // Status
-  GET_STATUS_UPDATES: StatusEndpoints.getAll,
-  POST_TEXT_STATUS: StatusEndpoints.postText,
-  POST_IMAGE_STATUS: StatusEndpoints.postImage,
-  POST_VIDEO_STATUS: StatusEndpoints.postVideo,
-  DELETE_STATUS: StatusEndpoints.delete,
-  VIEW_STATUS: StatusEndpoints.view,
-  GET_STATUS_PRIVACY: StatusEndpoints.getPrivacy,
-  
-  // Groups
-  GET_GROUPS: GroupEndpoints.getAll,
-  GET_GROUP_METADATA: GroupEndpoints.getMetadata,
-  CREATE_GROUP: GroupEndpoints.create,
-  GET_GROUP_INVITE_CODE: GroupEndpoints.getInviteCode,
-  JOIN_GROUP_VIA_INVITE: GroupEndpoints.joinViaInvite,
-  LEAVE_GROUP: GroupEndpoints.leave,
-  UPDATE_GROUP_SUBJECT: GroupEndpoints.updateSubject,
-  UPDATE_GROUP_DESCRIPTION: GroupEndpoints.updateDescription,
-  ADD_GROUP_PARTICIPANTS: GroupEndpoints.addParticipants,
-  REMOVE_GROUP_PARTICIPANTS: GroupEndpoints.removeParticipants,
-  PROMOTE_GROUP_PARTICIPANTS: GroupEndpoints.promoteParticipants,
-  DEMOTE_GROUP_PARTICIPANTS: GroupEndpoints.demoteParticipants,
-  UPDATE_GROUP_PICTURE: GroupEndpoints.updatePicture,
-  TOGGLE_GROUP_ANNOUNCEMENT: GroupEndpoints.toggleAnnouncement,
-  
-  // Channels
-  GET_CHANNELS: ChannelEndpoints.getAll,
-  GET_CHANNEL_INFO: ChannelEndpoints.getInfo,
-  FOLLOW_CHANNEL: ChannelEndpoints.follow,
-  UNFOLLOW_CHANNEL: ChannelEndpoints.unfollow,
-  MUTE_CHANNEL: ChannelEndpoints.mute,
-  GET_COMMUNITIES: ChannelEndpoints.getCommunities,
-  
-  // Calls
-  GET_CALLS: CallEndpoints.getHistory,
-  
-  // Presence
-  UPDATE_PRESENCE: PresenceEndpoints.update,
-  SUBSCRIBE_PRESENCE: PresenceEndpoints.subscribe,
-  
-  // Profile
-  GET_PROFILE: ProfileEndpoints.get,
-  UPDATE_PROFILE_NAME: ProfileEndpoints.updateName,
-  UPDATE_PROFILE_STATUS: ProfileEndpoints.updateStatus,
-  UPDATE_PROFILE_PICTURE: ProfileEndpoints.updatePicture,
-  REMOVE_PROFILE_PICTURE: ProfileEndpoints.removePicture,
-  
-  // AI
-  AI_SMART_REPLY: AIEndpoints.smartReply,
-  AI_AUTO_REPLY: AIEndpoints.generate,
-  AI_GENERATE: AIEndpoints.generate,
-  AI_SENTIMENT: AIEndpoints.sentiment,
-  AI_ANALYZE_IMAGE: AIEndpoints.generate,
-  AI_TRANSCRIBE: AIEndpoints.generate,
-  AI_SUMMARIZE: AIEndpoints.generate,
-  AI_TRANSLATE: AIEndpoints.translate,
-  AI_COMPOSE: AIEndpoints.compose,
-  AI_IMPROVE: AIEndpoints.improve,
-  AI_MODERATE: AIEndpoints.moderate,
-  AI_BATCH_ANALYZE: AIEndpoints.batchAnalyze,
-  AI_GET_HISTORY: AIEndpoints.getHistory,
-  AI_CLEAR_HISTORY: AIEndpoints.clearHistory,
-  
-  // Privacy
-  GET_PRIVACY_SETTINGS: PrivacyEndpoints.getSettings,
-  UPDATE_PRIVACY_SETTINGS: PrivacyEndpoints.updateSettings,
-  GET_BLOCKED_USERS: PrivacyEndpoints.getBlocked,
-  SET_DISAPPEARING_MESSAGES: PrivacyEndpoints.setDisappearingMessages,
-  
-  // Devices
-  GET_LINKED_DEVICES: DeviceEndpoints.getLinked,
-  UNLINK_DEVICE: DeviceEndpoints.unlink,
 };
 
 // ================================================================
