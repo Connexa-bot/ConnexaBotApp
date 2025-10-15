@@ -11,17 +11,15 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { callAPI, API_ENDPOINTS } from '../services/api';
 
-export default function GroupCreateScreen() {
+export default function BroadcastCreateScreen() {
   const [contacts, setContacts] = useState([]);
   const [selectedContacts, setSelectedContacts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [frequentContacts, setFrequentContacts] = useState([]);
   const navigation = useNavigation();
   const { user } = useAuth();
   const { colors } = useTheme();
@@ -33,10 +31,7 @@ export default function GroupCreateScreen() {
   const loadContacts = async () => {
     try {
       const response = await callAPI(API_ENDPOINTS.GET_CONTACTS(user.phone));
-      const allContacts = response.contacts || [];
-      setContacts(allContacts);
-      // Get first 3 as frequent contacts
-      setFrequentContacts(allContacts.slice(0, 3));
+      setContacts(response.contacts || []);
     } catch (error) {
       console.error('Error loading contacts:', error);
     }
@@ -50,13 +45,20 @@ export default function GroupCreateScreen() {
     );
   };
 
-  const proceedToGroupInfo = () => {
+  const createBroadcast = async () => {
     if (selectedContacts.length === 0) {
-      Alert.alert('Error', 'Please select at least one participant');
+      Alert.alert('Error', 'Please select at least one contact');
       return;
     }
-    // Navigate to group info screen (subject, icon)
-    navigation.navigate('GroupInfo', { selectedContacts });
+
+    try {
+      const participants = selectedContacts.map(c => c.id);
+      await callAPI(API_ENDPOINTS.CREATE_BROADCAST(user.phone, participants));
+      Alert.alert('Success', 'Broadcast list created successfully');
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to create broadcast list');
+    }
   };
 
   const filteredContacts = searchQuery.trim()
@@ -70,24 +72,26 @@ export default function GroupCreateScreen() {
         style={[styles.contactItem, { backgroundColor: colors.background }]}
         onPress={() => toggleContact(item)}
       >
+        <View style={styles.contactLeft}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+            {item.profilePic ? (
+              <Image source={{ uri: item.profilePic }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{item.name?.charAt(0).toUpperCase()}</Text>
+            )}
+          </View>
+          <View style={styles.contactInfo}>
+            <Text style={[styles.contactName, { color: colors.text }]}>{item.name}</Text>
+            <Text style={[styles.contactStatus, { color: colors.secondaryText }]}>
+              {item.status || 'Available'}
+            </Text>
+          </View>
+        </View>
         <View style={[
           styles.checkbox,
           isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
         ]}>
           {isSelected && <Ionicons name="checkmark" size={18} color="#fff" />}
-        </View>
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-          {item.profilePic ? (
-            <Image source={{ uri: item.profilePic }} style={styles.avatarImage} />
-          ) : (
-            <Text style={styles.avatarText}>{item.name?.charAt(0).toUpperCase()}</Text>
-          )}
-        </View>
-        <View style={styles.contactInfo}>
-          <Text style={[styles.contactName, { color: colors.text }]}>{item.name}</Text>
-          <Text style={[styles.contactStatus, { color: colors.secondaryText }]}>
-            {item.status || 'Hey there! I am using WhatsApp.'}
-          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -100,7 +104,7 @@ export default function GroupCreateScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.headerText} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={[styles.headerTitle, { color: colors.headerText }]}>Add members</Text>
+          <Text style={[styles.headerTitle, { color: colors.headerText }]}>New broadcast</Text>
           <Text style={[styles.headerSubtitle, { color: colors.headerText, opacity: 0.7 }]}>
             {selectedContacts.length} of {contacts.length} selected
           </Text>
@@ -110,18 +114,11 @@ export default function GroupCreateScreen() {
         </TouchableOpacity>
       </View>
 
-      {frequentContacts.length > 0 && (
-        <>
-          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>
-            Frequently contacted
-          </Text>
-          <FlatList
-            data={frequentContacts}
-            renderItem={renderContact}
-            keyExtractor={(item) => `frequent-${item.id}`}
-          />
-        </>
-      )}
+      <View style={[styles.infoBox, { backgroundColor: colors.secondaryBackground }]}>
+        <Text style={[styles.infoText, { color: colors.secondaryText }]}>
+          Only contacts with +{user?.phone?.substring(0, 3)} {user?.phone?.substring(3, 6)} {user?.phone?.substring(6, 9)} {user?.phone?.substring(9)} in their address book will receive your broadcast messages.
+        </Text>
+      </View>
 
       <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>
         Contacts on WhatsApp
@@ -137,9 +134,9 @@ export default function GroupCreateScreen() {
       {selectedContacts.length > 0 && (
         <TouchableOpacity
           style={[styles.fab, { backgroundColor: colors.primary }]}
-          onPress={proceedToGroupInfo}
+          onPress={createBroadcast}
         >
-          <Ionicons name="arrow-forward" size={28} color="#FFFFFF" />
+          <Ionicons name="checkmark" size={28} color="#FFFFFF" />
         </TouchableOpacity>
       )}
     </View>
@@ -160,6 +157,14 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 20, fontWeight: '500' },
   headerSubtitle: { fontSize: 14, marginTop: 2 },
   searchButton: { padding: 8 },
+  infoBox: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 8,
+  },
+  infoText: { fontSize: 14, lineHeight: 20 },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
@@ -169,18 +174,14 @@ const styles = StyleSheet.create({
   contactItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#8696A0',
-    marginRight: 12,
-    justifyContent: 'center',
+  contactLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   avatar: {
     width: 48,
@@ -199,6 +200,15 @@ const styles = StyleSheet.create({
   contactInfo: { flex: 1 },
   contactName: { fontSize: 16, fontWeight: '500' },
   contactStatus: { fontSize: 14, marginTop: 2 },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#8696A0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   fab: {
     position: 'absolute',
     bottom: 24,

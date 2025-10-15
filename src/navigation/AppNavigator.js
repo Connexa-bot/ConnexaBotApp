@@ -8,6 +8,7 @@ import LinkDeviceScreen from '../screens/LinkDeviceScreen';
 import ContactsScreen from '../screens/ContactsScreen';
 import ContactProfileScreen from '../screens/ContactProfileScreen';
 import GroupCreateScreen from '../screens/GroupCreateScreen';
+import BroadcastCreateScreen from '../screens/BroadcastCreateScreen';
 import StarredMessagesScreen from '../screens/StarredMessagesScreen';
 import ChatSettingsScreen from '../screens/ChatSettingsScreen';
 import TermsPrivacyScreen from '../screens/TermsPrivacyScreen';
@@ -73,6 +74,11 @@ export default function AppNavigator() {
       <Stack.Screen
         name="GroupCreate"
         component={GroupCreateScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="BroadcastCreate"
+        component={BroadcastCreateScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

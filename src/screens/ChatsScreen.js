@@ -34,10 +34,57 @@ export default function ChatsScreen() {
   const insets = useSafeAreaInsets();
 
   const handleCameraPress = async () => {
-    const { status } = await require('expo-image-picker').requestCameraPermissionsAsync();
-    if (status === 'granted') {
-      const result = await require('expo-image-picker').launchCameraAsync({
-        mediaTypes: require('expo-image-picker').MediaTypeOptions.All,
+    const ImagePicker = require('expo-image-picker');
+    
+    // Request permissions
+    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+    const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (cameraPermission.status !== 'granted' || mediaPermission.status !== 'granted') {
+      Alert.alert('Permission Required', 'Camera and media library access is needed');
+      return;
+    }
+
+    // Show action sheet to choose camera or gallery
+    if (Platform.OS === 'ios') {
+      const { ActionSheetIOS } = require('react-native');
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Take Photo', 'Choose from Gallery', 'Cancel'],
+          cancelButtonIndex: 2,
+        },
+        async (buttonIndex) => {
+          if (buttonIndex === 0) {
+            const result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.All,
+              allowsEditing: true,
+              quality: 1,
+            });
+            if (!result.canceled) {
+              navigation.navigate('StatusPost', {
+                mediaUri: result.assets[0].uri,
+                mediaType: result.assets[0].type || 'image',
+              });
+            }
+          } else if (buttonIndex === 1) {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.All,
+              allowsEditing: true,
+              quality: 1,
+            });
+            if (!result.canceled) {
+              navigation.navigate('StatusPost', {
+                mediaUri: result.assets[0].uri,
+                mediaType: result.assets[0].type || 'image',
+              });
+            }
+          }
+        }
+      );
+    } else {
+      // Android - directly launch camera
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: true,
         quality: 1,
       });
@@ -200,7 +247,6 @@ export default function ChatsScreen() {
   const menuOptions = [
     { id: 'new_group', label: 'New group' },
     { id: 'new_broadcast', label: 'New broadcast' },
-    { id: 'linked_devices', label: 'Linked devices' },
     { id: 'starred', label: 'Starred messages' },
     { id: 'settings', label: 'Settings' },
   ];
@@ -218,10 +264,12 @@ export default function ChatsScreen() {
             const option = menuOptions[buttonIndex];
             if (option.id === 'settings') {
               navigation.navigate('Settings');
-            } else if (option.id === 'linked_devices') {
-              navigation.navigate('LinkDevice');
             } else if (option.id === 'starred') {
               navigation.navigate('StarredMessages');
+            } else if (option.id === 'new_group') {
+              navigation.navigate('GroupCreate');
+            } else if (option.id === 'new_broadcast') {
+              navigation.navigate('BroadcastCreate');
             }
           }
         }
@@ -235,10 +283,12 @@ export default function ChatsScreen() {
     setMenuVisible(false);
     if (optionId === 'settings') {
       navigation.navigate('Settings');
-    } else if (optionId === 'linked_devices') {
-      navigation.navigate('LinkDevice');
     } else if (optionId === 'starred') {
       navigation.navigate('StarredMessages');
+    } else if (optionId === 'new_group') {
+      navigation.navigate('GroupCreate');
+    } else if (optionId === 'new_broadcast') {
+      navigation.navigate('BroadcastCreate');
     }
   };
 
