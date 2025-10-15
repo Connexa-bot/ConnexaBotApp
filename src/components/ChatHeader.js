@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, Modal, TouchableWithoutFeedback, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,28 +24,49 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
 
     switch (option) {
       case 'report':
-        // Handle report
+        Alert.alert('Report', 'Report this contact to WhatsApp?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Report', style: 'destructive', onPress: () => console.log('Reported') }
+        ]);
         break;
       case 'block':
-        // Handle block
+        Alert.alert('Block Contact', 'Block this contact?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Block', style: 'destructive', onPress: () => console.log('Blocked') }
+        ]);
         break;
       case 'clear':
-        // Handle clear chat
+        Alert.alert('Clear Chat', 'Delete all messages in this chat?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Clear', style: 'destructive', onPress: () => console.log('Chat cleared') }
+        ]);
         break;
       case 'export':
-        // Handle export chat
+        Alert.alert('Export Chat', 'Export chat history?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Export', onPress: () => console.log('Chat exported') }
+        ]);
         break;
       case 'shortcut':
-        // Handle add shortcut
+        Alert.alert('Add Shortcut', 'Add shortcut to home screen?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Add', onPress: () => console.log('Shortcut added') }
+        ]);
         break;
       case 'list':
-        // Handle add to list
+        Alert.alert('Add to List', 'Create or add to a list', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Add', onPress: () => console.log('Added to list') }
+        ]);
         break;
       case 'more':
         setShowMoreMenu(true);
         break;
       case 'contacts':
-        // Handle add to contacts
+        Alert.alert('Add to Contacts', 'Add this person to your contacts?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Add', onPress: () => console.log('Added to contacts') }
+        ]);
         break;
       case 'search':
         navigation.navigate('Search');
@@ -54,13 +75,23 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
         navigation.navigate('GroupCreate');
         break;
       case 'media':
-        // Handle media, links, and docs
+        Alert.alert('Media, Links, and Docs', 'View media, links, and documents from this chat');
         break;
       case 'mute':
-        // Handle mute notifications
+        Alert.alert('Mute Notifications', 'Mute notifications for:', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: '8 hours', onPress: () => console.log('Muted for 8 hours') },
+          { text: '1 week', onPress: () => console.log('Muted for 1 week') },
+          { text: 'Always', onPress: () => console.log('Muted always') }
+        ]);
         break;
       case 'disappearing':
-        // Handle disappearing messages
+        Alert.alert('Disappearing Messages', 'Set messages to disappear after:', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: '24 hours', onPress: () => console.log('24 hours') },
+          { text: '7 days', onPress: () => console.log('7 days') },
+          { text: '90 days', onPress: () => console.log('90 days') }
+        ]);
         break;
       case 'theme':
         navigation.navigate('ChatSettings', { chat });

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   FlatList,
   KeyboardAvoidingView,
@@ -10,7 +11,10 @@ import {
   Alert,
   ImageBackground,
   ActionSheetIOS,
+  TouchableOpacity,
+  Image,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -406,6 +410,102 @@ export default function ChatViewScreen({ route, navigation }) {
     navigation.navigate('ChatSettings', { chat });
   };
 
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp * 1000);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+  };
+
+  const renderEmptyState = () => {
+    const isContact = chat.isContact !== false;
+    
+    return (
+      <View style={styles.emptyStateContainer}>
+        {/* Date */}
+        <View style={styles.dateContainer}>
+          <View style={[styles.dateBadge, { backgroundColor: isDark ? '#182229' : '#E1F4F3' }]}>
+            <Text style={[styles.dateText, { color: isDark ? '#8696A0' : '#54656F' }]}>
+              {formatDate(Date.now() / 1000)}
+            </Text>
+          </View>
+        </View>
+
+        {/* Encryption Message */}
+        <View style={[styles.encryptionBanner, { backgroundColor: isDark ? '#182229' : '#FFF4C4' }]}>
+          <Ionicons name="lock-closed" size={14} color={isDark ? '#8696A0' : '#54656F'} />
+          <Text style={[styles.encryptionText, { color: isDark ? '#8696A0' : '#54656F' }]}>
+            Messages and calls are end-to-end encrypted. Only people in this chat can read, listen to, or share them.{' '}
+            <Text style={{ color: '#00A884' }}>Learn more</Text>.
+          </Text>
+        </View>
+
+        {/* Contact Info */}
+        <View style={styles.contactInfoContainer}>
+          <View style={[styles.largeAvatar, { backgroundColor: colors.primary }]}>
+            {chat.profilePic ? (
+              <Image source={{ uri: chat.profilePic }} style={styles.largeAvatarImage} />
+            ) : (
+              <Text style={styles.largeAvatarText}>
+                {chat.name?.charAt(0).toUpperCase() || chat.id?.charAt(0).toUpperCase()}
+              </Text>
+            )}
+          </View>
+
+          <Text style={[styles.contactName, { color: colors.text }]}>{chat.name || chat.id}</Text>
+          
+          {chat.email && (
+            <Text style={[styles.contactEmail, { color: colors.secondaryText }]}>
+              ~ {chat.email}
+            </Text>
+          )}
+
+          {!isContact && (
+            <Text style={[styles.notContactText, { color: colors.secondaryText }]}>
+              Not a contact • No common groups
+            </Text>
+          )}
+
+          {/* Safety Tools */}
+          <TouchableOpacity style={styles.safetyToolsButton}>
+            <Ionicons name="shield-checkmark-outline" size={18} color="#00A884" />
+            <Text style={styles.safetyToolsText}>Safety tools</Text>
+          </TouchableOpacity>
+
+          {/* Action Buttons */}
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity style={styles.actionButton}>
+              <Ionicons name="close-circle-outline" size={24} color="#E53935" />
+              <Text style={[styles.actionButtonText, { color: '#E53935' }]}>Block</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionButton}>
+              <Ionicons name="person-add-outline" size={24} color="#00A884" />
+              <Text style={[styles.actionButtonText, { color: '#00A884' }]}>Add</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Disappearing Message Info */}
+        <View style={[styles.disappearingInfo, { backgroundColor: isDark ? '#182229' : '#E1F4F3' }]}>
+          <Ionicons name="timer-outline" size={16} color={isDark ? '#8696A0' : '#54656F'} />
+          <Text style={[styles.disappearingText, { color: isDark ? '#8696A0' : '#54656F' }]}>
+            You use a default timer for disappearing messages in new chats. New messages will disappear from this chat 90 days after they're sent, except when kept. Tap to set your own default timer
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
@@ -435,22 +535,28 @@ export default function ChatViewScreen({ route, navigation }) {
           }]}
           resizeMode="repeat"
         >
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            renderItem={({ item }) => (
-              <MessageBubble
-                message={item}
-                onLongPress={handleMessageLongPress}
-                onReact={handleReact}
-                isGroupChat={chat.isGroup || false}
-                isChannel={chat.isChannel || false}
-              />
-            )}
-            keyExtractor={(item, index) => item.id || index.toString()}
-            contentContainerStyle={styles.messagesList}
-            onContentSizeChange={scrollToBottom}
-          />
+          {messages.length === 0 ? (
+            <ScrollView contentContainerStyle={styles.emptyScrollContent}>
+              {renderEmptyState()}
+            </ScrollView>
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              renderItem={({ item }) => (
+                <MessageBubble
+                  message={item}
+                  onLongPress={handleMessageLongPress}
+                  onReact={handleReact}
+                  isGroupChat={chat.isGroup || false}
+                  isChannel={chat.isChannel || false}
+                />
+              )}
+              keyExtractor={(item, index) => item.id || index.toString()}
+              contentContainerStyle={styles.messagesList}
+              onContentSizeChange={scrollToBottom}
+            />
+          )}
         </ImageBackground>
 
         {showSuggestions && smartSuggestions.length > 0 && (
@@ -491,5 +597,120 @@ const styles = StyleSheet.create({
   },
   messagesList: {
     paddingVertical: 8,
+  },
+  emptyScrollContent: {
+    flexGrow: 1,
+  },
+  emptyStateContainer: {
+    paddingVertical: 16,
+  },
+  dateContainer: {
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  dateBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  dateText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  encryptionBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginHorizontal: 16,
+    marginVertical: 12,
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  encryptionText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  contactInfoContainer: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+  },
+  largeAvatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  largeAvatarImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  largeAvatarText: {
+    color: '#FFFFFF',
+    fontSize: 48,
+    fontWeight: '400',
+  },
+  contactName: {
+    fontSize: 22,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  contactEmail: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  notContactText: {
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  safetyToolsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginBottom: 20,
+    gap: 6,
+  },
+  safetyToolsText: {
+    color: '#00A884',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 32,
+  },
+  actionButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E9EDEF',
+    minWidth: 120,
+  },
+  actionButtonText: {
+    fontSize: 15,
+    fontWeight: '500',
+    marginTop: 4,
+  },
+  disappearingInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginHorizontal: 16,
+    marginTop: 20,
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  disappearingText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
   },
 });
