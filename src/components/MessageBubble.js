@@ -144,10 +144,11 @@ export default function MessageBubble({ message, onLongPress, onReact, isGroupCh
               name={
                 message.status === 'read' ? 'checkmark-done' :
                 message.status === 'delivered' ? 'checkmark-done' :
+                message.status === 'sent' ? 'checkmark' :
                 'checkmark'
               } 
               size={16} 
-              color={message.status === 'read' ? '#53BDEB' : '#8696A0'}
+              color={message.status === 'read' ? '#53BDEB' : message.status === 'delivered' ? '#8696A0' : '#8696A0'}
               style={styles.statusIcon}
             />
           )}

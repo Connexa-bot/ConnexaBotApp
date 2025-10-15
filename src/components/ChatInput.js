@@ -18,6 +18,8 @@ export default function ChatInput({ onSendMessage, onSendMedia, onVoiceRecord })
   const [recording, setRecording] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [showMediaOptions, setShowMediaOptions] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const recordingInterval = useRef(null);
   const { colors } = useTheme();
 
   const handleSend = () => {
@@ -103,6 +105,11 @@ export default function ChatInput({ onSendMessage, onSendMedia, onVoiceRecord })
 
       setRecording(recording);
       setIsRecording(true);
+      setRecordingDuration(0);
+      
+      recordingInterval.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
     } catch (error) {
       Alert.alert('Error', 'Failed to start recording');
     }
@@ -112,18 +119,29 @@ export default function ChatInput({ onSendMessage, onSendMedia, onVoiceRecord })
     if (!recording) return;
 
     try {
+      if (recordingInterval.current) {
+        clearInterval(recordingInterval.current);
+      }
+      
       setIsRecording(false);
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       
-      if (uri) {
+      if (uri && recordingDuration > 0) {
         onVoiceRecord?.(uri);
       }
       
       setRecording(null);
+      setRecordingDuration(0);
     } catch (error) {
       Alert.alert('Error', 'Failed to stop recording');
     }
+  };
+
+  const formatRecordingTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -147,6 +165,23 @@ export default function ChatInput({ onSendMessage, onSendMedia, onVoiceRecord })
               <Ionicons name="image" size={24} color="#fff" />
             </View>
           </TouchableOpacity>
+        </View>
+      )}
+
+      {isRecording && (
+        <View style={[styles.recordingOverlay, { backgroundColor: colors.inputBackground || '#1F2C34' }]}>
+          <TouchableOpacity onPress={stopRecording} style={styles.cancelRecording}>
+            <Ionicons name="close" size={24} color="#FF3B30" />
+          </TouchableOpacity>
+          <View style={styles.recordingInfo}>
+            <View style={styles.recordingDot} />
+            <Text style={[styles.recordingTime, { color: colors.text }]}>
+              {formatRecordingTime(recordingDuration)}
+            </Text>
+          </View>
+          <Text style={[styles.swipeText, { color: colors.secondaryText }]}>
+            ← Slide to cancel
+          </Text>
         </View>
       )}
 
@@ -187,11 +222,12 @@ export default function ChatInput({ onSendMessage, onSendMedia, onVoiceRecord })
           </TouchableOpacity>
         ) : (
           <TouchableOpacity 
-            style={[styles.sendButton, { backgroundColor: isRecording ? '#FF3B30' : colors.primary }]}
-            onPressIn={startRecording}
+            style={[styles.sendButton, { backgroundColor: colors.primary }]}
+            onLongPress={startRecording}
             onPressOut={stopRecording}
+            delayLongPress={200}
           >
-            <Ionicons name={isRecording ? "stop" : "mic"} size={24} color="#fff" />
+            <Ionicons name="mic" size={24} color="#fff" />
           </TouchableOpacity>
         )}
       </View>
@@ -211,6 +247,42 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
     marginBottom: 8,
+    gap: 12,
+  },
+  recordingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    zIndex: 10,
+  },
+  cancelRecording: {
+    padding: 8,
+  },
+  recordingInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 16,
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF3B30',
+    marginRight: 8,
+  },
+  recordingTime: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  swipeText: {
+    fontSize: 14,
+    marginRight: 16,
   },
   mediaButton: {
     marginRight: 20,

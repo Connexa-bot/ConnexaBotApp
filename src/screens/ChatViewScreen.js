@@ -426,6 +426,26 @@ export default function ChatViewScreen({ route, navigation }) {
     }
   };
 
+  const groupMessagesByDate = (messages) => {
+    const grouped = [];
+    let currentDate = null;
+
+    messages.forEach((message) => {
+      const messageDate = formatDate(message.timestamp);
+      
+      if (messageDate !== currentDate) {
+        grouped.push({ type: 'date', date: messageDate, id: `date-${message.timestamp}` });
+        currentDate = messageDate;
+      }
+      
+      grouped.push({ type: 'message', data: message, id: message.id });
+    });
+
+    return grouped;
+  };
+
+  const groupedMessages = groupMessagesByDate(messages);
+
   const renderEmptyState = () => {
     const isContact = chat.isContact !== false;
     
@@ -542,17 +562,30 @@ export default function ChatViewScreen({ route, navigation }) {
           ) : (
             <FlatList
               ref={flatListRef}
-              data={messages}
-              renderItem={({ item }) => (
-                <MessageBubble
-                  message={item}
-                  onLongPress={handleMessageLongPress}
-                  onReact={handleReact}
-                  isGroupChat={chat.isGroup || false}
-                  isChannel={chat.isChannel || false}
-                />
-              )}
-              keyExtractor={(item, index) => item.id || index.toString()}
+              data={groupedMessages}
+              renderItem={({ item }) => {
+                if (item.type === 'date') {
+                  return (
+                    <View style={styles.dateContainer}>
+                      <View style={[styles.dateBadge, { backgroundColor: isDark ? '#182229' : '#E1F4F3' }]}>
+                        <Text style={[styles.dateText, { color: isDark ? '#8696A0' : '#54656F' }]}>
+                          {item.date}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                }
+                return (
+                  <MessageBubble
+                    message={item.data}
+                    onLongPress={handleMessageLongPress}
+                    onReact={handleReact}
+                    isGroupChat={chat.isGroup || false}
+                    isChannel={chat.isChannel || false}
+                  />
+                );
+              }}
+              keyExtractor={(item) => item.id}
               contentContainerStyle={styles.messagesList}
               onContentSizeChange={scrollToBottom}
             />
