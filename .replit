@@ -34,10 +34,10 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 43081
+localPort = 40615
 externalPort = 3000
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["npx", "expo", "start", "--web", "--port", "5000", "--no-dev"]
-build = ["yarn", "install"]
+run = ["npx", "serve", "dist", "-l", "5000"]
+build = ["npx", "expo", "export", "--platform", "web"]

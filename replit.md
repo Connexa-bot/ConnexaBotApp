@@ -10,6 +10,18 @@ The app connects to a hosted backend WhatsApp service and provides native experi
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### October 15, 2025 - Replit Environment Setup
+- Configured Expo web server to run on port 5000 with proper Replit proxy support
+- Fixed package.json web script: removed invalid `--host 0.0.0.0` flag (Expo uses EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0 for binding)
+- Installed all project dependencies including `serve` package for production static file serving
+- Configured deployment for Replit autoscale:
+  - Build: `npx expo export --platform web` (creates static web bundle in dist/)
+  - Run: `npx serve dist -l 5000` (serves static files on port 5000)
+- Verified app loads successfully with splash screen and no critical errors
+- API configuration already supports REPLIT_DEV_DOMAIN environment variable for dynamic backend URL resolution
+
 ## System Architecture
 
 ### Frontend Architecture
