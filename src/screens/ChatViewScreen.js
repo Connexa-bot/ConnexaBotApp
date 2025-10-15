@@ -11,8 +11,10 @@ import {
   ImageBackground,
   ActionSheetIOS,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import useNavigationBar from '../hooks/useNavigationBar';
 import { useAI } from '../contexts/AIContext';
 import { useWallpaper } from '../contexts/WallpaperContext';
 import { callAPI, API_ENDPOINTS } from '../services/api';
@@ -35,6 +37,9 @@ export default function ChatViewScreen({ route, navigation }) {
   const pollInterval = useRef(null);
   const lastProcessedMessageId = useRef(null);
   const isInitialLoad = useRef(true);
+
+  useNavigationBar();
+  const insets = useSafeAreaInsets();
 
   const aiSettings = getChatSettings(chat.id);
 
@@ -419,7 +424,7 @@ export default function ChatViewScreen({ route, navigation }) {
       />
 
       <KeyboardAvoidingView
-        style={styles.flex}
+        style={[styles.flex, { paddingBottom: insets.bottom }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
