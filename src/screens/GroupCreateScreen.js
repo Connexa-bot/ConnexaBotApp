@@ -178,7 +178,11 @@ export default function GroupCreateScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.selectedContactsContent}
           >
-            {selectedContacts.map(renderSelectedContact)}
+            {selectedContacts.map((contact) => (
+              <View key={contact.id}>
+                {renderSelectedContact(contact)}
+              </View>
+            ))}
           </ScrollView>
         </View>
       )}

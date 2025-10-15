@@ -8,24 +8,23 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { Camera } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function CameraScreen() {
-  const [hasPermission, setHasPermission] = useState(null);
-  const [type, setType] = useState('back'); // Changed to string
-  const [flash, setFlash] = useState('off'); // Changed to string
+  const [permission, requestPermission] = useCameraPermissions();
+  const [facing, setFacing] = useState('back');
+  const [flash, setFlash] = useState('off');
   const [mode, setMode] = useState('photo');
   const cameraRef = useRef(null);
   const navigation = useNavigation();
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
+    if (!permission) {
+      requestPermission();
+    }
   }, []);
 
   const takePicture = async () => {
@@ -73,19 +72,22 @@ export default function CameraScreen() {
   };
 
   const toggleCameraType = () => {
-    setType(current =>
+    setFacing(current =>
       current === 'back' ? 'front' : 'back'
     );
   };
 
-  if (hasPermission === null) {
+  if (!permission) {
     return <View style={styles.container} />;
   }
 
-  if (hasPermission === false) {
+  if (!permission.granted) {
     return (
       <View style={styles.container}>
         <Text style={styles.permissionText}>No access to camera</Text>
+        <TouchableOpacity onPress={requestPermission}>
+          <Text style={styles.permissionText}>Grant Permission</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -94,11 +96,11 @@ export default function CameraScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
 
-      <Camera
+      <CameraView
         ref={cameraRef}
         style={styles.camera}
-        facing={type} // Changed from type to facing
-        flash={flash} // Changed from flashMode to flash
+        facing={facing}
+        enableTorch={flash === 'on'}
       >
         {/* Top Bar */}
         <View style={styles.topBar}>
@@ -145,7 +147,7 @@ export default function CameraScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-      </Camera>
+      </CameraView>
     </View>
   );
 }

@@ -183,7 +183,11 @@ export default function BroadcastCreateScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.selectedContactsContent}
           >
-            {selectedContacts.map(renderSelectedContact)}
+            {selectedContacts.map((contact) => (
+              <View key={contact.id}>
+                {renderSelectedContact(contact)}
+              </View>
+            ))}
           </ScrollView>
         </View>
       )}
