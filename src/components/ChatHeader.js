@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, ActionSheetIOS } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, Modal, TouchableWithoutFeedback } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,55 +11,137 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
-  const handleMorePress = () => {
-    const options = [
-      'View contact',
-      'Media, links, and docs',
-      'Search',
-      'Mute notifications',
-      'Disappearing messages',
-      'Wallpaper',
-      'More',
-      'Cancel'
-    ];
+  const [showMenu, setShowMenu] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options,
-          cancelButtonIndex: options.length - 1,
-        },
-        (buttonIndex) => {
-          switch (buttonIndex) {
-            case 0:
-              navigation.navigate('ChatSettings', { chat });
-              break;
-            case 1:
-              // Media gallery
-              break;
-            case 2:
-              navigation.navigate('Search');
-              break;
-            case 3:
-              // Mute
-              break;
-            case 4:
-              // Disappearing messages
-              break;
-            case 5:
-              // Wallpaper
-              break;
-            case 6:
-              navigation.navigate('ChatSettings', { chat });
-              break;
-          }
-        }
-      );
-    } else {
-      // Android - navigate directly to settings
-      navigation.navigate('ChatSettings', { chat });
+  const handleMorePress = () => {
+    setShowMenu(true);
+  };
+
+  const handleMenuOptionPress = (option) => {
+    setShowMenu(false);
+    setShowMoreMenu(false);
+
+    switch (option) {
+      case 'report':
+        // Handle report
+        break;
+      case 'block':
+        // Handle block
+        break;
+      case 'clear':
+        // Handle clear chat
+        break;
+      case 'export':
+        // Handle export chat
+        break;
+      case 'shortcut':
+        // Handle add shortcut
+        break;
+      case 'list':
+        // Handle add to list
+        break;
+      case 'more':
+        setShowMoreMenu(true);
+        break;
+      case 'contacts':
+        // Handle add to contacts
+        break;
+      case 'search':
+        navigation.navigate('Search');
+        break;
+      case 'group':
+        navigation.navigate('GroupCreate');
+        break;
+      case 'media':
+        // Handle media, links, and docs
+        break;
+      case 'mute':
+        // Handle mute notifications
+        break;
+      case 'disappearing':
+        // Handle disappearing messages
+        break;
+      case 'theme':
+        navigation.navigate('ChatSettings', { chat });
+        break;
     }
   };
+
+  const renderMenu = () => (
+    <Modal
+      visible={showMenu}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setShowMenu(false)}
+    >
+      <TouchableWithoutFeedback onPress={() => setShowMenu(false)}>
+        <View style={styles.menuOverlay}>
+          <View style={[styles.menuContainer, { backgroundColor: colors.modalBackground, top: insets.top + 60, right: 8 }]}>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('report')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Report</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('block')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Block</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('clear')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Clear chat</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('export')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Export chat</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('shortcut')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Add shortcut</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('list')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Add to list</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOptionPress('more')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>More</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+
+  const renderMoreMenu = () => (
+    <Modal
+      visible={showMoreMenu}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setShowMoreMenu(false)}
+    >
+      <TouchableWithoutFeedback onPress={() => setShowMoreMenu(false)}>
+        <View style={styles.menuOverlay}>
+          <View style={[styles.menuContainer, { backgroundColor: colors.modalBackground, top: insets.top + 60, right: 8 }]}>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('contacts')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Add to contacts</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('search')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Search</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('group')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>New group</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('media')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Media, links, and docs</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('mute')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Mute notifications</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.divider }]} onPress={() => handleMenuOptionPress('disappearing')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Disappearing messages</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOptionPress('theme')}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Chat theme</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
 
   return (
     <View style={[
@@ -69,6 +151,8 @@ export default function ChatHeader({ chat, onVideoCall, onVoiceCall, onMore, onS
         paddingTop: insets.top,
       }
     ]}>
+      {renderMenu()}
+      {renderMoreMenu()}
       <View style={styles.content}>
         <TouchableOpacity
           style={styles.backButton}
@@ -154,6 +238,31 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
+  },
+  menuOverlay: {
+    flex: 1,
+  },
+  menuContainer: {
+    position: 'absolute',
+    borderRadius: 8,
+    minWidth: 200,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    overflow: 'hidden',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+  },
+  menuText: {
+    fontSize: 16,
   },
   content: {
     flexDirection: 'row',
