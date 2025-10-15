@@ -36,8 +36,9 @@ export default function GroupCreateScreen() {
       const response = await callAPI(API_ENDPOINTS.GET_CONTACTS(user.phone));
       const allContacts = response.contacts || [];
       setContacts(allContacts);
-      // Get first 3 as frequent contacts with unique IDs
-      setFrequentContacts(allContacts.slice(0, 3).map(c => ({...c, _frequent: true})));
+      // Get first 3 as frequent contacts - only include if they have valid IDs
+      const frequent = allContacts.slice(0, 3).filter(c => c.id);
+      setFrequentContacts(frequent);
     } catch (error) {
       console.error('Error loading contacts:', error);
     }

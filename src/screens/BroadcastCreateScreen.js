@@ -32,7 +32,9 @@ export default function BroadcastCreateScreen() {
   const loadContacts = async () => {
     try {
       const response = await callAPI(API_ENDPOINTS.GET_CONTACTS(user.phone));
-      setContacts(response.contacts || []);
+      const allContacts = response.contacts || [];
+      // Filter out contacts without valid IDs to prevent duplicate key errors
+      setContacts(allContacts.filter(c => c.id));
     } catch (error) {
       console.error('Error loading contacts:', error);
     }

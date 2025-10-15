@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -16,8 +15,8 @@ import * as ImagePicker from 'expo-image-picker';
 
 export default function CameraScreen() {
   const [hasPermission, setHasPermission] = useState(null);
-  const [type, setType] = useState(Camera.Constants.Type.back);
-  const [flash, setFlash] = useState(Camera.Constants.FlashMode.off);
+  const [type, setType] = useState('back'); // Changed to string
+  const [flash, setFlash] = useState('off'); // Changed to string
   const [mode, setMode] = useState('photo');
   const cameraRef = useRef(null);
   const navigation = useNavigation();
@@ -67,17 +66,15 @@ export default function CameraScreen() {
 
   const toggleFlash = () => {
     setFlash(current =>
-      current === Camera.Constants.FlashMode.off
-        ? Camera.Constants.FlashMode.on
-        : Camera.Constants.FlashMode.off
+      current === 'off'
+        ? 'on'
+        : 'off'
     );
   };
 
-  const toggleCamera = () => {
+  const toggleCameraType = () => {
     setType(current =>
-      current === Camera.Constants.Type.back
-        ? Camera.Constants.Type.front
-        : Camera.Constants.Type.back
+      current === 'back' ? 'front' : 'back'
     );
   };
 
@@ -96,12 +93,12 @@ export default function CameraScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
-      
+
       <Camera
         ref={cameraRef}
         style={styles.camera}
-        type={type}
-        flashMode={flash}
+        facing={type} // Changed from type to facing
+        flash={flash} // Changed from flashMode to flash
       >
         {/* Top Bar */}
         <View style={styles.topBar}>
@@ -110,7 +107,7 @@ export default function CameraScreen() {
           </TouchableOpacity>
           <TouchableOpacity onPress={toggleFlash} style={styles.topButton}>
             <Ionicons
-              name={flash === Camera.Constants.FlashMode.off ? 'flash-off' : 'flash'}
+              name={flash === 'off' ? 'flash-off' : 'flash'} // Changed to use string comparison
               size={28}
               color="#fff"
             />
@@ -130,7 +127,7 @@ export default function CameraScreen() {
           </TouchableOpacity>
 
           {/* Flip Camera */}
-          <TouchableOpacity onPress={toggleCamera} style={styles.flipButton}>
+          <TouchableOpacity onPress={toggleCameraType} style={styles.flipButton}>
             <Ionicons name="camera-reverse" size={28} color="#fff" />
           </TouchableOpacity>
         </View>
