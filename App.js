@@ -7,7 +7,6 @@ import { AuthProvider } from "./src/contexts/AuthContext";
 import { WallpaperProvider } from "./src/contexts/WallpaperContext";
 import { AIProvider } from "./src/contexts/AIContext";
 import RootNavigator from "./src/navigation";
-import * as NavigationBar from 'expo-navigation-bar';
 import * as SplashScreen from 'expo-splash-screen';
 
 if (Platform.OS !== 'web') {
@@ -20,12 +19,7 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        if (Platform.OS === 'android') {
-          // Hide navigation bar and set behavior to show on swipe, pushing content
-          await NavigationBar.setVisibilityAsync('hidden');
-          await NavigationBar.setBehaviorAsync('inset-swipe');
-        }
-
+        // Kept for splash screen timing
         if (Platform.OS !== 'web') {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }

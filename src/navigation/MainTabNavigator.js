@@ -2,7 +2,9 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
+import useNavigationBar from '../hooks/useNavigationBar';
 import ChatsScreen from '../screens/ChatsScreen';
 import UpdatesScreen from '../screens/UpdatesScreen';
 import CommunitiesScreen from '../screens/CommunitiesScreen';
@@ -12,6 +14,8 @@ const Tab = createBottomTabNavigator();
 
 export default function MainTabNavigator() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  useNavigationBar();
 
   return (
     <Tab.Navigator
@@ -22,8 +26,8 @@ export default function MainTabNavigator() {
           backgroundColor: colors.background,
           borderTopWidth: 0.5,
           borderTopColor: colors.border || '#E5E5EA',
-          height: Platform.OS === 'ios' ? 84 : 65,
-          paddingBottom: Platform.OS === 'ios' ? 34 : 12,
+          height: 65 + insets.bottom,
+          paddingBottom: 12 + insets.bottom,
           paddingTop: 8,
         },
         tabBarActiveTintColor: colors.primary,
