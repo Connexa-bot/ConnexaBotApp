@@ -1,3 +1,4 @@
+
 import Constants from "expo-constants";
 
 const API_BASE_URL =
@@ -6,6 +7,7 @@ const API_BASE_URL =
   'https://widespread-chicky-connexa-hub-afd02d40.koyeb.app';
 
 export const API_ENDPOINTS = {
+  // ========== HEALTH & CONNECTION ==========
   HEALTH: () => ({
     url: `${API_BASE_URL}/health`,
     method: 'GET',
@@ -15,41 +17,64 @@ export const API_ENDPOINTS = {
   API_HEALTH: () => ({
     url: `${API_BASE_URL}/api/health`,
     method: 'GET',
-    description: 'Check API health'
+    description: 'Check API health and active sessions count'
   }),
 
-CONNECT: (phone) => ({
+  OPENAI_STATUS: () => ({
+    url: `${API_BASE_URL}/api/openai/status`,
+    method: 'GET',
+    description: 'Check OpenAI connection status and configuration'
+  }),
+
+  CONNECT: (phone) => ({
     url: `${API_BASE_URL}/api/connect`,
     method: 'POST',
     body: { phone },
-    description: 'Connect WhatsApp session for this phone number'
+    description: 'Connect WhatsApp session and generate QR/link code'
   }),
 
-  // ✅ Add this:
   GET_STATUS: (phone) => ({
     url: `${API_BASE_URL}/api/status/${phone}`,
     method: 'GET',
-    description: 'Check WhatsApp connection status for the given phone'
+    description: 'Check WhatsApp connection status'
   }),
-  
+
   LOGOUT: (phone) => ({
     url: `${API_BASE_URL}/api/logout`,
     method: 'POST',
     body: { phone },
     description: 'Logout and clear WhatsApp session'
   }),
-  
+
   CLEAR_STATE: (phone, fullReset = false) => ({
     url: `${API_BASE_URL}/api/clear-state/${phone}?fullReset=${fullReset}`,
     method: 'POST',
     description: 'Clear session state (partial or full reset)'
   }),
-  
+
+  // ========== CHATS ==========
   GET_CHATS: (phone) => ({
     url: `${API_BASE_URL}/api/chats/${phone}`,
     method: 'GET',
-    description: 'Get all chats with profile pictures, names, and last messages (sorted by recent)',
-    responseFormat: '{ success, chats: [{ id, name, profilePicUrl, lastMessage: { text, timestamp }, unreadCount, isGroup, isChannel, isArchived, isPinned, isMuted }], count }'
+    description: 'Get all chats with profile pictures, names, and last messages (sorted by recent)'
+  }),
+
+  GET_CHAT_BY_ID: (phone, chatId) => ({
+    url: `${API_BASE_URL}/api/chats/${phone}/${chatId}`,
+    method: 'GET',
+    description: 'Get specific chat details'
+  }),
+
+  GET_ARCHIVED_CHATS: (phone) => ({
+    url: `${API_BASE_URL}/api/chats/archived/${phone}`,
+    method: 'GET',
+    description: 'Get all archived chats'
+  }),
+
+  SEARCH_CHATS: (phone, query) => ({
+    url: `${API_BASE_URL}/api/chats/search/${phone}?query=${encodeURIComponent(query)}`,
+    method: 'GET',
+    description: 'Search chats by name or message content'
   }),
 
   ARCHIVE_CHAT: (phone, chatId, archive = true) => ({
@@ -101,31 +126,11 @@ CONNECT: (phone) => ({
     description: 'Clear chat messages (keeps chat)'
   }),
 
-  GET_CHAT_LABELS: (phone) => ({
-    url: `${API_BASE_URL}/api/chats/labels/${phone}`,
-    method: 'GET',
-    description: 'Get all chat labels'
-  }),
-
-  ADD_CHAT_LABEL: (phone, chatId, labelId) => ({
-    url: `${API_BASE_URL}/api/chats/label/add`,
-    method: 'POST',
-    body: { phone, chatId, labelId },
-    description: 'Add label to chat'
-  }),
-
-  REMOVE_CHAT_LABEL: (phone, chatId, labelId) => ({
-    url: `${API_BASE_URL}/api/chats/label/remove`,
-    method: 'POST',
-    body: { phone, chatId, labelId },
-    description: 'Remove label from chat'
-  }),
-  
+  // ========== MESSAGES ==========
   GET_MESSAGES: (phone, chatId, limit = 50) => ({
     url: `${API_BASE_URL}/api/messages/${phone}/${chatId}?limit=${limit}`,
     method: 'GET',
-    description: 'Get messages from a specific chat',
-    responseFormat: '{ success, data: { messages: [...] } }'
+    description: 'Get messages from a specific chat'
   }),
 
   SEND_MESSAGE: (phone, to, text, mentions = []) => ({
@@ -247,15 +252,15 @@ CONNECT: (phone) => ({
     description: 'Star or unstar message'
   }),
 
-  MARK_MESSAGE_READ: (phone, messageKey) => ({
-    url: `${API_BASE_URL}/api/messages/read`,
-    method: 'POST',
-    body: { phone, messageKey },
-    description: 'Mark specific message as read'
+  GET_STARRED_MESSAGES: (phone) => ({
+    url: `${API_BASE_URL}/api/messages/starred/${phone}`,
+    method: 'GET',
+    description: 'Get all starred messages'
   }),
 
+  // ========== STATUS/STORY ==========
   GET_STATUS_UPDATES: (phone) => ({
-    url: `${API_BASE_URL}/api/status-updates/${phone}`,
+    url: `${API_BASE_URL}/api/status/updates/${phone}`,
     method: 'GET',
     description: 'Get all status updates'
   }),
@@ -281,13 +286,6 @@ CONNECT: (phone) => ({
     description: 'Post video status/story'
   }),
 
-  POST_AUDIO_STATUS: (phone, audioUrl, statusJidList = []) => ({
-    url: `${API_BASE_URL}/api/status/post-audio`,
-    method: 'POST',
-    body: { phone, audioUrl, statusJidList },
-    description: 'Post audio status/story'
-  }),
-
   DELETE_STATUS: (phone, statusKey) => ({
     url: `${API_BASE_URL}/api/status/delete`,
     method: 'POST',
@@ -307,53 +305,206 @@ CONNECT: (phone) => ({
     method: 'GET',
     description: 'Get status privacy settings'
   }),
-  
+
+  // ========== GROUPS ==========
   GET_GROUPS: (phone) => ({
     url: `${API_BASE_URL}/api/groups/${phone}`,
     method: 'GET',
     description: 'Get all groups'
   }),
 
-  GROUP_ACTION: (phone, action, data = {}) => ({
-    url: `${API_BASE_URL}/api/groups/action`,
-    method: 'POST',
-    body: { phone, action, ...data },
-    description: 'Perform group action (create, add, remove, promote, etc.)'
+  GET_GROUP_METADATA: (phone, groupId) => ({
+    url: `${API_BASE_URL}/api/groups/${phone}/${groupId}/metadata`,
+    method: 'GET',
+    description: 'Get group metadata'
   }),
 
+  CREATE_GROUP: (phone, name, participants) => ({
+    url: `${API_BASE_URL}/api/groups/create`,
+    method: 'POST',
+    body: { phone, name, participants },
+    description: 'Create new group'
+  }),
+
+  GET_GROUP_INVITE_CODE: (phone, groupId) => ({
+    url: `${API_BASE_URL}/api/groups/${phone}/${groupId}/invite-code`,
+    method: 'GET',
+    description: 'Get group invite code'
+  }),
+
+  JOIN_GROUP_VIA_INVITE: (phone, inviteCode) => ({
+    url: `${API_BASE_URL}/api/groups/join-via-invite`,
+    method: 'POST',
+    body: { phone, inviteCode },
+    description: 'Join group using invite code'
+  }),
+
+  LEAVE_GROUP: (phone, groupId) => ({
+    url: `${API_BASE_URL}/api/groups/leave`,
+    method: 'POST',
+    body: { phone, groupId },
+    description: 'Leave a group'
+  }),
+
+  UPDATE_GROUP_SUBJECT: (phone, groupId, subject) => ({
+    url: `${API_BASE_URL}/api/groups/update-subject`,
+    method: 'POST',
+    body: { phone, groupId, subject },
+    description: 'Update group name'
+  }),
+
+  UPDATE_GROUP_DESCRIPTION: (phone, groupId, description) => ({
+    url: `${API_BASE_URL}/api/groups/update-description`,
+    method: 'POST',
+    body: { phone, groupId, description },
+    description: 'Update group description'
+  }),
+
+  ADD_GROUP_PARTICIPANTS: (phone, groupId, participants) => ({
+    url: `${API_BASE_URL}/api/groups/add-participants`,
+    method: 'POST',
+    body: { phone, groupId, participants },
+    description: 'Add participants to group'
+  }),
+
+  REMOVE_GROUP_PARTICIPANTS: (phone, groupId, participants) => ({
+    url: `${API_BASE_URL}/api/groups/remove-participants`,
+    method: 'POST',
+    body: { phone, groupId, participants },
+    description: 'Remove participants from group'
+  }),
+
+  PROMOTE_GROUP_PARTICIPANTS: (phone, groupId, participants) => ({
+    url: `${API_BASE_URL}/api/groups/promote-participants`,
+    method: 'POST',
+    body: { phone, groupId, participants },
+    description: 'Promote participants to admin'
+  }),
+
+  DEMOTE_GROUP_PARTICIPANTS: (phone, groupId, participants) => ({
+    url: `${API_BASE_URL}/api/groups/demote-participants`,
+    method: 'POST',
+    body: { phone, groupId, participants },
+    description: 'Demote admins to participants'
+  }),
+
+  UPDATE_GROUP_PICTURE: (phone, groupId, imageUrl) => ({
+    url: `${API_BASE_URL}/api/groups/update-picture`,
+    method: 'POST',
+    body: { phone, groupId, imageUrl },
+    description: 'Update group picture'
+  }),
+
+  TOGGLE_GROUP_ANNOUNCEMENT: (phone, groupId, announce) => ({
+    url: `${API_BASE_URL}/api/groups/toggle-announcement`,
+    method: 'POST',
+    body: { phone, groupId, announce },
+    description: 'Toggle announcement mode (admins only can send)'
+  }),
+
+  // ========== CONTACTS ==========
   GET_CONTACTS: (phone) => ({
     url: `${API_BASE_URL}/api/contacts/${phone}`,
     method: 'GET',
     description: 'Get all contacts'
   }),
 
-  CONTACT_ACTION: (phone, action, data = {}) => ({
-    url: `${API_BASE_URL}/api/contacts/action`,
-    method: 'POST',
-    body: { phone, action, ...data },
-    description: 'Perform contact action (block, unblock, etc.)'
+  GET_CONTACT: (phone, contactId) => ({
+    url: `${API_BASE_URL}/api/contacts/${phone}/${contactId}`,
+    method: 'GET',
+    description: 'Get specific contact'
   }),
 
-  PRESENCE_ACTION: (phone, action, data = {}) => ({
-    url: `${API_BASE_URL}/api/presence/action`,
-    method: 'POST',
-    body: { phone, action, ...data },
-    description: 'Update presence (typing, recording, online, etc.)'
+  GET_CONTACT_PICTURE: (phone, contactId) => ({
+    url: `${API_BASE_URL}/api/contacts/${phone}/${contactId}/picture`,
+    method: 'GET',
+    description: 'Get contact profile picture'
   }),
 
+  GET_CONTACT_STATUS: (phone, contactId) => ({
+    url: `${API_BASE_URL}/api/contacts/${phone}/${contactId}/status`,
+    method: 'GET',
+    description: 'Get contact status/about'
+  }),
+
+  CHECK_CONTACT_EXISTS: (phone, phoneNumber) => ({
+    url: `${API_BASE_URL}/api/contacts/check-exists`,
+    method: 'POST',
+    body: { phone, phoneNumber },
+    description: 'Check if contact exists on WhatsApp'
+  }),
+
+  BLOCK_CONTACT: (phone, contactId) => ({
+    url: `${API_BASE_URL}/api/contacts/block`,
+    method: 'POST',
+    body: { phone, contactId },
+    description: 'Block a contact'
+  }),
+
+  UNBLOCK_CONTACT: (phone, contactId) => ({
+    url: `${API_BASE_URL}/api/contacts/unblock`,
+    method: 'POST',
+    body: { phone, contactId },
+    description: 'Unblock a contact'
+  }),
+
+  GET_BUSINESS_PROFILE: (phone, contactId) => ({
+    url: `${API_BASE_URL}/api/contacts/${phone}/${contactId}/business-profile`,
+    method: 'GET',
+    description: 'Get business profile information'
+  }),
+
+  // ========== PRESENCE ==========
+  UPDATE_PRESENCE: (phone, chatId, presence) => ({
+    url: `${API_BASE_URL}/api/presence/update`,
+    method: 'POST',
+    body: { phone, chatId, presence },
+    description: 'Update presence (composing, recording, available, unavailable, paused)'
+  }),
+
+  SUBSCRIBE_PRESENCE: (phone, contactId) => ({
+    url: `${API_BASE_URL}/api/presence/subscribe`,
+    method: 'POST',
+    body: { phone, contactId },
+    description: 'Subscribe to presence updates'
+  }),
+
+  // ========== PROFILE ==========
   GET_PROFILE: (phone) => ({
     url: `${API_BASE_URL}/api/profile/${phone}`,
     method: 'GET',
-    description: 'Get profile information'
+    description: 'Get own profile information'
   }),
 
-  PROFILE_ACTION: (phone, action, data = {}) => ({
-    url: `${API_BASE_URL}/api/profile/action`,
+  UPDATE_PROFILE_NAME: (phone, name) => ({
+    url: `${API_BASE_URL}/api/profile/update-name`,
     method: 'POST',
-    body: { phone, action, ...data },
-    description: 'Update profile (name, status, picture, etc.)'
+    body: { phone, name },
+    description: 'Update profile name'
   }),
 
+  UPDATE_PROFILE_STATUS: (phone, status) => ({
+    url: `${API_BASE_URL}/api/profile/update-status`,
+    method: 'POST',
+    body: { phone, status },
+    description: 'Update profile status/about'
+  }),
+
+  UPDATE_PROFILE_PICTURE: (phone, imageUrl) => ({
+    url: `${API_BASE_URL}/api/profile/update-picture`,
+    method: 'POST',
+    body: { phone, imageUrl },
+    description: 'Update profile picture'
+  }),
+
+  REMOVE_PROFILE_PICTURE: (phone) => ({
+    url: `${API_BASE_URL}/api/profile/remove-picture`,
+    method: 'POST',
+    body: { phone },
+    description: 'Remove profile picture'
+  }),
+
+  // ========== AI AUTOMATION ==========
   AI_SMART_REPLY: (phone, chatId, lastMessage, senderName = 'User', relationship = 'friend') => ({
     url: `${API_BASE_URL}/api/ai/smart-reply`,
     method: 'POST',
@@ -451,10 +602,17 @@ CONNECT: (phone) => ({
     description: 'Clear AI chat history'
   }),
 
+  // ========== CHANNELS ==========
   GET_CHANNELS: (phone) => ({
     url: `${API_BASE_URL}/api/channels/${phone}`,
     method: 'GET',
     description: 'Get all channels'
+  }),
+
+  GET_CHANNEL_INFO: (phone, channelId) => ({
+    url: `${API_BASE_URL}/api/channels/${phone}/${channelId}/info`,
+    method: 'GET',
+    description: 'Get channel information'
   }),
 
   FOLLOW_CHANNEL: (phone, channelJid) => ({
@@ -471,12 +629,6 @@ CONNECT: (phone) => ({
     description: 'Unfollow a channel'
   }),
 
-  GET_CHANNEL_METADATA: (phone, channelJid) => ({
-    url: `${API_BASE_URL}/api/channels/metadata/${phone}/${channelJid}`,
-    method: 'GET',
-    description: 'Get channel metadata'
-  }),
-
   MUTE_CHANNEL: (phone, channelJid, duration) => ({
     url: `${API_BASE_URL}/api/channels/mute`,
     method: 'POST',
@@ -485,24 +637,19 @@ CONNECT: (phone) => ({
   }),
 
   GET_COMMUNITIES: (phone) => ({
-    url: `${API_BASE_URL}/api/channels/communities/${phone}`,
+    url: `${API_BASE_URL}/api/communities/${phone}`,
     method: 'GET',
     description: 'Get all communities'
   }),
 
+  // ========== CALLS ==========
   GET_CALLS: (phone) => ({
     url: `${API_BASE_URL}/api/calls/${phone}`,
     method: 'GET',
     description: 'Get call history'
   }),
 
-  MAKE_CALL: (phone, to, isVideo = false) => ({
-    url: `${API_BASE_URL}/api/calls/make`,
-    method: 'POST',
-    body: { phone, to, isVideo },
-    description: 'Initiate call (not supported by Baileys)'
-  }),
-
+  // ========== PRIVACY & SECURITY ==========
   GET_PRIVACY_SETTINGS: (phone) => ({
     url: `${API_BASE_URL}/api/privacy/settings/${phone}`,
     method: 'GET',
@@ -516,24 +663,10 @@ CONNECT: (phone) => ({
     description: 'Update privacy settings'
   }),
 
-  GET_BLOCKED_CONTACTS: (phone) => ({
+  GET_BLOCKED_USERS: (phone) => ({
     url: `${API_BASE_URL}/api/privacy/blocked/${phone}`,
     method: 'GET',
     description: 'Get blocked contacts list'
-  }),
-
-  BLOCK_CONTACT: (phone, jid) => ({
-    url: `${API_BASE_URL}/api/privacy/block`,
-    method: 'POST',
-    body: { phone, jid },
-    description: 'Block a contact'
-  }),
-
-  UNBLOCK_CONTACT: (phone, jid) => ({
-    url: `${API_BASE_URL}/api/privacy/unblock`,
-    method: 'POST',
-    body: { phone, jid },
-    description: 'Unblock a contact'
   }),
 
   SET_DISAPPEARING_MESSAGES: (phone, chatId, duration) => ({
@@ -543,10 +676,39 @@ CONNECT: (phone) => ({
     description: 'Set disappearing messages timer'
   }),
 
-  GET_BUSINESS_PROFILE: (phone, jid) => ({
-    url: `${API_BASE_URL}/api/privacy/business-profile/${phone}/${jid}`,
+  // ========== SEARCH ==========
+  SEARCH_MESSAGES: (phone, query) => ({
+    url: `${API_BASE_URL}/api/search/messages/${phone}?q=${encodeURIComponent(query)}`,
     method: 'GET',
-    description: 'Get business profile information'
+    description: 'Search messages globally'
+  }),
+
+  // ========== BROADCAST ==========
+  GET_BROADCAST_LISTS: (phone) => ({
+    url: `${API_BASE_URL}/api/broadcast/lists/${phone}`,
+    method: 'GET',
+    description: 'Get all broadcast lists'
+  }),
+
+  // ========== STARRED MESSAGES ==========
+  GET_ALL_STARRED: (phone) => ({
+    url: `${API_BASE_URL}/api/starred/${phone}`,
+    method: 'GET',
+    description: 'Get all starred messages'
+  }),
+
+  // ========== DEVICES & MULTI-DEVICE ==========
+  GET_LINKED_DEVICES: (phone) => ({
+    url: `${API_BASE_URL}/api/devices/${phone}`,
+    method: 'GET',
+    description: 'Get all linked devices'
+  }),
+
+  UNLINK_DEVICE: (phone, deviceId) => ({
+    url: `${API_BASE_URL}/api/devices/unlink`,
+    method: 'POST',
+    body: { phone, deviceId },
+    description: 'Unlink a specific device'
   }),
 };
 
