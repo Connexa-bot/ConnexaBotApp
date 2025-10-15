@@ -35,11 +35,11 @@ export default function ChatsScreen() {
 
   const handleCameraPress = async () => {
     const ImagePicker = require('expo-image-picker');
-    
+
     // Request permissions
     const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
     const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (cameraPermission.status !== 'granted' || mediaPermission.status !== 'granted') {
       Alert.alert('Permission Required', 'Camera and media library access is needed');
       return;
@@ -208,7 +208,7 @@ export default function ChatsScreen() {
                 ]}
                 numberOfLines={1}
               >
-                {item.lastMessage || 'Tap to chat'}
+                {typeof item.lastMessage === 'object' ? item.lastMessage?.text || '' : item.lastMessage || ''}
               </Text>
             </View>
 
