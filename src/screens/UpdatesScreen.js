@@ -528,7 +528,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: 0.5,
+    borderBottomWidth: 0.2,
+    borderBottomColor: '#DADADA',
   },
   channelLeft: {
     flexDirection: 'row',

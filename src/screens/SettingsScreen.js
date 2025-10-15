@@ -263,6 +263,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 16,
+    borderBottomWidth: 0.2,
+    borderBottomColor: '#2A2F32',
   },
   iconContainer: {
     width: 40,

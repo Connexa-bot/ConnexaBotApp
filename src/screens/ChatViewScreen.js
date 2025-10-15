@@ -70,7 +70,7 @@ export default function ChatViewScreen({ route, navigation }) {
     if (wallpaper.isPattern) {
       // Auto pattern: follow app theme
       if (wallpaper.theme === 'auto' || wallpaper.uri === 'whatsapp-auto') {
-        return isDark ? '#0B141A' : '#EFEAE2';
+        return isDark ? '#0B141A' : '#E5DDD5';
       }
       // Theme-specific patterns: use their designated color (wallpaper selection overrides app theme)
       return wallpaper.color;
@@ -82,7 +82,7 @@ export default function ChatViewScreen({ route, navigation }) {
     }
     
     // Fallback: use app theme colors
-    return isDark ? '#0B141A' : '#EFEAE2';
+    return isDark ? '#0B141A' : '#E5DDD5';
   };
 
   const bgImage = getBackgroundImage();

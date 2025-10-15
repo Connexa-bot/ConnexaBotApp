@@ -195,7 +195,8 @@ const styles = StyleSheet.create({
     padding: 12,
     paddingHorizontal: 16,
     alignItems: 'center',
-    borderBottomWidth: 0.5,
+    borderBottomWidth: 0.2,
+    borderBottomColor: '#DADADA',
   },
   avatar: {
     width: 52,

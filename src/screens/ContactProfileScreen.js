@@ -226,7 +226,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    borderBottomWidth: 0.5,
+    borderBottomWidth: 0.2,
+    borderBottomColor: '#DADADA',
   },
   infoIcon: {
     marginRight: 16,
@@ -246,7 +247,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    borderBottomWidth: 0.5,
+    borderBottomWidth: 0.2,
+    borderBottomColor: '#DADADA',
   },
   settingText: {
     fontSize: 16,

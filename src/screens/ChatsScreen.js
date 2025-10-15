@@ -721,6 +721,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     gap: 28,
+    borderBottomWidth: 0.2,
+    borderBottomColor: '#DADADA',
   },
   archivedText: {
     fontSize: 16,
@@ -781,6 +783,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingVertical: 12,
     paddingHorizontal: 16,
+    borderBottomWidth: 0.2,
+    borderBottomColor: '#DADADA',
   },
   avatarContainer: {
     marginRight: 12,
@@ -805,8 +809,6 @@ const styles = StyleSheet.create({
   chatContent: {
     flex: 1,
     justifyContent: 'center',
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#E5E5EA',
     paddingBottom: 12,
   },
   topRow: {
