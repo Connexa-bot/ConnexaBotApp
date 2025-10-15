@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { callAPI, API_ENDPOINTS } from '../services/api';
+import API, { callAPI } from '../services/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -52,19 +52,19 @@ export default function StatusPostScreen({ navigation, route }) {
     setPosting(true);
     try {
       if (selectedMedia && mediaType === 'image') {
-        await callAPI(API_ENDPOINTS.POST_IMAGE_STATUS(
+        await callAPI(API.Status.postImage(
           user.phone,
           selectedMedia,
           caption
         ));
       } else if (selectedMedia && mediaType === 'video') {
-        await callAPI(API_ENDPOINTS.POST_VIDEO_STATUS(
+        await callAPI(API.Status.postVideo(
           user.phone,
           selectedMedia,
           caption
         ));
       } else if (statusText.trim()) {
-        await callAPI(API_ENDPOINTS.POST_TEXT_STATUS(
+        await callAPI(API.Status.postText(
           user.phone,
           statusText,
           [],

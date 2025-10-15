@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Sta
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { callAPI, API_ENDPOINTS } from '../services/api';
+import API, { callAPI } from '../services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
@@ -22,7 +22,7 @@ export default function CallsScreen() {
   const loadCalls = async () => {
     try {
       if (user?.phone) {
-        const response = await callAPI(API_ENDPOINTS.GET_CALLS(user.phone));
+        const response = await callAPI(API.Call.getHistory(user.phone));
         setCalls(response.data?.calls || []);
       }
     } catch (error) {

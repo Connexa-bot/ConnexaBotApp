@@ -21,7 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import useNavigationBar from '../hooks/useNavigationBar';
 import { useAI } from '../contexts/AIContext';
 import { useWallpaper } from '../contexts/WallpaperContext';
-import { callAPI, API_ENDPOINTS } from '../services/api';
+import API, { callAPI } from '../services/api';
 import ChatHeader from '../components/ChatHeader';
 import MessageBubble from '../components/MessageBubble';
 import ChatInput from '../components/ChatInput';
@@ -120,7 +120,7 @@ export default function ChatViewScreen({ route, navigation }) {
   const loadMessages = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const response = await callAPI(API_ENDPOINTS.GET_MESSAGES(user.phone, chat.id, 50));
+      const response = await callAPI(API.Message.get(user.phone, chat.id, 50));
       if (response.data?.messages) {
         const newMessages = response.data.messages;
         
@@ -155,7 +155,7 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const loadSmartSuggestions = async (lastMessage) => {
     try {
-      const response = await callAPI(API_ENDPOINTS.AI_SMART_REPLY(user.phone, lastMessage.text));
+      const response = await callAPI(API.AI.smartReply(user.phone, lastMessage.text));
       
       if (response.suggestions) {
         setSmartSuggestions(response.suggestions);
@@ -168,7 +168,7 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleSend = async (text) => {
     try {
-      await callAPI(API_ENDPOINTS.SEND_MESSAGE(user.phone, chat.id, text));
+      await callAPI(API.Message.send(user.phone, chat.id, text));
       
       const newMessage = {
         id: Date.now().toString(),
@@ -189,11 +189,15 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleAutoReply = async (userMessage) => {
     try {
-      const response = await callAPI(API_ENDPOINTS.AI_SUMMARIZE(user.phone, chat.id, 10));
+      const response = await callAPI(API.AI.generate(user.phone, { 
+        task: 'summarize', 
+        chatId: chat.id, 
+        contextWindow: 10 
+      }));
 
       if (response.summary) {
         const replyText = `Auto-reply based on context: ${response.summary}`;
-        await callAPI(API_ENDPOINTS.SEND_MESSAGE(user.phone, chat.id, replyText));
+        await callAPI(API.Message.send(user.phone, chat.id, replyText));
         
         const aiMessage = {
           id: Date.now().toString(),
@@ -214,11 +218,11 @@ export default function ChatViewScreen({ route, navigation }) {
   const handleSendMedia = async (media, type) => {
     try {
       if (type === 'image') {
-        await callAPI(API_ENDPOINTS.SEND_IMAGE(user.phone, chat.id, media.uri, media.caption || ''));
+        await callAPI(API.Message.sendImage(user.phone, chat.id, media.uri, media.caption || ''));
       } else if (type === 'video') {
-        await callAPI(API_ENDPOINTS.SEND_VIDEO(user.phone, chat.id, media.uri, media.caption || ''));
+        await callAPI(API.Message.sendVideo(user.phone, chat.id, media.uri, media.caption || ''));
       } else if (type === 'document') {
-        await callAPI(API_ENDPOINTS.SEND_DOCUMENT(user.phone, chat.id, media.uri, media.name, media.type));
+        await callAPI(API.Message.sendDocument(user.phone, chat.id, media.uri, media.name, media.type));
       }
       loadMessages();
       scrollToBottom();
@@ -230,7 +234,7 @@ export default function ChatViewScreen({ route, navigation }) {
 
   const handleVoiceRecord = async (audioUri) => {
     try {
-      await callAPI(API_ENDPOINTS.SEND_AUDIO(user.phone, chat.id, audioUri, true));
+      await callAPI(API.Message.sendAudio(user.phone, chat.id, audioUri, true));
       loadMessages();
       scrollToBottom();
     } catch (error) {
@@ -304,7 +308,7 @@ export default function ChatViewScreen({ route, navigation }) {
           if (text && text.trim()) {
             try {
               const messageKey = message.key || message.id;
-              await callAPI(API_ENDPOINTS.EDIT_MESSAGE(user.phone, chat.id, messageKey, text));
+              await callAPI(API.Message.edit(user.phone, chat.id, messageKey, text));
               loadMessages();
             } catch (error) {
               console.error('Error editing message:', error);
@@ -327,7 +331,7 @@ export default function ChatViewScreen({ route, navigation }) {
   const handleStar = async (message) => {
     try {
       const messageKey = message.key || message.id;
-      await callAPI(API_ENDPOINTS.STAR_MESSAGE(user.phone, chat.id, messageKey, true));
+      await callAPI(API.Message.star(user.phone, chat.id, messageKey, true));
       Alert.alert('Success', 'Message starred');
       loadMessages();
     } catch (error) {
@@ -347,7 +351,7 @@ export default function ChatViewScreen({ route, navigation }) {
           onPress: async () => {
             try {
               const messageKey = message.key || message.id;
-              await callAPI(API_ENDPOINTS.DELETE_MESSAGE(user.phone, chat.id, messageKey));
+              await callAPI(API.Message.delete(user.phone, chat.id, messageKey));
               loadMessages();
             } catch (error) {
               console.error('Error deleting message:', error);
@@ -360,7 +364,7 @@ export default function ChatViewScreen({ route, navigation }) {
           onPress: async () => {
             try {
               const messageKey = message.key || message.id;
-              await callAPI(API_ENDPOINTS.DELETE_MESSAGE(user.phone, chat.id, messageKey));
+              await callAPI(API.Message.delete(user.phone, chat.id, messageKey));
               loadMessages();
             } catch (error) {
               console.error('Error deleting message:', error);
@@ -382,7 +386,7 @@ export default function ChatViewScreen({ route, navigation }) {
         onPress: async () => {
           try {
             const messageKey = message.key || message.id;
-            await callAPI(API_ENDPOINTS.REACT_MESSAGE(user.phone, chat.id, messageKey, emoji));
+            await callAPI(API.Message.react(user.phone, chat.id, messageKey, emoji));
             loadMessages();
           } catch (error) {
             console.error('Error reacting to message:', error);

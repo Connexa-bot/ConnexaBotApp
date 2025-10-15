@@ -16,7 +16,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { callAPI, API_ENDPOINTS } from '../services/api';
+import API, { callAPI } from '../services/api';
 import { storage } from '../utils/storage';
 
 export default function LinkDeviceScreen() {
@@ -62,7 +62,7 @@ export default function LinkDeviceScreen() {
         console.log(`🔍 Poll #${pollCount}: Checking status for`, cleanPhone);
 
         try {
-          const data = await callAPI(API_ENDPOINTS.GET_STATUS(cleanPhone));
+          const data = await callAPI(API.Health.status(cleanPhone));
           
           console.log('📊 Full status response:', JSON.stringify(data, null, 2));
 

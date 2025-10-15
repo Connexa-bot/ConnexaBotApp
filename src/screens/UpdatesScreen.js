@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { callAPI, API_ENDPOINTS } from '../services/api';
+import API, { callAPI } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -43,7 +43,7 @@ export default function UpdatesScreen({ navigation }) {
   const loadStatuses = async () => {
     try {
       if (user?.phone) {
-        const response = await callAPI(API_ENDPOINTS.GET_STATUS_UPDATES(user.phone));
+        const response = await callAPI(API.Status.getAll(user.phone));
         setStatuses(response.statusUpdates || []);
       }
     } catch (error) {
@@ -56,7 +56,7 @@ export default function UpdatesScreen({ navigation }) {
   const loadChannels = async () => {
     try {
       if (user?.phone) {
-        const response = await callAPI(API_ENDPOINTS.GET_CHANNELS(user.phone));
+        const response = await callAPI(API.Channel.getAll(user.phone));
         setChannels(response.channels || []);
       }
     } catch (error) {
@@ -110,7 +110,7 @@ export default function UpdatesScreen({ navigation }) {
 
   const viewStatus = async (status) => {
     try {
-      await callAPI(API_ENDPOINTS.VIEW_STATUS(user.phone, status.jid, [status.key]));
+      await callAPI(API.Status.view(user.phone, status.jid, [status.key]));
     } catch (error) {
       console.error('Error viewing status:', error);
     }

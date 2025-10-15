@@ -13,7 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import MessageBubble from '../components/MessageBubble';
-import { callAPI, API_ENDPOINTS } from '../services/api';
+import API, { callAPI } from '../services/api';
 
 export default function StarredMessagesScreen() {
   const [starredMessages, setStarredMessages] = useState([]);
@@ -29,11 +29,7 @@ export default function StarredMessagesScreen() {
   const loadStarredMessages = async () => {
     try {
       if (user?.phone) {
-        // This would be a new API endpoint to get starred messages
-        const response = await callAPI({
-          url: `${API_ENDPOINTS.GET_CHATS(user.phone).url}/starred`,
-          method: 'GET'
-        });
+        const response = await callAPI(API.Message.getStarred(user.phone));
         setStarredMessages(response.messages || []);
       }
     } catch (error) {

@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { callAPI, API_ENDPOINTS } from '../services/api';
+import API, { callAPI } from '../services/api';
 
 export default function ChatsScreen() {
   const [chats, setChats] = useState([]);
@@ -57,7 +57,7 @@ export default function ChatsScreen() {
   const loadChats = async () => {
     try {
       if (user?.phone) {
-        const response = await callAPI(API_ENDPOINTS.GET_CHATS(user.phone));
+        const response = await callAPI(API.Chat.getAll(user.phone));
         const chatsList = response.chats || [];
         setChats(chatsList);
         setFilteredChats(chatsList);

@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { callAPI, API_ENDPOINTS } from '../services/api';
+import API, { callAPI } from '../services/api';
 
 export default function SearchScreen({ navigation }) {
   const { colors } = useTheme();
@@ -34,8 +34,8 @@ export default function SearchScreen({ navigation }) {
   const loadData = async () => {
     try {
       if (user?.phone) {
-        const chatsRes = await callAPI(API_ENDPOINTS.GET_CHATS(user.phone));
-        const contactsRes = await callAPI(API_ENDPOINTS.GET_CONTACTS(user.phone));
+        const chatsRes = await callAPI(API.Chat.getAll(user.phone));
+        const contactsRes = await callAPI(API.Contact.getAll(user.phone));
         
         setChats(chatsRes.chats || []);
         setContacts(contactsRes.contacts || []);
@@ -43,7 +43,7 @@ export default function SearchScreen({ navigation }) {
         const allMessages = [];
         for (const chat of (chatsRes.chats || [])) {
           try {
-            const msgRes = await callAPI(API_ENDPOINTS.GET_MESSAGES(user.phone, chat.id, 20));
+            const msgRes = await callAPI(API.Message.get(user.phone, chat.id, 20));
             if (msgRes.data?.messages) {
               msgRes.data.messages.forEach(msg => {
                 allMessages.push({ ...msg, chatId: chat.id, chatName: chat.name });

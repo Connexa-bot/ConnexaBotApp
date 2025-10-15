@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import API_ENDPOINTS, { callAPI } from '../services/api';
+import API, { callAPI } from '../services/api';
 import { storage } from '../utils/storage';
 
 const AuthContext = createContext();
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
         setTimeout(async () => {
           try {
             const statusResponse = await Promise.race([
-              callAPI(API_ENDPOINTS.GET_STATUS(storedPhone)),
+              callAPI(API.Health.status(storedPhone)),
               new Promise((_, reject) => setTimeout(() => reject(new Error('API timeout')), 3000))
             ]);
 
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔹 [AUTH] Starting login for phone:', phone);
       
-      const data = await callAPI(API_ENDPOINTS.CONNECT(phone));
+      const data = await callAPI(API.Health.connect(phone));
       console.log('🔹 [AUTH] Full backend response:', JSON.stringify(data, null, 2));
 
       if (data?.qrCode) {
@@ -123,7 +123,7 @@ export const AuthProvider = ({ children }) => {
     try {
       if (user?.phone) {
         console.log('🔹 [AUTH] Logging out phone:', user.phone);
-        await callAPI(API_ENDPOINTS.LOGOUT(user.phone));
+        await callAPI(API.Health.logout(user.phone));
       }
       
       await storage.deleteItem('userPhone');

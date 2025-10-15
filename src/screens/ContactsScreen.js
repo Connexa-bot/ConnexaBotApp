@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { callAPI, API_ENDPOINTS } from '../services/api';
+import API, { callAPI } from '../services/api';
 
 export default function ContactsScreen() {
   const [contacts, setContacts] = useState([]);
@@ -37,7 +37,7 @@ export default function ContactsScreen() {
   const loadContacts = async () => {
     try {
       if (user?.phone) {
-        const response = await callAPI(API_ENDPOINTS.GET_CONTACTS(user.phone));
+        const response = await callAPI(API.Contact.getAll(user.phone));
         setContacts(response.contacts || []);
       }
     } catch (error) {
@@ -115,7 +115,7 @@ export default function ContactsScreen() {
             onPress: async (number) => {
               if (number && number.trim()) {
                 try {
-                  await callAPI(API_ENDPOINTS.ADD_CONTACT(user.phone, number));
+                  await callAPI(API.Contact.add(user.phone, number));
                   Alert.alert('Success', 'Contact saved');
                   loadContacts();
                 } catch (error) {
