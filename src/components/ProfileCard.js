@@ -104,12 +104,12 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
 
   const cardScale = fullScreenAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 1.2],
+    outputRange: [1, 1],
   });
 
   const cardTranslateY = fullScreenAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -100],
+    outputRange: [0, -SCREEN_HEIGHT * 0.15],
   });
 
   const actionsOpacity = fullScreenAnim.interpolate({
@@ -198,11 +198,7 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
           ]}
           pointerEvents={showFullScreen ? 'none' : 'auto'}
         >
-          <BlurView
-            intensity={Platform.OS === 'ios' ? 80 : 100}
-            tint={isDark ? 'dark' : 'light'}
-            style={styles.blurContainer}
-          >
+          <View style={[styles.blurContainer, { backgroundColor: 'rgba(0, 0, 0, 0.3)' }]}>
             <View style={styles.actionsContent}>
               <TouchableOpacity
                 style={styles.iconButton}
@@ -211,17 +207,10 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
                   onClose();
                 }}
               >
-                <Ionicons name="chatbubble" size={28} color="#fff" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => {
-                  onInfo();
-                  onClose();
-                }}
-              >
-                <Ionicons name="person-circle" size={28} color="#fff" />
+                <View style={styles.iconCircle}>
+                  <Ionicons name="chatbubble" size={28} color="#fff" />
+                </View>
+                <Text style={styles.iconLabel}>Message</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -231,10 +220,26 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
                   onClose();
                 }}
               >
-                <Ionicons name="information-circle" size={28} color="#fff" />
+                <View style={styles.iconCircle}>
+                  <Ionicons name="call" size={28} color="#fff" />
+                </View>
+                <Text style={styles.iconLabel}>Call</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => {
+                  onInfo();
+                  onClose();
+                }}
+              >
+                <View style={styles.iconCircle}>
+                  <Ionicons name="information-circle" size={28} color="#fff" />
+                </View>
+                <Text style={styles.iconLabel}>Info</Text>
               </TouchableOpacity>
             </View>
-          </BlurView>
+          </View>
         </Animated.View>
       </Animated.View>
     </>
@@ -255,7 +260,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: SCREEN_HEIGHT * 0.75, // Increased to cover tab bar
+    height: SCREEN_HEIGHT * 0.6,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -298,11 +303,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 100,
+    height: 120,
   },
   blurContainer: {
     flex: 1,
     overflow: 'hidden',
+    backdropFilter: 'blur(10px)',
   },
   actionsContent: {
     flex: 1,
@@ -310,12 +316,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingHorizontal: 40,
+    paddingBottom: 20,
   },
   iconButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 60,
-    height: 60,
+  },
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  iconLabel: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 
