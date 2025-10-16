@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import API, { callAPI } from '../services/api';
+import { storage } from '../utils/storage';
 
 export default function ChatsScreen() {
   const [chats, setChats] = useState([]);
@@ -57,13 +58,30 @@ export default function ChatsScreen() {
   const loadChats = async () => {
     try {
       if (user?.phone) {
+        // Try to load from cache first
+        const cachedChats = await storage.getCachedData(`chats_${user.phone}`);
+        if (cachedChats) {
+          setChats(cachedChats);
+          setFilteredChats(cachedChats);
+        }
+
+        // Then try to fetch from server
         const response = await callAPI(API.Chat.getAll(user.phone));
         const chatsList = response.chats || [];
         setChats(chatsList);
         setFilteredChats(chatsList);
+        
+        // Cache the data
+        await storage.setCachedData(`chats_${user.phone}`, chatsList);
       }
     } catch (error) {
       console.error('Error loading chats:', error);
+      // If fetch fails but we have cache, keep using it
+      const cachedChats = await storage.getCachedData(`chats_${user.phone}`);
+      if (cachedChats && chats.length === 0) {
+        setChats(cachedChats);
+        setFilteredChats(cachedChats);
+      }
     } finally {
       setRefreshing(false);
     }

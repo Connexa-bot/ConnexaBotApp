@@ -3,11 +3,14 @@
 // Complete API endpoints organized by sections
 // ================================================================
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ||
-                     process.env.VITE_API_URL ||
-                     process.env.SERVER_URL ||
-                     (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null) ||
-                     'http://localhost:3000';
+// Remove trailing slash to prevent double slashes
+const baseUrl = process.env.REACT_APP_API_URL ||
+                process.env.VITE_API_URL ||
+                process.env.SERVER_URL ||
+                (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null) ||
+                'http://localhost:3000';
+
+const API_BASE_URL = baseUrl.replace(/\/$/, '');
 
 // ================================================================
 // SECTION 0: HEALTH & CONNECTION
@@ -739,6 +742,8 @@ export const AIEndpoints = {
 // ================================================================
 export const callAPI = async (endpoint) => {
   try {
+    console.log('📡 API Request:', endpoint.method, endpoint.url);
+    
     const response = await fetch(endpoint.url, {
       method: endpoint.method,
       headers: {
@@ -747,10 +752,17 @@ export const callAPI = async (endpoint) => {
       body: endpoint.body ? JSON.stringify(endpoint.body) : undefined
     });
 
+    if (!response.ok) {
+      console.error(`❌ API Error ${response.status}:`, endpoint.url);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
     const data = await response.json();
+    console.log('✅ API Response:', endpoint.method, endpoint.url);
     return data;
   } catch (error) {
-    console.error('API call failed:', error);
+    console.error('❌ API call failed:', error.message || error);
+    console.error('   URL:', endpoint.url);
     throw error;
   }
 };

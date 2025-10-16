@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import API, { callAPI } from '../services/api';
+import { storage } from '../utils/storage';
 
 export default function ContactsScreen() {
   const [contacts, setContacts] = useState([]);
@@ -37,11 +38,27 @@ export default function ContactsScreen() {
   const loadContacts = async () => {
     try {
       if (user?.phone) {
+        // Load from cache first
+        const cachedContacts = await storage.getCachedData(`contacts_${user.phone}`);
+        if (cachedContacts) {
+          setContacts(cachedContacts);
+        }
+
+        // Fetch from server
         const response = await callAPI(API.Contact.getAll(user.phone));
-        setContacts(response.contacts || []);
+        const contactsList = response.contacts || [];
+        setContacts(contactsList);
+        
+        // Cache the data
+        await storage.setCachedData(`contacts_${user.phone}`, contactsList);
       }
     } catch (error) {
       console.error('Error loading contacts:', error);
+      // Keep cached data if fetch fails
+      const cachedContacts = await storage.getCachedData(`contacts_${user.phone}`);
+      if (cachedContacts && contacts.length === 0) {
+        setContacts(cachedContacts);
+      }
     } finally {
       setRefreshing(false);
     }

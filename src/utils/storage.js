@@ -44,4 +44,14 @@ export const storage = {
       return false;
     }
   },
+
+  // Cache helpers for offline data
+  async getCachedData(key) {
+    const cached = await this.getItem(`cache_${key}`);
+    return cached ? JSON.parse(cached) : null;
+  },
+
+  async setCachedData(key, data) {
+    await this.setItem(`cache_${key}`, JSON.stringify(data));
+  },
 };
