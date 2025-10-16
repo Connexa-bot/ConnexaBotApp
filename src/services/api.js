@@ -346,6 +346,12 @@ export const MessageEndpoints = {
   search: (phone, query) => ({
     url: `${API_BASE_URL}/api/search/messages/${phone}?query=${encodeURIComponent(query)}`,
     method: 'GET'
+  }),
+
+  // Get archived chats
+  getArchived: (phone) => ({
+    url: `${API_BASE_URL}/api/chats/${phone}/archived`,
+    method: 'GET'
   })
 };
 

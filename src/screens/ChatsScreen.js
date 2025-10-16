@@ -39,22 +39,66 @@ export default function ChatsScreen() {
     navigation.navigate('Camera');
   };
 
+
+import { Modal } from 'react-native';
+
   useEffect(() => {
     loadChats();
   }, []);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setFilteredChats(chats);
+      applyFilter(selectedFilter);
     } else {
-      const query = searchQuery.toLowerCase();
-      const filtered = chats.filter(chat =>
-        chat.name?.toLowerCase().includes(query) ||
-        chat.lastMessage?.toLowerCase().includes(query)
-      );
-      setFilteredChats(filtered);
+      handleSearch(searchQuery);
     }
-  }, [searchQuery, chats]);
+  }, [searchQuery, chats, selectedFilter]);
+
+  const handleSearch = async (query) => {
+    if (!query.trim()) {
+      applyFilter(selectedFilter);
+      return;
+    }
+
+    try {
+      // Search via API
+      const response = await callAPI(API.Message.search(user.phone, query));
+      
+      if (response?.results) {
+        // Filter by selected filter type
+        let filtered = response.results;
+        
+        switch (selectedFilter) {
+          case 'Unread':
+            filtered = filtered.filter(chat => chat.unreadCount > 0);
+            break;
+          case 'Favorites':
+            filtered = filtered.filter(chat => chat.isPinned);
+            break;
+          case 'Groups':
+            filtered = filtered.filter(chat => chat.isGroup);
+            break;
+        }
+        
+        setFilteredChats(filtered);
+      } else {
+        // Fallback to local search
+        const localFiltered = chats.filter(chat =>
+          chat.name?.toLowerCase().includes(query.toLowerCase()) ||
+          chat.lastMessage?.toLowerCase().includes(query.toLowerCase())
+        );
+        setFilteredChats(localFiltered);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      // Fallback to local search
+      const localFiltered = chats.filter(chat =>
+        chat.name?.toLowerCase().includes(query.toLowerCase()) ||
+        chat.lastMessage?.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredChats(localFiltered);
+    }
+  };
 
   const loadChats = async () => {
     try {
@@ -132,6 +176,24 @@ export default function ChatsScreen() {
     return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
   };
 
+  const [lastTapTime, setLastTapTime] = useState(0);
+
+  const handleAvatarPress = (item) => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+
+    if (now - lastTapTime < DOUBLE_TAP_DELAY) {
+      // Double tap - open profile
+      navigation.navigate('ContactProfile', { contact: item });
+    } else {
+      // Single tap - view status if available
+      if (item.hasStatus) {
+        navigation.navigate('StatusView', { contact: item });
+      }
+    }
+    setLastTapTime(now);
+  };
+
   const renderChat = ({ item }) => {
     const isPinned = item.isPinned || false;
     const isMuted = item.isMuted || false;
@@ -144,7 +206,11 @@ export default function ChatsScreen() {
         onPress={() => navigation.navigate('ChatView', { chat: item })}
         activeOpacity={0.7}
       >
-        <View style={styles.avatarContainer}>
+        <TouchableOpacity 
+          style={styles.avatarContainer}
+          onPress={() => handleAvatarPress(item)}
+          activeOpacity={0.8}
+        >
           <StatusRing 
             size={56} 
             strokeWidth={2.5} 
@@ -162,7 +228,7 @@ export default function ChatsScreen() {
               </View>
             )}
           </StatusRing>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.chatContent}>
           <View style={styles.topRow}>
@@ -182,12 +248,20 @@ export default function ChatsScreen() {
           <View style={styles.bottomRow}>
             <View style={styles.messageContainer}>
               {item.lastMessageFromMe && (
-                <Ionicons
-                  name={item.lastMessageStatus === 'read' ? 'checkmark-done' : 'checkmark'}
-                  size={16}
-                  color={item.lastMessageStatus === 'read' ? '#53BDEB' : colors.tertiaryText}
-                  style={styles.statusIcon}
-                />
+                <View style={styles.tickContainer}>
+                  {item.lastMessageStatus === 'pending' && (
+                    <Ionicons name="time-outline" size={16} color={colors.tertiaryText} style={styles.statusIcon} />
+                  )}
+                  {item.lastMessageStatus === 'sent' && (
+                    <Ionicons name="checkmark" size={16} color={colors.tertiaryText} style={styles.statusIcon} />
+                  )}
+                  {item.lastMessageStatus === 'delivered' && (
+                    <Ionicons name="checkmark-done" size={16} color={colors.tertiaryText} style={styles.statusIcon} />
+                  )}
+                  {item.lastMessageStatus === 'read' && (
+                    <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.statusIcon} />
+                  )}
+                </View>
               )}
               <Text
                 style={[
@@ -228,12 +302,55 @@ export default function ChatsScreen() {
     { id: 'Links', label: 'Links', icon: 'link-outline' },
   ];
 
+  const [customFilters, setCustomFilters] = useState([]);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [archivedChats, setArchivedChats] = useState([]);
+
   const filters = [
     { id: 'All', label: 'All', icon: 'apps' },
-    { id: 'Unread', label: 'Unread', count: Array.isArray(filteredChats) ? filteredChats.filter(c => c.unreadCount > 0).length : 0, icon: 'mail-unread' },
+    { id: 'Unread', label: 'Unread', count: Array.isArray(chats) ? chats.filter(c => c.unreadCount > 0).length : 0, icon: 'mail-unread' },
     { id: 'Favorites', label: 'Favorites', icon: 'star' },
     { id: 'Groups', label: 'Groups', icon: 'people' },
+    ...customFilters.map(f => ({ id: f.id, label: f.name, icon: 'list', custom: true }))
   ];
+
+  const applyFilter = (filterId) => {
+    let filtered = [...chats];
+    
+    switch (filterId) {
+      case 'All':
+        filtered = chats;
+        break;
+      case 'Unread':
+        filtered = chats.filter(chat => chat.unreadCount > 0);
+        break;
+      case 'Favorites':
+        filtered = chats.filter(chat => chat.isPinned);
+        break;
+      case 'Groups':
+        filtered = chats.filter(chat => chat.isGroup);
+        break;
+      default:
+        // Custom filter
+        const customFilter = customFilters.find(f => f.id === filterId);
+        if (customFilter && customFilter.chatIds) {
+          filtered = chats.filter(chat => customFilter.chatIds.includes(chat.id));
+        }
+    }
+    
+    setFilteredChats(filtered);
+  };
+
+  const loadArchivedChats = async () => {
+    try {
+      const response = await callAPI(API.Chat.getArchived(user.phone));
+      if (response?.chats) {
+        setArchivedChats(response.chats);
+      }
+    } catch (error) {
+      console.error('Error loading archived chats:', error);
+    }
+  };
 
   const menuOptions = [
     { id: 'new_group', label: 'New group' },
@@ -456,7 +573,10 @@ export default function ChatsScreen() {
                     borderWidth: 0,
                   },
                 ]}
-                onPress={() => setSelectedFilter(filter.id)}
+                onPress={() => {
+                  setSelectedFilter(filter.id);
+                  applyFilter(filter.id);
+                }}
               >
                 <Ionicons
                   name={filter.icon}
@@ -475,7 +595,10 @@ export default function ChatsScreen() {
                 </Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity style={[styles.addFilterButton, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
+            <TouchableOpacity 
+              style={[styles.addFilterButton, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}
+              onPress={() => setShowFilterModal(true)}
+            >
               <Ionicons name="add" size={20} color={colors.text} />
             </TouchableOpacity>
           </ScrollView>
@@ -483,16 +606,27 @@ export default function ChatsScreen() {
       )}
 
       {/* Archived Section - Show when not typing */}
-      {!searchQuery.trim() && (
-        <TouchableOpacity style={[styles.archivedSection, { 
-          backgroundColor: colors.background,
-          borderBottomWidth: 0.5,
-          borderBottomColor: isDark ? '#1F2C34' : '#E9EDEF'
-        }]}>
+      {!searchQuery.trim() && selectedFilter === 'All' && (
+        <TouchableOpacity 
+          style={[styles.archivedSection, { 
+            backgroundColor: colors.background,
+            borderBottomWidth: 0.5,
+            borderBottomColor: isDark ? '#1F2C34' : '#E9EDEF'
+          }]}
+          onPress={() => {
+            loadArchivedChats();
+            navigation.navigate('ArchivedChats', { archivedChats });
+          }}
+        >
           <View style={[styles.archivedIconBox, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
             <Ionicons name="archive-outline" size={20} color={colors.text} />
           </View>
           <Text style={[styles.archivedText, { color: colors.text }]}>Archived</Text>
+          {archivedChats.length > 0 && (
+            <Text style={[styles.archivedCount, { color: colors.tertiaryText }]}>
+              {archivedChats.length}
+            </Text>
+          )}
         </TouchableOpacity>
       )}
 
@@ -642,6 +776,58 @@ export default function ChatsScreen() {
           <Ionicons name="add" size={28} color="#FFFFFF" />
         </TouchableOpacity>
       )}
+
+      {/* Custom Filter Creation Modal */}
+      <Modal
+        visible={showFilterModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowFilterModal(false)}
+      >
+        <View style={styles.filterModalOverlay}>
+          <View style={[styles.filterModalContent, { backgroundColor: colors.background }]}>
+            <View style={styles.filterModalHeader}>
+              <TouchableOpacity onPress={() => setShowFilterModal(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+              <Text style={[styles.filterModalTitle, { color: colors.text }]}>New list</Text>
+              <View style={{ width: 24 }} />
+            </View>
+
+            <View style={styles.filterModalBody}>
+              <Text style={[styles.filterModalLabel, { color: colors.secondaryText }]}>List name</Text>
+              <TextInput
+                style={[styles.filterModalInput, { 
+                  color: colors.text,
+                  borderColor: colors.primary,
+                  backgroundColor: colors.background 
+                }]}
+                placeholder="Example: Work, Friends"
+                placeholderTextColor={colors.tertiaryText}
+                onChangeText={(text) => {
+                  // Handle filter name input
+                }}
+              />
+              <Text style={[styles.filterModalHint, { color: colors.tertiaryText }]}>
+                Any list you create becomes a filter at the top of your Chats tab.
+              </Text>
+
+              <TouchableOpacity 
+                style={[styles.filterModalButton, { backgroundColor: colors.secondaryBackground }]}
+                onPress={() => {
+                  // Navigate to contact/group selector
+                  setShowFilterModal(false);
+                  navigation.navigate('SelectChatsForFilter');
+                }}
+              >
+                <Text style={[styles.filterModalButtonText, { color: colors.secondaryText }]}>
+                  Add people or groups
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -996,5 +1182,67 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     zIndex: 100,
+  },
+  tickContainer: {
+    marginRight: 4,
+  },
+  archivedCount: {
+    fontSize: 15,
+    marginLeft: 'auto',
+  },
+  filterModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  filterModalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 40,
+    minHeight: 400,
+  },
+  filterModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E9EDEF',
+  },
+  filterModalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  filterModalBody: {
+    padding: 20,
+  },
+  filterModalLabel: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  filterModalInput: {
+    borderWidth: 2,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  filterModalHint: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 24,
+  },
+  filterModalButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  filterModalButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
