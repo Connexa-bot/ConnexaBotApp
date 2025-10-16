@@ -196,7 +196,7 @@ export default function UpdatesScreen({ navigation }) {
       />
 
       {/* Custom Header */}
-      <View style={[styles.header, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      <View style={[styles.header, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, 16) }]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Updates</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={() => {/* Search */}} style={styles.headerIcon}>
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
   fabContainer: {
     position: 'absolute',
     right: 16,
-    bottom: Platform.OS === 'ios' ? 100 : 76,
+    bottom: Platform.OS === 'ios' ? 100 : 90,
     gap: 12,
   },
   fabPrimary: {
