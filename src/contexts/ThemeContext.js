@@ -14,26 +14,31 @@ const colorSchemes = {
     // Backgrounds
     background: '#FFFFFF',
     secondaryBackground: '#F0F2F5',
+    headerBackground: '#F0F2F5',
     header: '#008069',
     chatBackground: '#EFEAE2',
     inputBackground: '#FFFFFF',
     attachmentBg: '#F0F2F5',
+    menuBackground: '#FFFFFF',
     
     // Text Colors
-    headerText: '#FFFFFF',
+    headerText: '#00A884',
+    headerIconColor: '#5F6368',
     text: '#111B21',
     secondaryText: '#667781',
     tertiaryText: '#8696A0',
+    menuText: '#111B21',
     
     // Borders & Dividers
     border: '#E9EDEF',
     divider: '#E9EDEF',
     inputBorder: '#E9EDEF',
+    menuDivider: '#E9EDEF',
     
     // Tab Bar
     tabBar: '#FFFFFF',
     tabIconSelected: '#00A884',
-    tabIconDefault: '#8696A0',
+    tabIconDefault: '#5F6368',
     
     // Message Bubbles
     messageBubbleSent: '#D9FDD3',
@@ -69,21 +74,26 @@ const colorSchemes = {
     // Backgrounds
     background: '#111B21',
     secondaryBackground: '#1F2C34',
+    headerBackground: '#202C33',
     header: '#202C33',
     chatBackground: '#0B141A',
     inputBackground: '#1F2C34',
     attachmentBg: '#2A3942',
+    menuBackground: '#233138',
     
     // Text Colors
-    headerText: '#E9EDEF',
+    headerText: '#00A884',
+    headerIconColor: '#AEBAC1',
     text: '#E9EDEF',
     secondaryText: '#8696A0',
     tertiaryText: '#667781',
+    menuText: '#E9EDEF',
     
     // Borders & Dividers
     border: '#1F2C34',
     divider: '#1F2C34',
     inputBorder: '#2A3942',
+    menuDivider: '#2A3942',
     
     // Tab Bar
     tabBar: '#1F2C34',

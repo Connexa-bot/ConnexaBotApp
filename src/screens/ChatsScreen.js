@@ -19,6 +19,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import API, { callAPI } from '../services/api';
 import { storage } from '../utils/storage';
+import StatusRing from '../components/StatusRing';
 
 export default function ChatsScreen() {
   const [chats, setChats] = useState([]);
@@ -134,6 +135,8 @@ export default function ChatsScreen() {
   const renderChat = ({ item }) => {
     const isPinned = item.isPinned || false;
     const isMuted = item.isMuted || false;
+    const hasStatus = item.hasStatus || false;
+    const isStatusViewed = item.isStatusViewed || false;
 
     return (
       <TouchableOpacity
@@ -142,15 +145,23 @@ export default function ChatsScreen() {
         activeOpacity={0.7}
       >
         <View style={styles.avatarContainer}>
-          {item.profilePicUrl ? (
-            <Image source={{ uri: item.profilePicUrl }} style={styles.avatarImage} />
-          ) : (
-            <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
-              <Text style={styles.avatarText}>
-                {item.name?.charAt(0).toUpperCase() || '?'}
-              </Text>
-            </View>
-          )}
+          <StatusRing 
+            size={56} 
+            strokeWidth={2.5} 
+            hasStatus={hasStatus}
+            isViewed={isStatusViewed}
+            progress={1}
+          >
+            {item.profilePicUrl ? (
+              <Image source={{ uri: item.profilePicUrl }} style={styles.avatarImage} />
+            ) : (
+              <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
+                <Text style={styles.avatarText}>
+                  {item.name?.charAt(0).toUpperCase() || '?'}
+                </Text>
+              </View>
+            )}
+          </StatusRing>
         </View>
 
         <View style={styles.chatContent}>
@@ -293,14 +304,14 @@ export default function ChatsScreen() {
       />
 
       {/* Custom Header */}
-      <View style={[styles.header, { backgroundColor: colors.header, paddingTop: insets.top }]}>
-        <Text style={[styles.headerTitle, { color: colors.headerText }]}>WhatsApp</Text>
+      <View style={[styles.header, { backgroundColor: colors.headerBackground, paddingTop: insets.top }]}>
+        <Text style={[styles.headerTitle, { color: '#00A884' }]}>WhatsApp</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={handleCameraPress} style={styles.headerIcon}>
-            <Ionicons name="camera-outline" size={24} color={colors.headerText} />
+            <Ionicons name="camera-outline" size={24} color={colors.headerIconColor} />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleMenuPress} style={styles.headerIcon}>
-            <Ionicons name="ellipsis-vertical" size={24} color={colors.headerText} />
+            <Ionicons name="ellipsis-vertical" size={24} color={colors.headerIconColor} />
           </TouchableOpacity>
         </View>
       </View>
@@ -313,14 +324,18 @@ export default function ChatsScreen() {
             activeOpacity={1}
             onPress={() => setMenuVisible(false)}
           />
-          <View style={[styles.menuDropdown, { backgroundColor: colors.secondaryBackground, top: insets.top + 60 }]}>
-            {menuOptions.map((option) => (
+          <View style={[styles.menuDropdown, { backgroundColor: colors.menuBackground, top: insets.top + 50 }]}>
+            {menuOptions.map((option, index) => (
               <TouchableOpacity
                 key={option.id}
-                style={[styles.menuItem, { borderBottomColor: colors.border }]}
+                style={[
+                  styles.menuItem, 
+                  { borderBottomColor: colors.menuDivider },
+                  index === menuOptions.length - 1 && { borderBottomWidth: 0 }
+                ]}
                 onPress={() => handleMenuOptionPress(option.id)}
               >
-                <Text style={[styles.menuItemText, { color: colors.text }]}>
+                <Text style={[styles.menuItemText, { color: colors.menuText }]}>
                   {option.label}
                 </Text>
               </TouchableOpacity>
@@ -634,16 +649,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingBottom: 12,
+    elevation: 0,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '500',
+    fontSize: 22,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 20,
+    gap: 24,
   },
   headerIcon: {
     padding: 4,
@@ -659,24 +676,25 @@ const styles = StyleSheet.create({
   },
   menuDropdown: {
     position: 'absolute',
-    right: 16,
-    width: 200,
+    right: 8,
+    minWidth: 180,
     borderRadius: 8,
-    elevation: 8,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
     zIndex: 999,
     overflow: 'hidden',
+    paddingVertical: 4,
   },
   menuItem: {
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderBottomWidth: 0.5,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: 0,
   },
   menuItemText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '400',
   },
   searchContainer: {
@@ -855,14 +873,14 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   avatarImage: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: '100%',
+    height: '100%',
+    borderRadius: 1000,
   },
   avatarPlaceholder: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: '100%',
+    height: '100%',
+    borderRadius: 1000,
     justifyContent: 'center',
     alignItems: 'center',
   },
