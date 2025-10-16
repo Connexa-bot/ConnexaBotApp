@@ -16,7 +16,7 @@ import { useTheme } from '../contexts/ThemeContext';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall, onInfo, onViewFullScreen }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
 
@@ -70,57 +70,66 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
       
       <Animated.View
         style={[
-          styles.card,
+          styles.fullCard,
           {
-            backgroundColor: colors.modalBackground,
+            backgroundColor: isDark ? '#000' : '#fff',
             transform: [{ translateY: slideAnim }],
           },
         ]}
       >
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onViewFullScreen} activeOpacity={0.9}>
-            <Image
-              source={{ uri: contact.profilePic || 'https://via.placeholder.com/120' }}
-              style={styles.profilePic}
-            />
-          </TouchableOpacity>
-          <Text style={[styles.name, { color: colors.text }]}>{contact.name || contact.id}</Text>
-          {contact.phone && (
-            <Text style={[styles.phone, { color: colors.secondaryText }]}>{contact.phone}</Text>
-          )}
-        </View>
+        {/* Full screen image */}
+        <TouchableOpacity 
+          style={styles.imageContainer}
+          onPress={onViewFullScreen}
+          activeOpacity={0.9}
+        >
+          <Image
+            source={{ uri: contact.profilePicUrl || contact.profilePic || 'https://via.placeholder.com/500' }}
+            style={styles.fullImage}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
 
-        <View style={styles.actions}>
+        {/* Bottom action bar */}
+        <View style={[styles.bottomActions, { backgroundColor: isDark ? '#1F2C34' : '#fff' }]}>
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.secondaryBackground }]}
+            style={styles.iconButton}
             onPress={onMessage}
           >
-            <Ionicons name="chatbubble" size={24} color={colors.primary} />
-            <Text style={[styles.actionText, { color: colors.text }]}>Message</Text>
+            <View style={[styles.iconCircle, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
+              <Ionicons name="chatbubble" size={24} color="#00A884" />
+            </View>
+            <Text style={[styles.iconLabel, { color: colors.text }]}>Message</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.secondaryBackground }]}
+            style={styles.iconButton}
             onPress={onCall}
           >
-            <Ionicons name="call" size={24} color={colors.primary} />
-            <Text style={[styles.actionText, { color: colors.text }]}>Call</Text>
+            <View style={[styles.iconCircle, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
+              <Ionicons name="call" size={24} color="#00A884" />
+            </View>
+            <Text style={[styles.iconLabel, { color: colors.text }]}>Call</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.secondaryBackground }]}
-            onPress={onVideoCall}
-          >
-            <Ionicons name="videocam" size={24} color={colors.primary} />
-            <Text style={[styles.actionText, { color: colors.text }]}>Video</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.secondaryBackground }]}
+            style={styles.iconButton}
             onPress={onInfo}
           >
-            <Ionicons name="information-circle" size={24} color={colors.primary} />
-            <Text style={[styles.actionText, { color: colors.text }]}>Info</Text>
+            <View style={[styles.iconCircle, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
+              <Ionicons name="person-circle" size={24} color="#00A884" />
+            </View>
+            <Text style={[styles.iconLabel, { color: colors.text }]}>Profile</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={onClose}
+          >
+            <View style={[styles.iconCircle, { backgroundColor: '#E53935' }]}>
+              <Ionicons name="close-circle" size={24} color="#fff" />
+            </View>
+            <Text style={[styles.iconLabel, { color: colors.text }]}>Block</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -135,57 +144,56 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     zIndex: 999,
   },
-  card: {
+  fullCard: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+  },
+  imageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 100,
+  },
+  fullImage: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT - 120,
+  },
+  bottomActions: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 24,
-    paddingBottom: 40,
-    zIndex: 1000,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  profilePic: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 16,
-  },
-  name: {
-    fontSize: 20,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  phone: {
-    fontSize: 14,
-  },
-  actions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    paddingVertical: 16,
     paddingHorizontal: 20,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
-  actionButton: {
+  iconButton: {
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    minWidth: 70,
   },
-  actionText: {
-    fontSize: 12,
-    marginTop: 8,
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  iconLabel: {
+    fontSize: 11,
+    fontWeight: '400',
   },
 });
 

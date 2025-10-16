@@ -63,11 +63,11 @@ export default function ChatsScreen() {
     try {
       // Search via API
       const response = await callAPI(API.Message.search(user.phone, query));
-      
+
       if (response?.results) {
         // Filter by selected filter type
         let filtered = response.results;
-        
+
         switch (selectedFilter) {
           case 'Unread':
             filtered = filtered.filter(chat => chat.unreadCount > 0);
@@ -79,7 +79,7 @@ export default function ChatsScreen() {
             filtered = filtered.filter(chat => chat.isGroup);
             break;
         }
-        
+
         setFilteredChats(filtered);
       } else {
         // Fallback to local search
@@ -117,7 +117,7 @@ export default function ChatsScreen() {
 
         // Extract chats array - backend returns {success: true, chats: [...], count: X}
         let chatsList = [];
-        
+
         if (response?.success === true && Array.isArray(response.chats)) {
           chatsList = response.chats;
           console.log('✅ Successfully extracted', chatsList.length, 'chats from response');
@@ -130,7 +130,7 @@ export default function ChatsScreen() {
         } else {
           console.warn('⚠️ Unexpected response format:', typeof response);
         }
-        
+
         // Update state with fetched data
         if (chatsList.length > 0) {
           setChats(chatsList);
@@ -161,7 +161,7 @@ export default function ChatsScreen() {
 
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
-    
+
     // Handle both unix timestamp (seconds) and milliseconds
     const date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000);
     const today = new Date();
@@ -217,6 +217,18 @@ export default function ChatsScreen() {
     const hasStatus = item.hasStatus || false;
     const isStatusViewed = item.isStatusViewed || false;
 
+    // Extract text and time for display
+    let lastMessageText = 'Tap to chat';
+    let lastMessageTime = item.lastMessageTime;
+
+    if (item.lastMessage) {
+      if (typeof item.lastMessage === 'object' && item.lastMessage.text) {
+        lastMessageText = item.lastMessage.text;
+      } else if (typeof item.lastMessage === 'string') {
+        lastMessageText = item.lastMessage;
+      }
+    }
+    
     return (
       <TouchableOpacity
         style={[styles.chatItem, { backgroundColor: colors.background }]}
@@ -258,7 +270,7 @@ export default function ChatsScreen() {
               )}
             </View>
             <Text style={[styles.chatTime, { color: item.unreadCount > 0 ? colors.primary : colors.tertiaryText }]}>
-              {formatTime(item.lastMessageTime)}
+              {formatTime(lastMessageTime)}
             </Text>
           </View>
 
@@ -290,7 +302,7 @@ export default function ChatsScreen() {
                 ]}
                 numberOfLines={1}
               >
-                {item.lastMessage ? (typeof item.lastMessage === 'object' ? (item.lastMessage.text || 'Tap to chat') : item.lastMessage) : 'Tap to chat'}
+                {lastMessageText}
               </Text>
             </View>
 
@@ -334,7 +346,7 @@ export default function ChatsScreen() {
 
   const applyFilter = (filterId) => {
     let filtered = [...chats];
-    
+
     switch (filterId) {
       case 'All':
         filtered = chats;
@@ -355,7 +367,7 @@ export default function ChatsScreen() {
           filtered = chats.filter(chat => customFilter.chatIds.includes(chat.id));
         }
     }
-    
+
     setFilteredChats(filtered);
   };
 

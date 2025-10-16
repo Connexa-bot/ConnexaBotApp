@@ -560,9 +560,9 @@ export default function ChatViewScreen({ route, navigation }) {
           resizeMode="repeat"
         >
           {messages.length === 0 ? (
-            <ScrollView contentContainerStyle={styles.emptyScrollContent}>
+            <View style={styles.emptyScrollContent}>
               {renderEmptyState()}
-            </ScrollView>
+            </View>
           ) : (
             <FlatList
               ref={flatListRef}
