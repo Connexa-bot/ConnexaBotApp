@@ -9,8 +9,10 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
   Image,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { useTheme } from '../contexts/ThemeContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -74,6 +76,28 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
     });
   };
 
+  const handleBackdropPress = () => {
+    if (showFullScreen) {
+      handleBackFromFullScreen();
+    } else {
+      // Animate back to profile tag position
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: SCREEN_HEIGHT,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        onClose();
+      });
+    }
+  };
+
   if (!visible && slideAnim._value === SCREEN_HEIGHT) {
     return null;
   }
@@ -100,7 +124,7 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
 
   return (
     <>
-      <TouchableWithoutFeedback onPress={showFullScreen ? handleBackFromFullScreen : onClose}>
+      <TouchableWithoutFeedback onPress={handleBackdropPress}>
         <Animated.View
           style={[
             styles.backdrop,
@@ -164,52 +188,53 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
           )}
         </TouchableOpacity>
 
-        {/* Bottom action bar */}
+        {/* Bottom action bar with blur effect */}
         <Animated.View
           style={[
             styles.bottomActions,
             {
-              backgroundColor: isDark ? 'rgba(31, 44, 52, 0.95)' : 'rgba(255, 255, 255, 0.95)',
               opacity: actionsOpacity,
             },
           ]}
           pointerEvents={showFullScreen ? 'none' : 'auto'}
         >
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => {
-              onMessage();
-              onClose();
-            }}
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 80 : 100}
+            tint={isDark ? 'dark' : 'light'}
+            style={styles.blurContainer}
           >
-            <View style={[styles.iconCircle, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
-              <Ionicons name="chatbubble" size={24} color="#00A884" />
-            </View>
-          </TouchableOpacity>
+            <View style={styles.actionsContent}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => {
+                  onMessage();
+                  onClose();
+                }}
+              >
+                <Ionicons name="chatbubble" size={28} color="#fff" />
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => {
-              onCall();
-              onClose();
-            }}
-          >
-            <View style={[styles.iconCircle, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
-              <Ionicons name="person-circle" size={24} color="#00A884" />
-            </View>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => {
+                  onInfo();
+                  onClose();
+                }}
+              >
+                <Ionicons name="person-circle" size={28} color="#fff" />
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => {
-              onInfo();
-              onClose();
-            }}
-          >
-            <View style={[styles.iconCircle, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
-              <Ionicons name="information-circle" size={24} color="#00A884" />
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => {
+                  onCall();
+                  onClose();
+                }}
+              >
+                <Ionicons name="information-circle" size={28} color="#fff" />
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
+          </BlurView>
         </Animated.View>
       </Animated.View>
     </>
@@ -230,7 +255,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: SCREEN_HEIGHT * 0.7,
+    height: SCREEN_HEIGHT * 0.75, // Increased to cover tab bar
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -273,22 +298,24 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    height: 100,
+  },
+  blurContainer: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  actionsContent: {
+    flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
+    alignItems: 'center',
+    paddingHorizontal: 40,
   },
   iconButton: {
     alignItems: 'center',
-  },
-  iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
     justifyContent: 'center',
-    alignItems: 'center',
+    width: 60,
+    height: 60,
   },
 });
 

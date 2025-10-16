@@ -201,12 +201,8 @@ export default function ChatsScreen() {
     if (item.hasStatus && !item.isStatusViewed) {
       // If has unviewed status, go directly to status view
       navigation.navigate('StatusView', { contact: item });
-    } else if (item.hasStatus && item.isStatusViewed) {
-      // If has viewed status, show options
-      setSelectedContact(item);
-      setShowProfileCard(true);
     } else {
-      // No status, show profile card directly
+      // Show profile card
       setSelectedContact(item);
       setShowProfileCard(true);
     }
@@ -865,21 +861,32 @@ export default function ChatsScreen() {
         <ProfileCard
           visible={showProfileCard}
           contact={selectedContact}
-          onClose={() => setShowProfileCard(false)}
-          onMessage={() => {
+          onClose={() => {
             setShowProfileCard(false);
-            navigation.navigate('ChatView', { chat: selectedContact });
+            setSelectedContact(null);
+          }}
+          onMessage={() => {
+            const chatData = {
+              ...selectedContact,
+              id: selectedContact.id || selectedContact.chatId,
+              name: selectedContact.name || 'Unknown',
+              profilePic: selectedContact.profilePicUrl || selectedContact.profilePic,
+            };
+            setShowProfileCard(false);
+            setSelectedContact(null);
+            navigation.navigate('ChatView', { chat: chatData });
           }}
           onCall={() => {
             setShowProfileCard(false);
-            navigation.navigate('ChatView', { chat: selectedContact });
+            setSelectedContact(null);
           }}
           onVideoCall={() => {
             setShowProfileCard(false);
-            navigation.navigate('ChatView', { chat: selectedContact });
+            setSelectedContact(null);
           }}
           onInfo={() => {
             setShowProfileCard(false);
+            setSelectedContact(null);
             navigation.navigate('ContactProfile', { contact: selectedContact });
           }}
           onViewFullScreen={() => {
