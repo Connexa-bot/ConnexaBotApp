@@ -1,0 +1,76 @@
+ule)
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  📱 Checking stored phone: 2349041648144
+ LOG  ✅ Session found, setting user immediately
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/chats/2349041648144
+ WARN  `setBehaviorAsync` is not supported with edge-to-edge enabled.
+ WARN  `setBackgroundColorAsync` is not supported with edge-to-edge enabled.
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status/2349041648144
+ LOG     Data structure: connected, status, authenticated, ready, isConnected, qrCode, linkCode, user, phone, error
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/chats/2349041648144
+ LOG     Data structure: success, chats, count
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG     Data structure: success, contacts, count
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG     Data structure: success, contacts, count
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG     Data structure: success, contacts, count
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG     Data structure: success, contacts, count
+ WARN  `setBehaviorAsync` is not supported with edge-to-edge enabled.
+ WARN  `setBackgroundColorAsync` is not supported with edge-to-edge enabled.
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status-updates/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/channels/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status-updates/2349041648144
+ LOG     Data structure: success, statusUpdates, count
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/channels/2349041648144
+ LOG     Data structure: success, data
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status-updates/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/channels/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/channels/2349041648144
+ LOG     Data structure: success, data
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status-updates/2349041648144
+ LOG     Data structure: success, statusUpdates, count
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status-updates/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/channels/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status-updates/2349041648144
+ LOG     Data structure: success, statusUpdates, count
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/channels/2349041648144
+ LOG     Data structure: success, data
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/calls/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/calls/2349041648144
+ LOG     Data structure: success, calls
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/calls/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/calls/2349041648144
+ LOG     Data structure: success, calls
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/calls/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/calls/2349041648144
+ LOG     Data structure: success, calls
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status-updates/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/channels/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/channels/2349041648144
+ LOG     Data structure: success, data
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status-updates/2349041648144
+ LOG     Data structure: success, statusUpdates, count
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG     Data structure: success, contacts, count
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG     Data structure: success, contacts, count
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG     Data structure: success, contacts, count
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG     Data structure: success, contacts, count
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG     Data structure: success, contacts, count
+ WARN  `setBehaviorAsync` is not supported with edge-to-edge enabled.
+ WARN  `setBackgroundColorAsync`
