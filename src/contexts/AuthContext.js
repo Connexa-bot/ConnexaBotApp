@@ -20,19 +20,26 @@ export const AuthProvider = ({ children }) => {
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
   useEffect(() => {
-    checkStoredUser();
+    checkStoredSession();
   }, []);
 
-  const checkStoredUser = async () => {
+  useEffect(() => {
+    // Check WhatsApp connection status when user is set
+    if (user?.phone) {
+      checkWhatsAppStatus();
+    }
+  }, [user]);
+
+  const checkStoredSession = async () => {
     try {
       const storedPhone = await storage.getItem('userPhone');
       console.log('📱 Checking stored phone:', storedPhone);
-      
+
       if (storedPhone) {
         console.log('✅ Session found, setting user immediately');
         setUser({ phone: storedPhone });
         setConnectionStatus('connected');
-        
+
         // Verify connection in background (don't block UI)
         setTimeout(async () => {
           try {
@@ -66,7 +73,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (phone) => {
     try {
       console.log('🔹 [AUTH] Starting login for phone:', phone);
-      
+
       const data = await callAPI(API.Health.connect(phone));
       console.log('🔹 [AUTH] Full backend response:', JSON.stringify(data, null, 2));
 
@@ -109,9 +116,9 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('🔹 [AUTH] ❌ Login error:', error);
       console.error('🔹 [AUTH] Error details:', error.message);
-      
+
       setConnectionStatus('error');
-      
+
       return {
         success: false,
         error: error.message || 'Network Error'
@@ -125,13 +132,13 @@ export const AuthProvider = ({ children }) => {
         console.log('🔹 [AUTH] Logging out phone:', user.phone);
         await callAPI(API.Health.logout(user.phone));
       }
-      
+
       await storage.deleteItem('userPhone');
       setUser(null);
       setQrCode(null);
       setLinkCode(null);
       setConnectionStatus('disconnected');
-      
+
       console.log('✅ Logout successful');
     } catch (error) {
       console.error('❌ Logout error:', error);
@@ -141,6 +148,40 @@ export const AuthProvider = ({ children }) => {
   const updateConnectionStatus = (status) => {
     console.log('🔹 [AUTH] Connection status updated:', status);
     setConnectionStatus(status);
+  };
+
+  const checkWhatsAppStatus = async () => {
+    try {
+      const status = await callAPI(API.Health.status(user.phone));
+      console.log('📱 WhatsApp Status:', status);
+
+      if (!status.authenticated || !status.ready) {
+        console.warn('⚠️ WhatsApp not fully connected:', {
+          authenticated: status.authenticated,
+          ready: status.ready,
+          connected: status.connected
+        });
+        // If not authenticated or ready, update connection status and potentially clear user data
+        if (!status.connected) {
+          setConnectionStatus('disconnected');
+          setUser(null);
+          await storage.deleteItem('userPhone');
+        } else if (!status.authenticated) {
+          setConnectionStatus('authentication_failed');
+        } else if (!status.ready) {
+          setConnectionStatus('not_ready');
+        }
+      } else {
+        console.log('✅ WhatsApp fully connected and ready.');
+        setConnectionStatus('connected'); // Ensure it's set to connected if all checks pass
+      }
+    } catch (error) {
+      console.error('❌ Failed to check WhatsApp status:', error);
+      setConnectionStatus('error');
+      // Consider logging out or clearing user data on persistent errors
+      // await storage.deleteItem('userPhone');
+      // setUser(null);
+    }
   };
 
   const value = {

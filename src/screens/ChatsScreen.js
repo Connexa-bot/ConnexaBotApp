@@ -60,8 +60,10 @@ export default function ChatsScreen() {
       if (user?.phone) {
         // Load from cache first
         const cachedChats = await storage.getCachedData(`chats_${user.phone}`);
-        if (cachedChats) {
+        if (cachedChats && cachedChats.length > 0) {
+          console.log('📱 Using cached chats:', cachedChats.length);
           setChats(cachedChats);
+          setFilteredChats(cachedChats);
         }
 
         // Fetch from server
@@ -81,20 +83,26 @@ export default function ChatsScreen() {
         }
 
         console.log('📊 Processed chats count:', chatsList.length);
+        
+        // Check if backend returned empty data
+        if (chatsList.length === 0 && response.success) {
+          console.warn('⚠️ Backend returned empty chats array - WhatsApp session may not have synced data yet');
+        }
+        
         setChats(chatsList);
-        setFilteredChats(chatsList); // Also update filteredChats immediately
+        setFilteredChats(chatsList);
 
         // Cache the data
         await storage.setCachedData(`chats_${user.phone}`, chatsList);
       }
     } catch (error) {
-      console.error('Error loading chats:', error.message || error);
+      console.error('❌ Error loading chats:', error.message || error);
       console.error('Full error:', error);
       // If fetch fails but we have cache, keep using it
       const cachedChats = await storage.getCachedData(`chats_${user.phone}`);
       if (cachedChats && chats.length === 0) {
         setChats(cachedChats);
-        setFilteredChats(cachedChats); // Ensure filteredChats is also updated from cache
+        setFilteredChats(cachedChats);
       }
     } finally {
       setRefreshing(false);
@@ -535,11 +543,23 @@ export default function ChatsScreen() {
           <View style={styles.emptyContent}>
             <Ionicons name="chatbubbles" size={64} color={colors.tertiaryText} />
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              Start messaging
+              No chats yet
             </Text>
             <Text style={[styles.emptySubtitle, { color: colors.secondaryText }]}>
-              Tap the chat icon below to message a friend
+              {user?.phone ? 
+                'Your WhatsApp chats will appear here once they sync from the backend' :
+                'Please connect your WhatsApp to see your chats'
+              }
             </Text>
+            {user?.phone && (
+              <TouchableOpacity 
+                style={[styles.refreshButton, { backgroundColor: colors.primary }]}
+                onPress={onRefresh}
+              >
+                <Ionicons name="refresh" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.refreshButtonText}>Refresh</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Contacts Row - Only shown when there are contacts */}
@@ -810,6 +830,19 @@ const styles = StyleSheet.create({
   contactName: {
     fontSize: 13,
     textAlign: 'center',
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    marginTop: 20,
+  },
+  refreshButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
   },
   chatItem: {
     flexDirection: 'row',

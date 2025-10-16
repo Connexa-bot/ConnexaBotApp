@@ -259,12 +259,12 @@ export default function ContactsScreen() {
               <Ionicons name="people-outline" size={64} color={colors.primary} />
             </View>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              {searchQuery ? 'No contacts found' : 'No contacts yet'}
+              {searchQuery ? 'No contacts found' : 'No contacts synced'}
             </Text>
             <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
               {searchQuery 
                 ? 'Try searching with a different name or number'
-                : 'Add contacts to start messaging'
+                : 'Your WhatsApp contacts will appear here once they sync from the backend. Pull down to refresh.'
               }
             </Text>
           </View>
