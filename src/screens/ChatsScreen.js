@@ -305,7 +305,7 @@ export default function ChatsScreen() {
 
       {/* Custom Header */}
       <View style={[styles.header, { backgroundColor: colors.headerBackground, paddingTop: insets.top }]}>
-        <Text style={[styles.headerTitle, { color: '#25D366' }]}>WhatsApp</Text>
+        <Text style={[styles.headerTitle, { color: colors.headerText }]}>WhatsApp</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={handleCameraPress} style={styles.headerIcon}>
             <Ionicons name="camera-outline" size={24} color={colors.headerIconColor} />
@@ -659,8 +659,8 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '500',
+    fontSize: 22,
+    fontWeight: '600',
     letterSpacing: 0,
   },
   headerActions: {
@@ -773,33 +773,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   filtersContainer: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
   },
   filtersContent: {
-    gap: 8,
+    gap: 6,
     alignItems: 'center',
   },
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 18,
-    marginRight: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 6,
   },
   filterChipActive: {
     backgroundColor: '#D0F4EA',
     borderWidth: 0,
   },
   filterText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '400',
   },
   addFilterButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -807,18 +807,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 16,
+    paddingVertical: 10,
+    gap: 12,
   },
   archivedIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
   archivedText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '400',
   },
   emptyStateContainer: {

@@ -23,7 +23,7 @@ const colorSchemes = {
     
     // Text Colors
     headerText: '#00A884',
-    headerIconColor: '#5F6368',
+    headerIconColor: '#54656F',
     text: '#000000',
     secondaryText: '#667781',
     tertiaryText: '#8696A0',
@@ -68,7 +68,7 @@ const colorSchemes = {
 
   dark: {
     // Primary Colors
-    primary: '#25D366',
+    primary: '#00A884',
     secondary: '#128C7E',
     
     // Backgrounds

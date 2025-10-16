@@ -51,16 +51,16 @@ export default function MainTabNavigator() {
           backgroundColor: colors.tabBar,
           borderTopWidth: 0,
           height: 58 + insets.bottom,
-          paddingBottom: 8 + insets.bottom,
-          paddingTop: 8,
+          paddingBottom: 6 + insets.bottom,
+          paddingTop: 6,
           elevation: 0,
         },
-        tabBarActiveTintColor: '#25D366',
-        tabBarInactiveTintColor: isDark ? '#8696A0' : '#667781',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: isDark ? '#8696A0' : '#5F6368',
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '400',
-          marginTop: 4,
+          fontSize: 11,
+          fontWeight: '500',
+          marginTop: 2,
         },
         tabBarHideOnKeyboard: Platform.OS === 'android',
         tabBarIcon: ({ focused, color }) => {
@@ -68,11 +68,11 @@ export default function MainTabNavigator() {
           let badge = 0;
 
           if (route.name === 'Chats') {
-            iconName = focused ? 'chatbubble' : 'chatbubble-outline';
+            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
             // badge should come from actual unread count from context/state
             badge = 0; // Only show if there are actual unread messages
           } else if (route.name === 'Updates') {
-            iconName = focused ? 'radio-button-on' : 'radio-button-off-outline';
+            iconName = focused ? 'disc' : 'disc-outline';
             // badge should show only if there are new/unviewed statuses
             badge = 0; // Only show if there are new statuses
           } else if (route.name === 'Communities') {
