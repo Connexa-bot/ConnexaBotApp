@@ -31,6 +31,8 @@ export default function ChatsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [showProfileCard, setShowProfileCard] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
   const navigation = useNavigation();
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
@@ -159,37 +161,54 @@ export default function ChatsScreen() {
 
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
-    const date = new Date(timestamp * 1000);
+    
+    // Handle both unix timestamp (seconds) and milliseconds
+    const date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) {
-      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    // Reset time to midnight for date comparison
+    const todayMidnight = new Date(today.setHours(0, 0, 0, 0));
+    const yesterdayMidnight = new Date(yesterday.setHours(0, 0, 0, 0));
+    const dateMidnight = new Date(date.setHours(0, 0, 0, 0));
+
+    if (dateMidnight.getTime() === todayMidnight.getTime()) {
+      // Today - show time
+      return new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000).toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      });
+    } else if (dateMidnight.getTime() === yesterdayMidnight.getTime()) {
+      // Yesterday
       return 'Yesterday';
-    } else if (today - date < 7 * 24 * 60 * 60 * 1000) {
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    } else if (new Date() - dateMidnight < 7 * 24 * 60 * 60 * 1000) {
+      // Last 7 days - show day name
+      return new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000).toLocaleDateString('en-US', { weekday: 'short' });
+    } else {
+      // Older - show date
+      return new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000).toLocaleDateString('en-US', { 
+        month: 'numeric', 
+        day: 'numeric', 
+        year: '2-digit' 
+      });
     }
-    return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
   };
 
-  const [lastTapTime, setLastTapTime] = useState(0);
-
   const handleAvatarPress = (item) => {
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
-
-    if (now - lastTapTime < DOUBLE_TAP_DELAY) {
-      // Double tap - open profile
-      navigation.navigate('ContactProfile', { contact: item });
+    if (item.hasStatus && !item.isStatusViewed) {
+      // If has unviewed status, go directly to status view
+      navigation.navigate('StatusView', { contact: item });
+    } else if (item.hasStatus && item.isStatusViewed) {
+      // If has viewed status, show options
+      setSelectedContact(item);
+      setShowProfileCard(true);
     } else {
-      // Single tap - view status if available
-      if (item.hasStatus) {
-        navigation.navigate('StatusView', { contact: item });
-      }
+      // No status, show profile card directly
+      setSelectedContact(item);
+      setShowProfileCard(true);
     }
-    setLastTapTime(now);
   };
 
   const renderChat = ({ item }) => {
@@ -294,9 +313,10 @@ export default function ChatsScreen() {
   };
 
   const searchFilters = [
-    { id: 'Unread', label: 'Unread', icon: 'mail-unread-outline' },
     { id: 'Photos', label: 'Photos', icon: 'image-outline' },
     { id: 'Videos', label: 'Videos', icon: 'videocam-outline' },
+    { id: 'Audio', label: 'Audio', icon: 'musical-notes-outline' },
+    { id: 'Documents', label: 'Documents', icon: 'document-outline' },
     { id: 'Links', label: 'Links', icon: 'link-outline' },
   ];
 
@@ -488,48 +508,56 @@ export default function ChatsScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* AI Suggestions when no query */}
-          {!searchQuery.trim() && (
-            <View style={styles.aiSuggestionsContainer}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.aiSuggestionsContent}
-              >
-                {aiSuggestions.map((suggestion, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[styles.aiSuggestionChip, { backgroundColor: colors.secondaryBackground }]}
-                    onPress={() => setSearchQuery(suggestion.text)}
-                  >
-                    <Text style={styles.aiSuggestionEmoji}>{suggestion.emoji}</Text>
-                    <Text style={[styles.aiSuggestionText, { color: colors.text }]} numberOfLines={1}>
-                      {suggestion.text}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+          {/* AI Suggestions and Search Filters - Only show when "All" filter is active */}
+          {!searchQuery.trim() && selectedFilter === 'All' && (
+            <>
+              <View style={styles.aiSuggestionsContainer}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.aiSuggestionsContent}
+                >
+                  {aiSuggestions.map((suggestion, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[styles.aiSuggestionChip, { backgroundColor: colors.secondaryBackground }]}
+                      onPress={() => setSearchQuery(suggestion.text)}
+                    >
+                      <Text style={styles.aiSuggestionEmoji}>{suggestion.emoji}</Text>
+                      <Text style={[styles.aiSuggestionText, { color: colors.text }]} numberOfLines={1}>
+                        {suggestion.text}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              <View style={styles.filtersContainer}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.filtersContent}
+                >
+                  {searchFilters.map((filter) => (
+                    <TouchableOpacity
+                      key={filter.id}
+                      style={[styles.filterChip, { backgroundColor: colors.secondaryBackground }]}
+                    >
+                      <Ionicons name={filter.icon} size={18} color={colors.text} style={{ marginRight: 6 }} />
+                      <Text style={[styles.filterText, { color: colors.text }]}>{filter.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </>
           )}
 
-          {/* Search Filter Chips */}
-          {!searchQuery.trim() && (
-            <View style={styles.filtersContainer}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filtersContent}
-              >
-                {searchFilters.map((filter) => (
-                  <TouchableOpacity
-                    key={filter.id}
-                    style={[styles.filterChip, { backgroundColor: colors.secondaryBackground }]}
-                  >
-                    <Ionicons name={filter.icon} size={18} color={colors.text} style={{ marginRight: 6 }} />
-                    <Text style={[styles.filterText, { color: colors.text }]}>{filter.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+          {/* Filter-specific search placeholder */}
+          {!searchQuery.trim() && selectedFilter !== 'All' && (
+            <View style={[styles.filterSearchHint, { backgroundColor: colors.background, padding: 16 }]}>
+              <Text style={[styles.filterSearchHintText, { color: colors.secondaryText }]}>
+                Search in {selectedFilter.toLowerCase()} chats
+              </Text>
             </View>
           )}
         </View>
@@ -691,32 +719,76 @@ export default function ChatsScreen() {
           </View>
         </ScrollView>
       ) : filteredChats.length === 0 ? (
-        /* Empty State - Non-scrollable with contacts row */
+        /* Filter-specific Empty States */
         <View style={styles.emptyStateContainer}>
           <View style={styles.emptyContent}>
-            <Ionicons name="chatbubbles" size={64} color={colors.tertiaryText} />
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              No chats yet
-            </Text>
-            <Text style={[styles.emptySubtitle, { color: colors.secondaryText }]}>
-              {user?.phone ? 
-                'Your WhatsApp chats will appear here once they sync from the backend' :
-                'Please connect your WhatsApp to see your chats'
-              }
-            </Text>
-            {user?.phone && (
-              <TouchableOpacity 
-                style={[styles.refreshButton, { backgroundColor: colors.primary }]}
-                onPress={onRefresh}
-              >
-                <Ionicons name="refresh" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                <Text style={styles.refreshButtonText}>Refresh</Text>
-              </TouchableOpacity>
+            {selectedFilter === 'All' ? (
+              <>
+                <Ionicons name="chatbubbles" size={64} color={colors.tertiaryText} />
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                  No chats yet
+                </Text>
+                <Text style={[styles.emptySubtitle, { color: colors.secondaryText }]}>
+                  {user?.phone ? 
+                    'Your WhatsApp chats will appear here once they sync from the backend' :
+                    'Please connect your WhatsApp to see your chats'
+                  }
+                </Text>
+                {user?.phone && (
+                  <TouchableOpacity 
+                    style={[styles.refreshButton, { backgroundColor: colors.primary }]}
+                    onPress={onRefresh}
+                  >
+                    <Ionicons name="refresh" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                    <Text style={styles.refreshButtonText}>Refresh</Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            ) : selectedFilter === 'Unread' ? (
+              <>
+                <Ionicons name="mail-unread-outline" size={64} color={colors.tertiaryText} />
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                  No unread chats
+                </Text>
+                <Text style={[styles.emptySubtitle, { color: colors.secondaryText }]}>
+                  You're all caught up! All your chats have been read.
+                </Text>
+              </>
+            ) : selectedFilter === 'Favorites' ? (
+              <>
+                <Ionicons name="star-outline" size={64} color={colors.tertiaryText} />
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                  No favorites
+                </Text>
+                <Text style={[styles.emptySubtitle, { color: colors.secondaryText }]}>
+                  Pin your important chats to keep them at the top
+                </Text>
+              </>
+            ) : selectedFilter === 'Groups' ? (
+              <>
+                <Ionicons name="people-outline" size={64} color={colors.tertiaryText} />
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                  No groups
+                </Text>
+                <Text style={[styles.emptySubtitle, { color: colors.secondaryText }]}>
+                  Create or join a group to get started
+                </Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="list-outline" size={64} color={colors.tertiaryText} />
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                  No chats in this list
+                </Text>
+                <Text style={[styles.emptySubtitle, { color: colors.secondaryText }]}>
+                  Add chats to your custom list
+                </Text>
+              </>
             )}
           </View>
 
-          {/* Contacts Row - Only shown when there are contacts */}
-          {mockContacts.length > 0 && (
+          {/* Contacts Row - Only shown when there are contacts and All filter is active */}
+          {mockContacts.length > 0 && selectedFilter === 'All' && (
             <View style={styles.contactsRow}>
               <ScrollView
                 horizontal
@@ -773,6 +845,83 @@ export default function ChatsScreen() {
         >
           <Ionicons name="add" size={28} color="#FFFFFF" />
         </TouchableOpacity>
+      )}
+
+      {/* Profile Card Modal */}
+      {showProfileCard && selectedContact && (
+        <Modal
+          visible={showProfileCard}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setShowProfileCard(false)}
+        >
+          <TouchableOpacity 
+            style={styles.profileModalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowProfileCard(false)}
+          >
+            <View style={[styles.profileCardContainer, { backgroundColor: colors.background }]}>
+              <View style={styles.profileCardHeader}>
+                <TouchableOpacity 
+                  style={styles.profilePicLarge}
+                  onPress={() => {
+                    setShowProfileCard(false);
+                    navigation.navigate('FullScreenImage', { imageUri: selectedContact.profilePicUrl });
+                  }}
+                >
+                  {selectedContact.profilePicUrl ? (
+                    <Image source={{ uri: selectedContact.profilePicUrl }} style={styles.profilePicImage} />
+                  ) : (
+                    <View style={[styles.profilePicPlaceholder, { backgroundColor: colors.primary }]}>
+                      <Text style={styles.profilePicText}>
+                        {selectedContact.name?.charAt(0).toUpperCase() || '?'}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+                <Text style={[styles.profileCardName, { color: colors.text }]}>{selectedContact.name || selectedContact.id}</Text>
+                <Text style={[styles.profileCardPhone, { color: colors.secondaryText }]}>{selectedContact.id}</Text>
+              </View>
+
+              <View style={styles.profileCardActions}>
+                <TouchableOpacity 
+                  style={[styles.profileCardAction, { backgroundColor: colors.secondaryBackground }]}
+                  onPress={() => {
+                    setShowProfileCard(false);
+                    navigation.navigate('ChatView', { chat: selectedContact });
+                  }}
+                >
+                  <Ionicons name="chatbubble" size={24} color={colors.primary} />
+                  <Text style={[styles.profileCardActionText, { color: colors.text }]}>Message</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.profileCardAction, { backgroundColor: colors.secondaryBackground }]}
+                  onPress={() => {
+                    setShowProfileCard(false);
+                    navigation.navigate('ContactProfile', { contact: selectedContact });
+                  }}
+                >
+                  <Ionicons name="information-circle" size={24} color={colors.primary} />
+                  <Text style={[styles.profileCardActionText, { color: colors.text }]}>Profile</Text>
+                </TouchableOpacity>
+
+                {selectedContact.hasStatus && (
+                  <TouchableOpacity 
+                    style={[styles.profileCardAction, { backgroundColor: colors.secondaryBackground }]}
+                    onPress={() => {
+                      setShowProfileCard(false);
+                      navigation.navigate('StatusView', { contact: selectedContact });
+                    }}
+                  >
+                    <Ionicons name="eye" size={24} color={colors.primary} />
+                    <Text style={[styles.profileCardActionText, { color: colors.text }]}>View Status</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Modal>
       )}
 
       {/* Custom Filter Creation Modal */}
@@ -1242,5 +1391,74 @@ const styles = StyleSheet.create({
   filterModalButtonText: {
     fontSize: 16,
     fontWeight: '500',
+  },
+  profileModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  profileCardContainer: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 40,
+    paddingTop: 24,
+  },
+  profileCardHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  profilePicLarge: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 16,
+  },
+  profilePicImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  profilePicPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profilePicText: {
+    color: '#FFFFFF',
+    fontSize: 36,
+    fontWeight: '500',
+  },
+  profileCardName: {
+    fontSize: 20,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  profileCardPhone: {
+    fontSize: 14,
+  },
+  profileCardActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
+  },
+  profileCardAction: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    minWidth: 90,
+  },
+  profileCardActionText: {
+    fontSize: 12,
+    marginTop: 8,
+  },
+  filterSearchHint: {
+    paddingVertical: 8,
+  },
+  filterSearchHintText: {
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
