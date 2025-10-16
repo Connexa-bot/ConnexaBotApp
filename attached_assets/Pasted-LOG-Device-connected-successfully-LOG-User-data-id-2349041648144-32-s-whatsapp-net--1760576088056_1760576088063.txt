@@ -1,0 +1,46 @@
+LOG  ✅ Device connected successfully!
+ LOG  📱 User data: {"id": "2349041648144:32@s.whatsapp.net"}
+ LOG  💾 Saved phone to storage: 2349041648144
+ LOG  🔹 [AUTH] Connection status updated: connected
+ LOG  🔄 Updated connection status to: connected
+ LOG  👤 Set user in AuthContext: {"phone": "2349041648144"}
+ LOG  🎉 Connection successful, navigation will happen automatically
+ LOG  🛑 Clearing polling interval
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/chats/2349041648144
+ WARN  `setBehaviorAsync` is not supported with edge-to-edge enabled.
+ WARN  `setBackgroundColorAsync` is not supported with edge-to-edge enabled.
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/chats/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status-updates/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/channels/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/status-updates/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/channels/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/calls/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/calls/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ WARN  `setBehaviorAsync` is not supported with edge-to-edge enabled.
+ WARN  `setBackgroundColorAsync` is not supported with edge-to-edge enabled.
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ WARN  `setBehaviorAsync` is not supported with edge-to-edge enabled.
+ WARN  `setBackgroundColorAsync` is not supported with edge-to-edge enabled.
+ ERROR  Error loading contacts: [TypeError: Cannot read property 'GET_CONTACTS' of undefined]
+ WARN  `setBehaviorAsync` is not supported with edge-to-edge enabled.
+ WARN  `setBackgroundColorAsync` is not supported with edge-to-edge enabled.
+ ERROR  Error loading contacts: [TypeError: Cannot read property 'GET_CONTACTS' of undefined]
+ WARN  `setBehaviorAsync` is not supported with edge-to-edge enabled.
+ WARN  `setBackgroundColorAsync` is not supported with edge-to-edge enabled.
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  📡 API Request: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ LOG  ✅ API Response: GET http://widespread-chicky-connexa-hub-afd02d40.koyeb.app/api/contacts/2349041648144
+ WARN  `setBehaviorAsync` is not supported with edge-to-edge enabled.
+ WARN  `setBackgroundColorAsync` is not supported with edge-to-edge enabled.
