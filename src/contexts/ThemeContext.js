@@ -14,8 +14,8 @@ const colorSchemes = {
     // Backgrounds
     background: '#FFFFFF',
     secondaryBackground: '#F0F2F5',
-    headerBackground: '#F0F2F5',
-    header: '#008069',
+    headerBackground: '#FFFFFF',
+    header: '#FFFFFF',
     chatBackground: '#EFEAE2',
     inputBackground: '#FFFFFF',
     attachmentBg: '#F0F2F5',
@@ -24,7 +24,7 @@ const colorSchemes = {
     // Text Colors
     headerText: '#00A884',
     headerIconColor: '#5F6368',
-    text: '#111B21',
+    text: '#000000',
     secondaryText: '#667781',
     tertiaryText: '#8696A0',
     menuText: '#111B21',
@@ -38,7 +38,7 @@ const colorSchemes = {
     // Tab Bar
     tabBar: '#FFFFFF',
     tabIconSelected: '#00A884',
-    tabIconDefault: '#5F6368',
+    tabIconDefault: '#667781',
     
     // Message Bubbles
     messageBubbleSent: '#D9FDD3',

@@ -229,10 +229,10 @@ export default function ChatsScreen() {
   ];
 
   const filters = [
-    { id: 'All', label: 'All' },
-    { id: 'Unread', label: 'Unread', count: Array.isArray(filteredChats) ? filteredChats.filter(c => c.unreadCount > 0).length : 0 },
-    { id: 'Favorites', label: 'Favorites' },
-    { id: 'Groups', label: 'Groups' },
+    { id: 'All', label: 'All', icon: 'apps' },
+    { id: 'Unread', label: 'Unread', count: Array.isArray(filteredChats) ? filteredChats.filter(c => c.unreadCount > 0).length : 0, icon: 'mail-unread' },
+    { id: 'Favorites', label: 'Favorites', icon: 'star' },
+    { id: 'Groups', label: 'Groups', icon: 'people' },
   ];
 
   const menuOptions = [
@@ -450,27 +450,24 @@ export default function ChatsScreen() {
                 key={filter.id}
                 style={[
                   styles.filterChip,
-                  selectedFilter === filter.id && { backgroundColor: colors.primary + '20' },
-                  selectedFilter !== filter.id && { backgroundColor: colors.secondaryBackground },
+                  selectedFilter === filter.id && styles.filterChipActive,
+                  selectedFilter !== filter.id && { 
+                    backgroundColor: isDark ? '#233138' : '#E9EDEF',
+                    borderWidth: 0,
+                  },
                 ]}
                 onPress={() => setSelectedFilter(filter.id)}
               >
                 <Ionicons
-                  name={
-                    filter.id === 'Unread' ? 'mail-unread-outline' :
-                    filter.id === 'Favorites' ? 'star-outline' :
-                    filter.id === 'Groups' ? 'people-outline' :
-                    filter.id === 'All' ? 'apps-outline' : 'apps-outline'
-                  }
-                  size={18}
+                  name={filter.icon}
+                  size={16}
                   color={selectedFilter === filter.id ? colors.primary : colors.text}
                   style={{ marginRight: 6 }}
                 />
                 <Text
                   style={[
                     styles.filterText,
-                    selectedFilter === filter.id && { color: colors.primary },
-                    selectedFilter !== filter.id && { color: colors.text },
+                    { color: selectedFilter === filter.id ? colors.primary : colors.text },
                   ]}
                 >
                   {filter.label}
@@ -478,14 +475,23 @@ export default function ChatsScreen() {
                 </Text>
               </TouchableOpacity>
             ))}
+            <TouchableOpacity style={[styles.addFilterButton, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
+              <Ionicons name="add" size={20} color={colors.text} />
+            </TouchableOpacity>
           </ScrollView>
         </View>
       )}
 
       {/* Archived Section - Show when not typing */}
       {!searchQuery.trim() && (
-        <TouchableOpacity style={[styles.archivedSection, { backgroundColor: colors.background }]}>
-          <Ionicons name="archive-outline" size={24} color={colors.tertiaryText} />
+        <TouchableOpacity style={[styles.archivedSection, { 
+          backgroundColor: colors.background,
+          borderBottomWidth: 0.5,
+          borderBottomColor: isDark ? '#1F2C34' : '#E9EDEF'
+        }]}>
+          <View style={[styles.archivedIconBox, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
+            <Ionicons name="archive-outline" size={20} color={colors.text} />
+          </View>
           <Text style={[styles.archivedText, { color: colors.text }]}>Archived</Text>
         </TouchableOpacity>
       )}
@@ -653,9 +659,9 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '600',
-    letterSpacing: 0.3,
+    fontSize: 24,
+    fontWeight: '500',
+    letterSpacing: 0,
   },
   headerActions: {
     flexDirection: 'row',
@@ -767,36 +773,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   filtersContainer: {
-    paddingVertical: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
   filtersContent: {
-    paddingHorizontal: 16,
     gap: 8,
+    alignItems: 'center',
   },
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 18,
     marginRight: 8,
+  },
+  filterChipActive: {
+    backgroundColor: '#D0F4EA',
+    borderWidth: 0,
   },
   filterText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '400',
+  },
+  addFilterButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   archivedSection: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 28,
-    borderBottomWidth: 0.2,
-    borderBottomColor: '#DADADA',
+    paddingVertical: 12,
+    gap: 16,
+  },
+  archivedIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   archivedText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '400',
   },
   emptyStateContainer: {
     flex: 1,
@@ -907,9 +930,9 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   chatName: {
-    fontSize: 17,
-    fontWeight: '500',
-    lineHeight: 22,
+    fontSize: 16,
+    fontWeight: '400',
+    lineHeight: 20,
   },
   pinIcon: {
     marginLeft: 6,

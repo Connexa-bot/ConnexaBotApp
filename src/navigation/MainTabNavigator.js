@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
+import { Platform, View, StyleSheet, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import useNavigationBar from '../hooks/useNavigationBar';
@@ -12,8 +12,33 @@ import CallsScreen from '../screens/CallsScreen';
 
 const Tab = createBottomTabNavigator();
 
+const TabBarIcon = ({ focused, iconName, color, badge }) => {
+  const scaleAnim = React.useRef(new Animated.Value(focused ? 1 : 0.9)).current;
+
+  React.useEffect(() => {
+    Animated.spring(scaleAnim, {
+      toValue: focused ? 1 : 0.9,
+      useNativeDriver: true,
+      friction: 5,
+    }).start();
+  }, [focused]);
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <View>
+        <Ionicons name={iconName} size={24} color={color} />
+        {badge > 0 && (
+          <View style={styles.badge}>
+            <View style={[styles.badgeCircle, { backgroundColor: '#25D366' }]} />
+          </View>
+        )}
+      </View>
+    </Animated.View>
+  );
+};
+
 export default function MainTabNavigator() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   useNavigationBar();
 
@@ -28,34 +53,33 @@ export default function MainTabNavigator() {
           height: 58 + insets.bottom,
           paddingBottom: 8 + insets.bottom,
           paddingTop: 8,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
+          elevation: 0,
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.tabIconDefault,
+        tabBarActiveTintColor: '#00A884',
+        tabBarInactiveTintColor: isDark ? '#8696A0' : '#667781',
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '500',
+          fontWeight: '400',
           marginTop: 4,
         },
         tabBarHideOnKeyboard: Platform.OS === 'android',
         tabBarIcon: ({ focused, color }) => {
           let iconName;
+          let badge = 0;
 
           if (route.name === 'Chats') {
             iconName = focused ? 'chatbubble' : 'chatbubble-outline';
+            badge = 3; // Example badge count
           } else if (route.name === 'Updates') {
             iconName = focused ? 'radio-button-on' : 'radio-button-off-outline';
+            badge = 1;
           } else if (route.name === 'Communities') {
             iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'Calls') {
             iconName = focused ? 'call' : 'call-outline';
           }
 
-          return <Ionicons name={iconName} size={22} color={color} />;
+          return <TabBarIcon focused={focused} iconName={iconName} color={color} badge={badge} />;
         },
       })}
     >
@@ -90,3 +114,16 @@ export default function MainTabNavigator() {
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -6,
+  },
+  badgeCircle: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+});
