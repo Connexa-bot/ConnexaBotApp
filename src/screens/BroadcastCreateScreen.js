@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -15,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { callAPI, API_ENDPOINTS } from '../services/api';
+import API, { callAPI } from '../services/api';
 
 export default function BroadcastCreateScreen() {
   const [contacts, setContacts] = useState([]);
@@ -31,10 +30,20 @@ export default function BroadcastCreateScreen() {
 
   const loadContacts = async () => {
     try {
-      const response = await callAPI(API_ENDPOINTS.GET_CONTACTS(user.phone));
-      const allContacts = response.contacts || [];
+      const response = await callAPI(API.Contact.getAll(user.phone));
+
+      // Handle different response formats
+      let contactsList = [];
+      if (Array.isArray(response)) {
+        contactsList = response;
+      } else if (response.contacts && Array.isArray(response.contacts)) {
+        contactsList = response.contacts;
+      } else if (response.data && Array.isArray(response.data)) {
+        contactsList = response.data;
+      }
+
       // Filter out contacts without valid IDs to prevent duplicate key errors
-      setContacts(allContacts.filter(c => c.id));
+      setContacts(contactsList.filter(c => c.id));
     } catch (error) {
       console.error('Error loading contacts:', error);
     }

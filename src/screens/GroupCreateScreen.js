@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -16,7 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { callAPI, API_ENDPOINTS } from '../services/api';
+import API, { callAPI, API_ENDPOINTS } from '../services/api';
 
 export default function GroupCreateScreen() {
   const [contacts, setContacts] = useState([]);
@@ -33,11 +32,21 @@ export default function GroupCreateScreen() {
 
   const loadContacts = async () => {
     try {
-      const response = await callAPI(API_ENDPOINTS.GET_CONTACTS(user.phone));
-      const allContacts = response.contacts || [];
-      setContacts(allContacts);
+      const response = await callAPI(API.Contact.getAll(user.phone));
+
+      // Handle different response formats
+      let contactsList = [];
+      if (Array.isArray(response)) {
+        contactsList = response;
+      } else if (response.contacts && Array.isArray(response.contacts)) {
+        contactsList = response.contacts;
+      } else if (response.data && Array.isArray(response.data)) {
+        contactsList = response.data;
+      }
+
+      setContacts(contactsList);
       // Get first 3 as frequent contacts - only include if they have valid IDs
-      const frequent = allContacts.slice(0, 3).filter(c => c.id);
+      const frequent = contactsList.slice(0, 3).filter(c => c.id);
       setFrequentContacts(frequent);
     } catch (error) {
       console.error('Error loading contacts:', error);

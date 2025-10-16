@@ -770,6 +770,7 @@ export const callAPI = async (endpoint) => {
     }
 
     console.log('✅ API Response:', endpoint.method, endpoint.url);
+    console.log('   Data structure:', Array.isArray(data) ? `Array[${data.length}]` : typeof data === 'object' ? Object.keys(data).join(', ') : typeof data);
     return data;
   } catch (error) {
     console.error('❌ API call failed:', error.message || error);

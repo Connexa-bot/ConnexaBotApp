@@ -34,14 +34,36 @@ export default function SearchScreen({ navigation }) {
   const loadData = async () => {
     try {
       if (user?.phone) {
-        const chatsRes = await callAPI(API.Chat.getAll(user.phone));
-        const contactsRes = await callAPI(API.Contact.getAll(user.phone));
-        
-        setChats(chatsRes.chats || []);
-        setContacts(contactsRes.contacts || []);
-        
+        const [chatsResponse, contactsResponse] = await Promise.all([
+          callAPI(API.Chat.getAll(user.phone)),
+          callAPI(API.Contact.getAll(user.phone))
+        ]);
+
+        // Handle different response formats for chats
+        let chatsList = [];
+        if (Array.isArray(chatsResponse)) {
+          chatsList = chatsResponse;
+        } else if (chatsResponse.chats && Array.isArray(chatsResponse.chats)) {
+          chatsList = chatsResponse.chats;
+        } else if (chatsResponse.data && Array.isArray(chatsResponse.data)) {
+          chatsList = chatsResponse.data;
+        }
+
+        // Handle different response formats for contacts
+        let contactsList = [];
+        if (Array.isArray(contactsResponse)) {
+          contactsList = contactsResponse;
+        } else if (contactsResponse.contacts && Array.isArray(contactsResponse.contacts)) {
+          contactsList = contactsResponse.contacts;
+        } else if (contactsResponse.data && Array.isArray(contactsResponse.data)) {
+          contactsList = contactsResponse.data;
+        }
+
+        setChats(chatsList);
+        setContacts(contactsList);
+
         const allMessages = [];
-        for (const chat of (chatsRes.chats || [])) {
+        for (const chat of chatsList) {
           try {
             const msgRes = await callAPI(API.Message.get(user.phone, chat.id, 20));
             if (msgRes.data?.messages) {
