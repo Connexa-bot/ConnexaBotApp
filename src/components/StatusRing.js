@@ -16,8 +16,8 @@ const StatusRing = ({
   const strokeDashoffset = circumference * (1 - progress);
 
   // Status colors
-  const activeColor = '#00A884'; // WhatsApp green for unviewed
-  const viewedColor = '#667781'; // Gray for viewed
+  const activeColor = '#25D366'; // WhatsApp green for unviewed
+  const viewedColor = '#8696A0'; // Gray for viewed
 
   if (!hasStatus) {
     // No status ring, just show the content

@@ -8,8 +8,8 @@ const ThemeContext = createContext();
 const colorSchemes = {
   light: {
     // Primary Colors
-    primary: '#00A884',
-    secondary: '#008069',
+    primary: '#25D366',
+    secondary: '#128C7E',
     
     // Backgrounds
     background: '#FFFFFF',
@@ -68,8 +68,8 @@ const colorSchemes = {
 
   dark: {
     // Primary Colors
-    primary: '#00A884',
-    secondary: '#008069',
+    primary: '#25D366',
+    secondary: '#128C7E',
     
     // Backgrounds
     background: '#111B21',

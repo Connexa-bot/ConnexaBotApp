@@ -305,7 +305,7 @@ export default function ChatsScreen() {
 
       {/* Custom Header */}
       <View style={[styles.header, { backgroundColor: colors.headerBackground, paddingTop: insets.top }]}>
-        <Text style={[styles.headerTitle, { color: '#00A884' }]}>WhatsApp</Text>
+        <Text style={[styles.headerTitle, { color: '#25D366' }]}>WhatsApp</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={handleCameraPress} style={styles.headerIcon}>
             <Ionicons name="camera-outline" size={24} color={colors.headerIconColor} />

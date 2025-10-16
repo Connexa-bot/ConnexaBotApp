@@ -55,7 +55,7 @@ export default function MainTabNavigator() {
           paddingTop: 8,
           elevation: 0,
         },
-        tabBarActiveTintColor: '#00A884',
+        tabBarActiveTintColor: '#25D366',
         tabBarInactiveTintColor: isDark ? '#8696A0' : '#667781',
         tabBarLabelStyle: {
           fontSize: 12,
@@ -69,10 +69,12 @@ export default function MainTabNavigator() {
 
           if (route.name === 'Chats') {
             iconName = focused ? 'chatbubble' : 'chatbubble-outline';
-            badge = 3; // Example badge count
+            // badge should come from actual unread count from context/state
+            badge = 0; // Only show if there are actual unread messages
           } else if (route.name === 'Updates') {
             iconName = focused ? 'radio-button-on' : 'radio-button-off-outline';
-            badge = 1;
+            // badge should show only if there are new/unviewed statuses
+            badge = 0; // Only show if there are new statuses
           } else if (route.name === 'Communities') {
             iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'Calls') {
