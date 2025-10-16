@@ -58,7 +58,7 @@ export default function ChatsScreen() {
   const loadChats = async () => {
     try {
       if (user?.phone) {
-        // Load from cache first
+        // Load from cache first for instant display
         const cachedChats = await storage.getCachedData(`chats_${user.phone}`);
         if (cachedChats && cachedChats.length > 0) {
           console.log('📱 Using cached chats:', cachedChats.length);
@@ -68,37 +68,37 @@ export default function ChatsScreen() {
 
         // Fetch from server
         const response = await callAPI(API.Chat.getAll(user.phone));
-        console.log('📊 Chats response:', JSON.stringify(response, null, 2));
+        console.log('📊 Chats API response:', response);
 
-        // Handle different response formats
+        // Extract chats array - backend returns {success: true, chats: [...], count: X}
         let chatsList = [];
-        if (Array.isArray(response)) {
+        
+        if (response?.success === true && Array.isArray(response.chats)) {
+          chatsList = response.chats;
+          console.log('✅ Successfully extracted', chatsList.length, 'chats from response');
+        } else if (Array.isArray(response)) {
           chatsList = response;
-        } else if (response.success && response.chats && Array.isArray(response.chats)) {
+        } else if (response?.chats && Array.isArray(response.chats)) {
           chatsList = response.chats;
-        } else if (response.chats && Array.isArray(response.chats)) {
-          chatsList = response.chats;
-        } else if (response.data && Array.isArray(response.data)) {
+        } else if (response?.data && Array.isArray(response.data)) {
           chatsList = response.data;
-        }
-
-        console.log('📊 Processed chats count:', chatsList.length);
-        
-        // Check if backend returned empty data
-        if (chatsList.length === 0 && response.success) {
-          console.warn('⚠️ Backend returned empty chats array - WhatsApp session may not have synced data yet');
+        } else {
+          console.warn('⚠️ Unexpected response format:', typeof response);
         }
         
-        setChats(chatsList);
-        setFilteredChats(chatsList);
-
-        // Cache the data
-        await storage.setCachedData(`chats_${user.phone}`, chatsList);
+        // Update state with fetched data
+        if (chatsList.length > 0) {
+          setChats(chatsList);
+          setFilteredChats(chatsList);
+          await storage.setCachedData(`chats_${user.phone}`, chatsList);
+          console.log('💾 Cached', chatsList.length, 'chats');
+        } else {
+          console.warn('⚠️ No chats in response - keeping cached data if available');
+        }
       }
     } catch (error) {
       console.error('❌ Error loading chats:', error.message || error);
-      console.error('Full error:', error);
-      // If fetch fails but we have cache, keep using it
+      // Keep using cached data on error
       const cachedChats = await storage.getCachedData(`chats_${user.phone}`);
       if (cachedChats && chats.length === 0) {
         setChats(cachedChats);

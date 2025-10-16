@@ -38,37 +38,45 @@ export default function ContactsScreen() {
   const loadContacts = async () => {
     try {
       if (user?.phone) {
-        // Load from cache first
+        // Load from cache first for instant display
         const cachedContacts = await storage.getCachedData(`contacts_${user.phone}`);
-        if (cachedContacts) {
+        if (cachedContacts && cachedContacts.length > 0) {
+          console.log('📱 Using cached contacts:', cachedContacts.length);
           setContacts(cachedContacts);
         }
 
         // Fetch from server
         const response = await callAPI(API.Contact.getAll(user.phone));
-        console.log('📊 Contacts response:', JSON.stringify(response, null, 2));
+        console.log('📊 Contacts API response:', response);
         
-        // Handle different response formats
+        // Extract contacts array - backend returns {success: true, contacts: [...], count: X}
         let contactsList = [];
-        if (Array.isArray(response)) {
+        
+        if (response?.success === true && Array.isArray(response.contacts)) {
+          contactsList = response.contacts;
+          console.log('✅ Successfully extracted', contactsList.length, 'contacts from response');
+        } else if (Array.isArray(response)) {
           contactsList = response;
-        } else if (response.success && response.contacts && Array.isArray(response.contacts)) {
+        } else if (response?.contacts && Array.isArray(response.contacts)) {
           contactsList = response.contacts;
-        } else if (response.contacts && Array.isArray(response.contacts)) {
-          contactsList = response.contacts;
-        } else if (response.data && Array.isArray(response.data)) {
+        } else if (response?.data && Array.isArray(response.data)) {
           contactsList = response.data;
+        } else {
+          console.warn('⚠️ Unexpected contacts response format:', typeof response);
         }
         
-        console.log('📊 Processed contacts count:', contactsList.length);
-        setContacts(contactsList);
-        
-        // Cache the data
-        await storage.setCachedData(`contacts_${user.phone}`, contactsList);
+        // Update state with fetched data
+        if (contactsList.length > 0) {
+          setContacts(contactsList);
+          await storage.setCachedData(`contacts_${user.phone}`, contactsList);
+          console.log('💾 Cached', contactsList.length, 'contacts');
+        } else {
+          console.warn('⚠️ No contacts in response - keeping cached data if available');
+        }
       }
     } catch (error) {
-      console.error('Error loading contacts:', error.message || error);
-      // Keep cached data if fetch fails
+      console.error('❌ Error loading contacts:', error.message || error);
+      // Keep using cached data on error
       const cachedContacts = await storage.getCachedData(`contacts_${user.phone}`);
       if (cachedContacts && contacts.length === 0) {
         setContacts(cachedContacts);

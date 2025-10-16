@@ -44,24 +44,27 @@ export default function UpdatesScreen({ navigation }) {
     try {
       if (user?.phone) {
         const response = await callAPI(API.Status.getAll(user.phone));
-        console.log('📊 Status response:', JSON.stringify(response, null, 2));
+        console.log('📊 Status API response:', response);
         
         let statusList = [];
-        if (Array.isArray(response)) {
+        
+        if (response?.success === true && Array.isArray(response.statusUpdates)) {
+          statusList = response.statusUpdates;
+          console.log('✅ Successfully extracted', statusList.length, 'status updates');
+        } else if (Array.isArray(response)) {
           statusList = response;
-        } else if (response.success && response.statusUpdates && Array.isArray(response.statusUpdates)) {
+        } else if (response?.statusUpdates && Array.isArray(response.statusUpdates)) {
           statusList = response.statusUpdates;
-        } else if (response.statusUpdates && Array.isArray(response.statusUpdates)) {
-          statusList = response.statusUpdates;
-        } else if (response.data && Array.isArray(response.data)) {
+        } else if (response?.data && Array.isArray(response.data)) {
           statusList = response.data;
+        } else {
+          console.warn('⚠️ Unexpected status response format:', typeof response);
         }
         
-        console.log('📊 Processed statuses count:', statusList.length);
         setStatuses(statusList);
       }
     } catch (error) {
-      console.error('Error loading statuses:', error);
+      console.error('❌ Error loading statuses:', error);
     } finally {
       setRefreshing(false);
     }
@@ -71,24 +74,27 @@ export default function UpdatesScreen({ navigation }) {
     try {
       if (user?.phone) {
         const response = await callAPI(API.Channel.getAll(user.phone));
-        console.log('📊 Channels response:', JSON.stringify(response, null, 2));
+        console.log('📊 Channels API response:', response);
         
         let channelsList = [];
-        if (Array.isArray(response)) {
+        
+        if (response?.success === true && Array.isArray(response.data)) {
+          channelsList = response.data;
+          console.log('✅ Successfully extracted', channelsList.length, 'channels');
+        } else if (Array.isArray(response)) {
           channelsList = response;
-        } else if (response.success && response.data && Array.isArray(response.data)) {
-          channelsList = response.data;
-        } else if (response.channels && Array.isArray(response.channels)) {
+        } else if (response?.channels && Array.isArray(response.channels)) {
           channelsList = response.channels;
-        } else if (response.data && Array.isArray(response.data)) {
+        } else if (response?.data && Array.isArray(response.data)) {
           channelsList = response.data;
+        } else {
+          console.warn('⚠️ Unexpected channels response format:', typeof response);
         }
         
-        console.log('📊 Processed channels count:', channelsList.length);
         setChannels(channelsList);
       }
     } catch (error) {
-      console.error('Error loading channels:', error);
+      console.error('❌ Error loading channels:', error);
     }
   };
 

@@ -23,26 +23,29 @@ export default function CallsScreen() {
     try {
       if (user?.phone) {
         const response = await callAPI(API.Call.getHistory(user.phone));
-        console.log('📊 Calls response:', JSON.stringify(response, null, 2));
+        console.log('📊 Calls API response:', response);
         
         let callsList = [];
-        if (Array.isArray(response)) {
+        
+        if (response?.success === true && Array.isArray(response.calls)) {
+          callsList = response.calls;
+          console.log('✅ Successfully extracted', callsList.length, 'calls');
+        } else if (Array.isArray(response)) {
           callsList = response;
-        } else if (response.success && response.calls && Array.isArray(response.calls)) {
+        } else if (response?.calls && Array.isArray(response.calls)) {
           callsList = response.calls;
-        } else if (response.calls && Array.isArray(response.calls)) {
-          callsList = response.calls;
-        } else if (response.data && response.data.calls && Array.isArray(response.data.calls)) {
+        } else if (response?.data?.calls && Array.isArray(response.data.calls)) {
           callsList = response.data.calls;
-        } else if (response.data && Array.isArray(response.data)) {
+        } else if (response?.data && Array.isArray(response.data)) {
           callsList = response.data;
+        } else {
+          console.warn('⚠️ Unexpected calls response format:', typeof response);
         }
         
-        console.log('📊 Processed calls count:', callsList.length);
         setCalls(callsList);
       }
     } catch (error) {
-      console.error('Error loading calls:', error);
+      console.error('❌ Error loading calls:', error);
     } finally {
       setRefreshing(false);
     }
