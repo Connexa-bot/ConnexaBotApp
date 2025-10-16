@@ -8,12 +8,13 @@ import {
   Image,
   Dimensions,
   Platform,
-  SafeAreaView,
+  StatusBar,
   KeyboardAvoidingView,
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import API, { callAPI } from '../services/api';
@@ -36,8 +37,9 @@ const STATUS_COLORS = [
 ];
 
 export default function StatusPostScreen({ navigation, route }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const { mediaType, mediaUri } = route.params || {};
   
   const [statusText, setStatusText] = useState('');
@@ -45,6 +47,19 @@ export default function StatusPostScreen({ navigation, route }) {
   const [caption, setCaption] = useState('');
   const [posting, setPosting] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(mediaUri);
+
+  const isColorLight = (hexColor) => {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 155;
+  };
+
+  const statusBarStyle = selectedMedia 
+    ? 'light-content' 
+    : (isColorLight(backgroundColor) ? 'dark-content' : 'light-content');
 
   const handlePostStatus = async () => {
     if (!statusText.trim() && !selectedMedia) return;
@@ -131,8 +146,13 @@ export default function StatusPostScreen({ navigation, route }) {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: selectedMedia ? '#000' : backgroundColor }]}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: selectedMedia ? '#000' : backgroundColor }]}>
+      <StatusBar 
+        barStyle={statusBarStyle}
+        backgroundColor={selectedMedia ? '#000' : backgroundColor}
+        translucent={false}
+      />
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 12) }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="close" size={28} color="#FFFFFF" />
         </TouchableOpacity>
@@ -156,7 +176,7 @@ export default function StatusPostScreen({ navigation, route }) {
         {selectedMedia ? renderMediaStatusEditor() : renderTextStatusEditor()}
       </KeyboardAvoidingView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <View style={styles.privacyContainer}>
           <Ionicons name="eye-outline" size={20} color="#FFFFFF" />
           <Text style={styles.privacyText}>My contacts</Text>
@@ -170,7 +190,7 @@ export default function StatusPostScreen({ navigation, route }) {
           <Ionicons name="send" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -183,7 +203,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 12,
   },
   backButton: {
     padding: 4,
@@ -253,8 +273,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingBottom: Platform.OS === 'ios' ? 32 : 16,
+    paddingTop: 16,
   },
   privacyContainer: {
     flexDirection: 'row',

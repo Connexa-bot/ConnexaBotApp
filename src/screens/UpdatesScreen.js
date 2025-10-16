@@ -104,26 +104,8 @@ export default function UpdatesScreen({ navigation }) {
     loadChannels();
   };
 
-  const handleCameraPress = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Camera permission is required to post status');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      const mediaType = result.assets[0].type || 'image';
-      navigation.navigate('StatusPost', {
-        mediaUri: result.assets[0].uri,
-        mediaType: mediaType,
-      });
-    }
+  const handleCameraPress = () => {
+    navigation.navigate('Camera');
   };
 
   const handleTextStatusPress = () => {
