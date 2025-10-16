@@ -21,6 +21,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import API, { callAPI } from '../services/api';
 import { storage } from '../utils/storage';
 import StatusRing from '../components/StatusRing';
+import ProfileCard from '../components/ProfileCard';
 
 export default function ChatsScreen() {
   const [chats, setChats] = useState([]);
@@ -861,79 +862,30 @@ export default function ChatsScreen() {
 
       {/* Profile Card Modal */}
       {showProfileCard && selectedContact && (
-        <Modal
+        <ProfileCard
           visible={showProfileCard}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setShowProfileCard(false)}
-        >
-          <TouchableOpacity 
-            style={styles.profileModalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowProfileCard(false)}
-          >
-            <View style={[styles.profileCardContainer, { backgroundColor: colors.background }]}>
-              <View style={styles.profileCardHeader}>
-                <TouchableOpacity 
-                  style={styles.profilePicLarge}
-                  onPress={() => {
-                    setShowProfileCard(false);
-                    navigation.navigate('FullScreenImage', { imageUri: selectedContact.profilePicUrl });
-                  }}
-                >
-                  {selectedContact.profilePicUrl ? (
-                    <Image source={{ uri: selectedContact.profilePicUrl }} style={styles.profilePicImage} />
-                  ) : (
-                    <View style={[styles.profilePicPlaceholder, { backgroundColor: colors.primary }]}>
-                      <Text style={styles.profilePicText}>
-                        {selectedContact.name?.charAt(0).toUpperCase() || '?'}
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-                <Text style={[styles.profileCardName, { color: colors.text }]}>{selectedContact.name || selectedContact.id}</Text>
-                <Text style={[styles.profileCardPhone, { color: colors.secondaryText }]}>{selectedContact.id}</Text>
-              </View>
-
-              <View style={styles.profileCardActions}>
-                <TouchableOpacity 
-                  style={[styles.profileCardAction, { backgroundColor: colors.secondaryBackground }]}
-                  onPress={() => {
-                    setShowProfileCard(false);
-                    navigation.navigate('ChatView', { chat: selectedContact });
-                  }}
-                >
-                  <Ionicons name="chatbubble" size={24} color={colors.primary} />
-                  <Text style={[styles.profileCardActionText, { color: colors.text }]}>Message</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={[styles.profileCardAction, { backgroundColor: colors.secondaryBackground }]}
-                  onPress={() => {
-                    setShowProfileCard(false);
-                    navigation.navigate('ContactProfile', { contact: selectedContact });
-                  }}
-                >
-                  <Ionicons name="information-circle" size={24} color={colors.primary} />
-                  <Text style={[styles.profileCardActionText, { color: colors.text }]}>Profile</Text>
-                </TouchableOpacity>
-
-                {selectedContact.hasStatus && (
-                  <TouchableOpacity 
-                    style={[styles.profileCardAction, { backgroundColor: colors.secondaryBackground }]}
-                    onPress={() => {
-                      setShowProfileCard(false);
-                      navigation.navigate('StatusView', { contact: selectedContact });
-                    }}
-                  >
-                    <Ionicons name="eye" size={24} color={colors.primary} />
-                    <Text style={[styles.profileCardActionText, { color: colors.text }]}>View Status</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          </TouchableOpacity>
-        </Modal>
+          contact={selectedContact}
+          onClose={() => setShowProfileCard(false)}
+          onMessage={() => {
+            setShowProfileCard(false);
+            navigation.navigate('ChatView', { chat: selectedContact });
+          }}
+          onCall={() => {
+            setShowProfileCard(false);
+            navigation.navigate('ChatView', { chat: selectedContact });
+          }}
+          onVideoCall={() => {
+            setShowProfileCard(false);
+            navigation.navigate('ChatView', { chat: selectedContact });
+          }}
+          onInfo={() => {
+            setShowProfileCard(false);
+            navigation.navigate('ContactProfile', { contact: selectedContact });
+          }}
+          onViewFullScreen={() => {
+            // Fullscreen is handled within ProfileCard
+          }}
+        />
       )}
 
       {/* Custom Filter Creation Modal */}
@@ -1404,68 +1356,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  profileModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  profileCardContainer: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 40,
-    paddingTop: 24,
-  },
-  profileCardHeader: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  profilePicLarge: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 16,
-  },
-  profilePicImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  profilePicPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profilePicText: {
-    color: '#FFFFFF',
-    fontSize: 36,
-    fontWeight: '500',
-  },
-  profileCardName: {
-    fontSize: 20,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  profileCardPhone: {
-    fontSize: 14,
-  },
-  profileCardActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 20,
-  },
-  profileCardAction: {
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    minWidth: 90,
-  },
-  profileCardActionText: {
-    fontSize: 12,
-    marginTop: 8,
-  },
+  
   filterSearchHint: {
     paddingVertical: 8,
   },

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
   const { colors, isDark } = useTheme();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
+  const [showFullScreen, setShowFullScreen] = useState(false);
+  const fullScreenAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
@@ -36,6 +38,7 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
         }),
       ]).start();
     } else {
+      setShowFullScreen(false);
       Animated.parallel([
         Animated.timing(slideAnim, {
           toValue: SCREEN_HEIGHT,
@@ -51,18 +54,59 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
     }
   }, [visible]);
 
+  const handleImagePress = () => {
+    setShowFullScreen(true);
+    Animated.spring(fullScreenAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 8,
+    }).start();
+  };
+
+  const handleBackFromFullScreen = () => {
+    Animated.timing(fullScreenAnim, {
+      toValue: 0,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowFullScreen(false);
+    });
+  };
+
   if (!visible && slideAnim._value === SCREEN_HEIGHT) {
     return null;
   }
 
+  const cardScale = fullScreenAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.2],
+  });
+
+  const cardTranslateY = fullScreenAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -100],
+  });
+
+  const actionsOpacity = fullScreenAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 0, 0],
+  });
+
+  const backButtonOpacity = fullScreenAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0, 1],
+  });
+
   return (
     <>
-      <TouchableWithoutFeedback onPress={onClose}>
+      <TouchableWithoutFeedback onPress={showFullScreen ? handleBackFromFullScreen : onClose}>
         <Animated.View
           style={[
             styles.backdrop,
             {
               opacity: backdropAnim,
+              backgroundColor: showFullScreen ? '#000' : 'rgba(0, 0, 0, 0.5)',
             },
           ]}
         />
@@ -70,68 +114,103 @@ const ProfileCard = ({ visible, contact, onClose, onMessage, onCall, onVideoCall
       
       <Animated.View
         style={[
-          styles.fullCard,
+          styles.cardContainer,
           {
-            backgroundColor: isDark ? '#000' : '#fff',
-            transform: [{ translateY: slideAnim }],
+            backgroundColor: isDark ? '#0B141A' : '#fff',
+            transform: [
+              { translateY: slideAnim },
+              { scale: cardScale },
+              { translateY: cardTranslateY },
+            ],
           },
         ]}
       >
-        {/* Full screen image */}
+        {/* Back button for fullscreen */}
+        <Animated.View
+          style={[
+            styles.backButton,
+            {
+              opacity: backButtonOpacity,
+            },
+          ]}
+          pointerEvents={showFullScreen ? 'auto' : 'none'}
+        >
+          <TouchableOpacity
+            onPress={handleBackFromFullScreen}
+            style={styles.backButtonTouchable}
+          >
+            <Ionicons name="arrow-back" size={28} color="#fff" />
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Profile Image - fills entire card */}
         <TouchableOpacity 
           style={styles.imageContainer}
-          onPress={onViewFullScreen}
+          onPress={showFullScreen ? handleBackFromFullScreen : handleImagePress}
           activeOpacity={0.9}
         >
-          <Image
-            source={{ uri: contact.profilePicUrl || contact.profilePic || 'https://via.placeholder.com/500' }}
-            style={styles.fullImage}
-            resizeMode="contain"
-          />
+          {contact.profilePicUrl || contact.profilePic ? (
+            <Image
+              source={{ uri: contact.profilePicUrl || contact.profilePic }}
+              style={styles.fullImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={[styles.placeholderContainer, { backgroundColor: colors.primary }]}>
+              <Text style={styles.placeholderText}>
+                {contact.name?.charAt(0).toUpperCase() || '?'}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         {/* Bottom action bar */}
-        <View style={[styles.bottomActions, { backgroundColor: isDark ? '#1F2C34' : '#fff' }]}>
+        <Animated.View
+          style={[
+            styles.bottomActions,
+            {
+              backgroundColor: isDark ? 'rgba(31, 44, 52, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              opacity: actionsOpacity,
+            },
+          ]}
+          pointerEvents={showFullScreen ? 'none' : 'auto'}
+        >
           <TouchableOpacity
             style={styles.iconButton}
-            onPress={onMessage}
+            onPress={() => {
+              onMessage();
+              onClose();
+            }}
           >
             <View style={[styles.iconCircle, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
               <Ionicons name="chatbubble" size={24} color="#00A884" />
             </View>
-            <Text style={[styles.iconLabel, { color: colors.text }]}>Message</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.iconButton}
-            onPress={onCall}
-          >
-            <View style={[styles.iconCircle, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
-              <Ionicons name="call" size={24} color="#00A884" />
-            </View>
-            <Text style={[styles.iconLabel, { color: colors.text }]}>Call</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={onInfo}
+            onPress={() => {
+              onCall();
+              onClose();
+            }}
           >
             <View style={[styles.iconCircle, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
               <Ionicons name="person-circle" size={24} color="#00A884" />
             </View>
-            <Text style={[styles.iconLabel, { color: colors.text }]}>Profile</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.iconButton}
-            onPress={onClose}
+            onPress={() => {
+              onInfo();
+              onClose();
+            }}
           >
-            <View style={[styles.iconCircle, { backgroundColor: '#E53935' }]}>
-              <Ionicons name="close-circle" size={24} color="#fff" />
+            <View style={[styles.iconCircle, { backgroundColor: isDark ? '#233138' : '#E9EDEF' }]}>
+              <Ionicons name="information-circle" size={24} color="#00A884" />
             </View>
-            <Text style={[styles.iconLabel, { color: colors.text }]}>Block</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </Animated.View>
     </>
   );
@@ -144,26 +223,50 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     zIndex: 999,
   },
-  fullCard: {
+  cardContainer: {
     position: 'absolute',
-    top: 0,
+    bottom: 0,
     left: 0,
     right: 0,
-    bottom: 0,
+    height: SCREEN_HEIGHT * 0.7,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
     zIndex: 1000,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+  },
+  backButtonTouchable: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 100,
   },
   fullImage: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT - 120,
+    width: '100%',
+    height: '100%',
+  },
+  placeholderContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: '#FFFFFF',
+    fontSize: 80,
+    fontWeight: '400',
   },
   bottomActions: {
     position: 'absolute',
@@ -172,13 +275,10 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 16,
+    paddingVertical: 20,
     paddingHorizontal: 20,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.1)',
   },
   iconButton: {
     alignItems: 'center',
@@ -189,11 +289,6 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
-  },
-  iconLabel: {
-    fontSize: 11,
-    fontWeight: '400',
   },
 });
 
