@@ -8,7 +8,7 @@ const baseUrl = process.env.REACT_APP_API_URL ||
                 process.env.VITE_API_URL ||
                 process.env.SERVER_URL ||
                 (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null) ||
-                'http://localhost:3000';
+                'http://widespread-chicky-connexa-hub-afd02d40.koyeb.app';
 
 const API_BASE_URL = baseUrl.replace(/\/$/, '');
 
