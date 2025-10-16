@@ -46,19 +46,21 @@ export default function ContactsScreen() {
 
         // Fetch from server
         const response = await callAPI(API.Contact.getAll(user.phone));
+        console.log('📊 Contacts response:', JSON.stringify(response, null, 2));
         
         // Handle different response formats
         let contactsList = [];
         if (Array.isArray(response)) {
           contactsList = response;
+        } else if (response.success && response.contacts && Array.isArray(response.contacts)) {
+          contactsList = response.contacts;
         } else if (response.contacts && Array.isArray(response.contacts)) {
           contactsList = response.contacts;
         } else if (response.data && Array.isArray(response.data)) {
           contactsList = response.data;
-        } else if (response.success && response.data) {
-          contactsList = Array.isArray(response.data) ? response.data : [];
         }
         
+        console.log('📊 Processed contacts count:', contactsList.length);
         setContacts(contactsList);
         
         // Cache the data
@@ -66,7 +68,6 @@ export default function ContactsScreen() {
       }
     } catch (error) {
       console.error('Error loading contacts:', error.message || error);
-      console.error('Full error:', error);
       // Keep cached data if fetch fails
       const cachedContacts = await storage.getCachedData(`contacts_${user.phone}`);
       if (cachedContacts && contacts.length === 0) {

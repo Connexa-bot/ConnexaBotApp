@@ -44,7 +44,21 @@ export default function UpdatesScreen({ navigation }) {
     try {
       if (user?.phone) {
         const response = await callAPI(API.Status.getAll(user.phone));
-        setStatuses(response.statusUpdates || []);
+        console.log('📊 Status response:', JSON.stringify(response, null, 2));
+        
+        let statusList = [];
+        if (Array.isArray(response)) {
+          statusList = response;
+        } else if (response.success && response.statusUpdates && Array.isArray(response.statusUpdates)) {
+          statusList = response.statusUpdates;
+        } else if (response.statusUpdates && Array.isArray(response.statusUpdates)) {
+          statusList = response.statusUpdates;
+        } else if (response.data && Array.isArray(response.data)) {
+          statusList = response.data;
+        }
+        
+        console.log('📊 Processed statuses count:', statusList.length);
+        setStatuses(statusList);
       }
     } catch (error) {
       console.error('Error loading statuses:', error);
@@ -57,7 +71,21 @@ export default function UpdatesScreen({ navigation }) {
     try {
       if (user?.phone) {
         const response = await callAPI(API.Channel.getAll(user.phone));
-        setChannels(response.channels || []);
+        console.log('📊 Channels response:', JSON.stringify(response, null, 2));
+        
+        let channelsList = [];
+        if (Array.isArray(response)) {
+          channelsList = response;
+        } else if (response.success && response.data && Array.isArray(response.data)) {
+          channelsList = response.data;
+        } else if (response.channels && Array.isArray(response.channels)) {
+          channelsList = response.channels;
+        } else if (response.data && Array.isArray(response.data)) {
+          channelsList = response.data;
+        }
+        
+        console.log('📊 Processed channels count:', channelsList.length);
+        setChannels(channelsList);
       }
     } catch (error) {
       console.error('Error loading channels:', error);

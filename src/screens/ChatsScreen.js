@@ -58,31 +58,32 @@ export default function ChatsScreen() {
   const loadChats = async () => {
     try {
       if (user?.phone) {
-        // Try to load from cache first
+        // Load from cache first
         const cachedChats = await storage.getCachedData(`chats_${user.phone}`);
         if (cachedChats) {
           setChats(cachedChats);
-          setFilteredChats(cachedChats);
         }
 
-        // Then try to fetch from server
+        // Fetch from server
         const response = await callAPI(API.Chat.getAll(user.phone));
-        
+        console.log('📊 Chats response:', JSON.stringify(response, null, 2));
+
         // Handle different response formats
         let chatsList = [];
         if (Array.isArray(response)) {
           chatsList = response;
+        } else if (response.success && response.chats && Array.isArray(response.chats)) {
+          chatsList = response.chats;
         } else if (response.chats && Array.isArray(response.chats)) {
           chatsList = response.chats;
         } else if (response.data && Array.isArray(response.data)) {
           chatsList = response.data;
-        } else if (response.success && response.data) {
-          chatsList = Array.isArray(response.data) ? response.data : [];
         }
-        
+
+        console.log('📊 Processed chats count:', chatsList.length);
         setChats(chatsList);
-        setFilteredChats(chatsList);
-        
+        setFilteredChats(chatsList); // Also update filteredChats immediately
+
         // Cache the data
         await storage.setCachedData(`chats_${user.phone}`, chatsList);
       }
@@ -93,7 +94,7 @@ export default function ChatsScreen() {
       const cachedChats = await storage.getCachedData(`chats_${user.phone}`);
       if (cachedChats && chats.length === 0) {
         setChats(cachedChats);
-        setFilteredChats(cachedChats);
+        setFilteredChats(cachedChats); // Ensure filteredChats is also updated from cache
       }
     } finally {
       setRefreshing(false);

@@ -23,7 +23,23 @@ export default function CallsScreen() {
     try {
       if (user?.phone) {
         const response = await callAPI(API.Call.getHistory(user.phone));
-        setCalls(response.data?.calls || []);
+        console.log('📊 Calls response:', JSON.stringify(response, null, 2));
+        
+        let callsList = [];
+        if (Array.isArray(response)) {
+          callsList = response;
+        } else if (response.success && response.calls && Array.isArray(response.calls)) {
+          callsList = response.calls;
+        } else if (response.calls && Array.isArray(response.calls)) {
+          callsList = response.calls;
+        } else if (response.data && response.data.calls && Array.isArray(response.data.calls)) {
+          callsList = response.data.calls;
+        } else if (response.data && Array.isArray(response.data)) {
+          callsList = response.data;
+        }
+        
+        console.log('📊 Processed calls count:', callsList.length);
+        setCalls(callsList);
       }
     } catch (error) {
       console.error('Error loading calls:', error);
