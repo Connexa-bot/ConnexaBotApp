@@ -67,7 +67,19 @@ export default function ChatsScreen() {
 
         // Then try to fetch from server
         const response = await callAPI(API.Chat.getAll(user.phone));
-        const chatsList = response.chats || [];
+        
+        // Handle different response formats
+        let chatsList = [];
+        if (Array.isArray(response)) {
+          chatsList = response;
+        } else if (response.chats && Array.isArray(response.chats)) {
+          chatsList = response.chats;
+        } else if (response.data && Array.isArray(response.data)) {
+          chatsList = response.data;
+        } else if (response.success && response.data) {
+          chatsList = Array.isArray(response.data) ? response.data : [];
+        }
+        
         setChats(chatsList);
         setFilteredChats(chatsList);
         
@@ -75,7 +87,8 @@ export default function ChatsScreen() {
         await storage.setCachedData(`chats_${user.phone}`, chatsList);
       }
     } catch (error) {
-      console.error('Error loading chats:', error);
+      console.error('Error loading chats:', error.message || error);
+      console.error('Full error:', error);
       // If fetch fails but we have cache, keep using it
       const cachedChats = await storage.getCachedData(`chats_${user.phone}`);
       if (cachedChats && chats.length === 0) {

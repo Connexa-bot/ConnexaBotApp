@@ -46,14 +46,27 @@ export default function ContactsScreen() {
 
         // Fetch from server
         const response = await callAPI(API.Contact.getAll(user.phone));
-        const contactsList = response.contacts || [];
+        
+        // Handle different response formats
+        let contactsList = [];
+        if (Array.isArray(response)) {
+          contactsList = response;
+        } else if (response.contacts && Array.isArray(response.contacts)) {
+          contactsList = response.contacts;
+        } else if (response.data && Array.isArray(response.data)) {
+          contactsList = response.data;
+        } else if (response.success && response.data) {
+          contactsList = Array.isArray(response.data) ? response.data : [];
+        }
+        
         setContacts(contactsList);
         
         // Cache the data
         await storage.setCachedData(`contacts_${user.phone}`, contactsList);
       }
     } catch (error) {
-      console.error('Error loading contacts:', error);
+      console.error('Error loading contacts:', error.message || error);
+      console.error('Full error:', error);
       // Keep cached data if fetch fails
       const cachedContacts = await storage.getCachedData(`contacts_${user.phone}`);
       if (cachedContacts && contacts.length === 0) {

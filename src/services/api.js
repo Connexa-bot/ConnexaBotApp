@@ -752,12 +752,23 @@ export const callAPI = async (endpoint) => {
       body: endpoint.body ? JSON.stringify(endpoint.body) : undefined
     });
 
-    if (!response.ok) {
-      console.error(`❌ API Error ${response.status}:`, endpoint.url);
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    // Try to get response text first
+    const responseText = await response.text();
+    let data;
+    
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (parseError) {
+      console.error('❌ JSON Parse Error:', responseText);
+      data = { error: 'Invalid JSON response', raw: responseText };
     }
 
-    const data = await response.json();
+    if (!response.ok) {
+      console.error(`❌ API Error ${response.status}:`, endpoint.url);
+      console.error('   Response:', data);
+      throw new Error(data.error || data.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
     console.log('✅ API Response:', endpoint.method, endpoint.url);
     return data;
   } catch (error) {
