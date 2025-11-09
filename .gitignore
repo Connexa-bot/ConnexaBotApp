@@ -1,16 +1,22 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# =============================
+# Global ignores for entire repo
+# =============================
 
-# dependencies
-node_modules/
+# Node dependencies (frontend and backend)
+**/node_modules/
+
+# Build outputs
+**/dist/
+**/build/
+**/web-build/
 
 # Expo
-.expo/
-dist/
-web-build/
+**/.expo/
 expo-env.d.ts
 
 # Native
-.kotlin/
+**/.kotlin/
 *.orig.*
 *.jks
 *.p8
@@ -19,40 +25,37 @@ expo-env.d.ts
 *.mobileprovision
 
 # Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
-*.pem
-
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
-
-app-example
-
-# generated native folders
-/ios
-/android
+**/.metro-health-check*
 
 # Logs
 *.log
 /tmp/
 
-# IDE
+# macOS
+.DS_Store
+*.pem
+
+# Local environment files
+**/.env*
+.env*.local
+
+# TypeScript build info
+*.tsbuildinfo
+
+# IDE / Editor
 .vscode/
 .idea/
 
 # AsyncStorage
 .AsyncStorage/
 
-# Misc
+# Cache / Misc
 .cache/
 coverage/
+
+# Generated native folders
+**/ios/
+**/android/
+
+# Example files
+app-example
